@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Profil membre Heivoli Network." />
+    <meta name="theme-color" content="#071a3d" />
+    <title>Mon profil — Heivoli Network</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="profile-page">
+    <div class="page-glow glow-one" aria-hidden="true"></div>
+    <div class="page-glow glow-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Heivoli Network — accueil"><span class="brand-mark" aria-hidden="true">H</span><span>Heivoli <strong>Network</strong></span></a>
+      <nav class="site-nav profile-nav" aria-label="Navigation principale">
+        <a href="index.html">Accueil</a><a href="index.html#annonces">Annonces</a><a href="index.html#communaute">Communauté</a><a class="is-current" href="profil.html">Mon compte</a>
+      </nav>
+    </header>
+
+    <main class="profile-shell section-shell">
+      <a class="back-link" href="index.html">← Retour à l’accueil</a>
+      <section id="profile-locked" class="profile-gate">
+        <div class="account-orb" aria-hidden="true">H</div>
+        <p class="eyebrow"><span></span> Espace membre</p>
+        <h1>Ton profil<br /><em>Heivoli.</em></h1>
+        <p>Connecte-toi avec Google pour accéder à tes informations et modifier ta description.</p>
+        <button id="google-login" class="button button-primary" type="button"><span class="google-icon">G</span> Continuer avec Google</button>
+        <p id="auth-status" class="auth-status" aria-live="polite"></p>
+      </section>
+
+      <section id="profile-content" class="profile-panel" hidden>
+        <div class="profile-heading">
+          <div id="profile-avatar" class="account-orb"><span id="profile-initial">H</span><img id="profile-photo" alt="Photo de profil" hidden /></div>
+          <div><p class="eyebrow"><span></span> Espace membre</p><h1>Mon<br /><em>profil.</em></h1></div>
+          <button id="sign-out" class="button button-quiet" type="button">Se déconnecter</button>
+        </div>
+        <div class="profile-details">
+          <div class="profile-info"><span id="profile-name">Membre Heivoli</span><span id="profile-email"></span></div>
+          <form id="profile-form" class="profile-form">
+            <label for="profile-description">Ma description</label>
+            <textarea id="profile-description" maxlength="280" placeholder="Présente-toi à la communauté : tes jeux préférés, ta console, ce que tu recherches…"></textarea>
+            <div class="profile-form-footer"><span id="description-count">0 / 280</span><button class="button button-primary" type="submit">Enregistrer</button></div>
+            <p id="profile-save-status" class="auth-status" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="profil.js"></script>
+  </body>
+</html>
