@@ -1,0 +1,8 @@
+{
+  "name": "heivoli-discord-auth",
+  "main": "src/index.js",
+  "compatibility_date": "2025-04-01",
+  "vars": {
+    "DISCORD_CLIENT_ID": "1465787972870869236"
+  }
+}

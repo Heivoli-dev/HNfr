@@ -3,7 +3,7 @@ import { GoogleAuthProvider, getAuth, getRedirectResult, onAuthStateChanged, sig
 import { addDoc, collection, doc, getDoc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
-const DISCORD_LOGIN_URL = "https://europe-west1-heivoli-network-408f3.cloudfunctions.net/discordLogin?returnTo=tickets";
+const DISCORD_LOGIN_URL = "https://heivoli-discord-auth.heivoli-discord-auth.workers.dev/login?returnTo=tickets";
 const firebaseConfig = {
   apiKey: "AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk",
   authDomain: "heivoli-network-408f3.firebaseapp.com",

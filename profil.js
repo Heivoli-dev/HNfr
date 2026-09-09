@@ -11,7 +11,7 @@ const firebaseConfig = {
   appId: "1:761703200496:web:967e8fd7330db657ca7435",
 };
 const CREATOR_EMAIL = "heivolipro@gmail.com";
-const DISCORD_LOGIN_URL = "https://europe-west1-heivoli-network-408f3.cloudfunctions.net/discordLogin";
+const DISCORD_LOGIN_URL = "https://heivoli-discord-auth.heivoli-discord-auth.workers.dev/login";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
