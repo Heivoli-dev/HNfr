@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071a3d" />
+    <title>Administration — Heivoli Network</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="profile-page">
+    <div class="page-glow glow-one" aria-hidden="true"></div><div class="page-glow glow-two" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">H</span><span>Heivoli <strong>Network</strong></span></a>
+      <nav class="site-nav profile-nav" aria-label="Navigation principale"><a href="index.html">Accueil</a><a href="profil.html">Mon compte</a><a class="is-current" href="admin.html">Administration</a></nav>
+    </header>
+
+    <main class="profile-shell section-shell">
+      <a class="back-link" href="profil.html">← Retour au profil</a>
+      <section id="admin-locked" class="profile-gate">
+        <div class="account-orb" aria-hidden="true">H</div><p class="eyebrow"><span></span> Accès protégé</p>
+        <h1>Panneau<br /><em>admin.</em></h1>
+        <p>Connecte-toi avec un compte autorisé pour gérer les annonces de Heivoli Network.</p>
+        <button id="google-login" class="button button-primary" type="button"><span class="google-icon">G</span> Continuer avec Google</button>
+        <p id="auth-status" class="auth-status" aria-live="polite"></p>
+      </section>
+
+      <section id="admin-content" class="admin-panel" hidden>
+        <div class="admin-heading"><div><p class="eyebrow"><span></span> Administration</p><h1>Les<br /><em>annonces.</em></h1></div><button id="sign-out" class="button button-quiet" type="button">Se déconnecter</button></div>
+        <form id="announcement-form" class="admin-form">
+          <div class="form-row"><label>Catégorie<select id="announcement-type"><option>Bienvenue</option><option>Événement</option><option>Communauté</option><option>Important</option></select></label><label>Date affichée<input id="announcement-date" maxlength="32" value="Aujourd'hui" required /></label></div>
+          <label>Titre<input id="announcement-title" maxlength="80" required placeholder="Titre de l’annonce" /></label>
+          <label>Message<textarea id="announcement-text" maxlength="320" required placeholder="Écris ton annonce ici…"></textarea></label>
+          <label class="featured-choice"><input id="announcement-featured" type="checkbox" /> Mettre cette annonce en avant</label>
+          <div class="profile-form-footer"><span id="admin-status" class="auth-status" aria-live="polite"></span><button class="button button-primary" type="submit">Publier l’annonce</button></div>
+        </form>
+        <div class="admin-list-heading"><h2>Annonces publiées</h2><p>Supprime une annonce si elle n’est plus d’actualité.</p></div>
+        <div id="admin-announcements" class="admin-announcements"></div>
+      </section>
+    </main>
+    <script type="module" src="admin.js"></script>
+  </body>
+</html>

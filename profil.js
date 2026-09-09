@@ -9,6 +9,7 @@ const firebaseConfig = {
   messagingSenderId: "761703200496",
   appId: "1:761703200496:web:967e8fd7330db657ca7435",
 };
+const CREATOR_EMAIL = "heivolipro@gmail.com";
 
 const auth = getAuth(initializeApp(firebaseConfig));
 const provider = new GoogleAuthProvider();
@@ -23,6 +24,8 @@ const profilePhoto = document.querySelector("#profile-photo");
 const profileDescription = document.querySelector("#profile-description");
 const descriptionCount = document.querySelector("#description-count");
 const profileSaveStatus = document.querySelector("#profile-save-status");
+const profileBadge = document.querySelector("#profile-badge");
+const adminLink = document.querySelector("#admin-link");
 let currentUser = null;
 
 function updateDescriptionCount() {
@@ -63,7 +66,11 @@ onAuthStateChanged(auth, (user) => {
   currentUser = user;
   lockedProfile.hidden = Boolean(user);
   profileContent.hidden = !user;
-  if (!user) return;
+  if (!user) {
+    profileBadge.hidden = true;
+    adminLink.hidden = true;
+    return;
+  }
 
   const name = user.displayName || user.email || "Membre";
   profileName.textContent = name;
@@ -73,5 +80,8 @@ onAuthStateChanged(auth, (user) => {
   profilePhoto.hidden = !user.photoURL;
   profilePhoto.src = user.photoURL || "";
   profileDescription.value = localStorage.getItem(`heivoli-profile-${user.uid}`) || "";
+  const isCreator = user.email?.toLowerCase() === CREATOR_EMAIL;
+  profileBadge.hidden = !isCreator;
+  adminLink.hidden = !isCreator;
   updateDescriptionCount();
 });
