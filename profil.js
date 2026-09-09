@@ -103,13 +103,15 @@ onAuthStateChanged(auth, async (user) => {
 
   const name = user.displayName || user.email || "Membre";
   profileName.textContent = name;
-  profileEmail.textContent = user.email || "Compte Discord";
+  const tokenClaims = (await user.getIdTokenResult()).claims;
+  const isDiscordAccount = Boolean(tokenClaims.discordId);
+  profileEmail.textContent = isDiscordAccount ? "Compte Discord" : (user.email || "Compte Google");
   profileInitial.textContent = name.charAt(0).toUpperCase();
   profileInitial.hidden = Boolean(user.photoURL);
   profilePhoto.hidden = !user.photoURL;
   profilePhoto.src = user.photoURL || "";
   profileDescription.value = localStorage.getItem(`heivoli-profile-${user.uid}`) || "";
-  const email = user.email?.toLowerCase() || "";
+  const email = isDiscordAccount ? "" : (user.email?.toLowerCase() || "");
   const isCreator = email === CREATOR_EMAIL;
   let isAdmin = isCreator;
   if (!isAdmin && email) {

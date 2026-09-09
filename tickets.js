@@ -250,7 +250,8 @@ onAuthStateChanged(auth, async (user) => {
   content.hidden = !user;
   if (!user) return;
 
-  const email = user.email?.toLowerCase() || "";
+  const tokenClaims = (await user.getIdTokenResult()).claims;
+  const email = tokenClaims.discordId ? "" : (user.email?.toLowerCase() || "");
   isModerator = email === CREATOR_EMAIL;
   if (!isModerator && email) {
     try {
