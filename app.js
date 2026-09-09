@@ -1,6 +1,6 @@
 // Configuration à compléter lorsque l'invitation Discord Heivoli sera prête.
 const CONFIG = {
-  discordInvite: "",
+  discordInvite: "https://discord.gg/nXDYpkWTDV",
 };
 
 const announcements = [
