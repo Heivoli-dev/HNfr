@@ -17,6 +17,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: "select_account" });
 const lockedProfile = document.querySelector("#profile-locked");
 const profileContent = document.querySelector("#profile-content");
 const googleButton = document.querySelector("#google-login");
