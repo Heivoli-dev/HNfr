@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
-      return request.auth != null && request.auth.token.email_verified == true;
+      return request.auth != null;
     }
 
     function isFounder() {
@@ -11,7 +11,10 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isFounder() || exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+      return isFounder()
+        || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        || (request.auth.token.email != null
+          && exists(/databases/$(database)/documents/admins/$(request.auth.token.email)));
     }
 
     function ownsTicket(ticketId) {

@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
-import { GoogleAuthProvider, getAuth, getRedirectResult, onAuthStateChanged, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { GoogleAuthProvider, getAuth, getRedirectResult, onAuthStateChanged, signInWithCustomToken, signInWithRedirect, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { doc, getDoc, getFirestore } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -11,6 +11,7 @@ const firebaseConfig = {
   appId: "1:761703200496:web:967e8fd7330db657ca7435",
 };
 const CREATOR_EMAIL = "heivolipro@gmail.com";
+const DISCORD_LOGIN_URL = "https://europe-west1-heivoli-network-408f3.cloudfunctions.net/discordLogin";
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -19,6 +20,7 @@ const provider = new GoogleAuthProvider();
 const lockedProfile = document.querySelector("#profile-locked");
 const profileContent = document.querySelector("#profile-content");
 const googleButton = document.querySelector("#google-login");
+const discordButton = document.querySelector("#discord-login");
 const authStatus = document.querySelector("#auth-status");
 const profileName = document.querySelector("#profile-name");
 const profileEmail = document.querySelector("#profile-email");
@@ -44,6 +46,25 @@ function showAuthError(error) {
   googleButton.disabled = false;
 }
 
+async function finishDiscordLogin() {
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  const customToken = params.get("discordToken");
+  if (!customToken) return;
+  history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+  authStatus.textContent = "Connexion Discord en cours…";
+  try {
+    const credential = await signInWithCustomToken(auth, customToken);
+    const claims = (await credential.user.getIdTokenResult(true)).claims;
+    await updateProfile(credential.user, {
+      displayName: claims.discordName || "Membre Heivoli",
+      photoURL: claims.discordAvatar || null,
+    });
+    window.location.reload();
+  } catch {
+    authStatus.textContent = "La connexion Discord n’a pas pu aboutir. Réessaie dans un instant.";
+  }
+}
+
 googleButton.addEventListener("click", async () => {
   googleButton.disabled = true;
   googleButton.textContent = "Connexion en cours…";
@@ -54,7 +75,12 @@ googleButton.addEventListener("click", async () => {
   }
 });
 
+discordButton.addEventListener("click", () => {
+  window.location.assign(DISCORD_LOGIN_URL);
+});
+
 getRedirectResult(auth).catch(showAuthError);
+finishDiscordLogin();
 document.querySelector("#sign-out").addEventListener("click", () => signOut(auth));
 
 profileDescription.addEventListener("input", updateDescriptionCount);
@@ -77,7 +103,7 @@ onAuthStateChanged(auth, async (user) => {
 
   const name = user.displayName || user.email || "Membre";
   profileName.textContent = name;
-  profileEmail.textContent = user.email || "Compte Google";
+  profileEmail.textContent = user.email || "Compte Discord";
   profileInitial.textContent = name.charAt(0).toUpperCase();
   profileInitial.hidden = Boolean(user.photoURL);
   profilePhoto.hidden = !user.photoURL;

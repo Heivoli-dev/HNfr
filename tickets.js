@@ -1,8 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
-import { GoogleAuthProvider, getAuth, getRedirectResult, onAuthStateChanged, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { GoogleAuthProvider, getAuth, getRedirectResult, onAuthStateChanged, signInWithCustomToken, signInWithRedirect, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { addDoc, collection, doc, getDoc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
+const DISCORD_LOGIN_URL = "https://europe-west1-heivoli-network-408f3.cloudfunctions.net/discordLogin?returnTo=tickets";
 const firebaseConfig = {
   apiKey: "AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk",
   authDomain: "heivoli-network-408f3.firebaseapp.com",
@@ -19,6 +20,7 @@ const provider = new GoogleAuthProvider();
 const locked = document.querySelector("#tickets-locked");
 const content = document.querySelector("#tickets-content");
 const googleButton = document.querySelector("#google-login");
+const discordButton = document.querySelector("#discord-login");
 const authStatus = document.querySelector("#auth-status");
 const ticketForm = document.querySelector("#ticket-form");
 const ticketCreateStatus = document.querySelector("#ticket-create-status");
@@ -56,6 +58,25 @@ function showAuthError(error) {
   };
   authStatus.textContent = messages[error.code] || "La connexion n’a pas pu aboutir. Réessaie dans un instant.";
   googleButton.disabled = false;
+}
+
+async function finishDiscordLogin() {
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  const customToken = params.get("discordToken");
+  if (!customToken) return;
+  history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+  authStatus.textContent = "Connexion Discord en cours…";
+  try {
+    const credential = await signInWithCustomToken(auth, customToken);
+    const claims = (await credential.user.getIdTokenResult(true)).claims;
+    await updateProfile(credential.user, {
+      displayName: claims.discordName || "Membre Heivoli",
+      photoURL: claims.discordAvatar || null,
+    });
+    window.location.reload();
+  } catch {
+    authStatus.textContent = "La connexion Discord n’a pas pu aboutir. Réessaie dans un instant.";
+  }
 }
 
 function setSelectedTicket(ticket) {
@@ -156,7 +177,12 @@ googleButton.addEventListener("click", async () => {
   }
 });
 
+discordButton.addEventListener("click", () => {
+  window.location.assign(DISCORD_LOGIN_URL);
+});
+
 getRedirectResult(auth).catch(showAuthError);
+finishDiscordLogin();
 document.querySelector("#sign-out").addEventListener("click", () => signOut(auth));
 
 ticketForm.addEventListener("submit", async (event) => {
