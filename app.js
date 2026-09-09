@@ -1,6 +1,26 @@
-// Configuration à compléter lorsque l'invitation Discord Heivoli sera prête.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+import {
+  GoogleAuthProvider,
+  getAuth,
+  getRedirectResult,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+
 const CONFIG = {
   discordInvite: "https://discord.gg/nXDYpkWTDV",
+};
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk",
+  authDomain: "heivoli-network-408f3.firebaseapp.com",
+  projectId: "heivoli-network-408f3",
+  storageBucket: "heivoli-network-408f3.firebasestorage.app",
+  messagingSenderId: "761703200496",
+  appId: "1:761703200496:web:967e8fd7330db657ca7435",
+  measurementId: "G-DJCSXJRJ84",
 };
 
 const announcements = [
@@ -59,25 +79,19 @@ const modal = document.querySelector("#notice-modal");
 const modalTitle = document.querySelector("#modal-title");
 const modalMessage = document.querySelector("#modal-message");
 const modalAction = document.querySelector("#modal-action");
+const accountTrigger = document.querySelector("#account-trigger");
+const googleButton = document.querySelector(".google-login");
+const authStatus = document.querySelector("#auth-status");
 
 function showNotice(kind) {
-  const discordIsReady = Boolean(CONFIG.discordInvite);
-
-  if (kind === "discord" && discordIsReady) {
+  if (kind === "discord" && CONFIG.discordInvite) {
     window.open(CONFIG.discordInvite, "_blank", "noopener,noreferrer");
     return;
   }
 
-  if (kind === "discord") {
-    modalTitle.textContent = "Le portail Discord arrive.";
-    modalMessage.textContent = "L'invitation officielle de Heivoli Network sera ajoutée ici très bientôt. Reviens vite pour rejoindre la communauté !";
-    modalAction.hidden = true;
-  } else {
-    modalTitle.textContent = "Connexion en préparation.";
-    modalMessage.textContent = "Les connexions Discord et Google seront activées avec le futur bot Heivoli. Aucun compte n'est créé ni relié pour l'instant.";
-    modalAction.hidden = true;
-  }
-
+  modalTitle.textContent = "Discord arrive bientôt.";
+  modalMessage.textContent = "La connexion Discord sera activée quand le bot Heivoli sera prêt. Tu peux déjà te connecter avec Google.";
+  modalAction.hidden = true;
   modal.showModal();
 }
 
@@ -90,4 +104,56 @@ document.querySelectorAll(".account-trigger").forEach((button) =>
 document.querySelector(".modal-close").addEventListener("click", () => modal.close());
 modal.addEventListener("click", (event) => {
   if (event.target === modal) modal.close();
+});
+
+const auth = getAuth(initializeApp(firebaseConfig));
+const googleProvider = new GoogleAuthProvider();
+
+function setGoogleButton(isLoading) {
+  googleButton.disabled = isLoading;
+  googleButton.innerHTML = isLoading
+    ? '<span class="google-icon">…</span> Connexion en cours…'
+    : '<span class="google-icon">G</span> Continuer avec Google';
+}
+
+function showAuthError(error) {
+  const messages = {
+    "auth/operation-not-allowed": "La connexion Google doit encore être activée dans Firebase.",
+    "auth/unauthorized-domain": "Ce domaine doit être ajouté aux domaines autorisés dans Firebase.",
+    "auth/popup-closed-by-user": "La fenêtre de connexion a été fermée.",
+  };
+  authStatus.textContent = messages[error.code] || "La connexion Google n’a pas pu aboutir. Réessaie dans un instant.";
+  setGoogleButton(false);
+}
+
+async function startGoogleLogin() {
+  setGoogleButton(true);
+  authStatus.textContent = "";
+  try {
+    await signInWithPopup(auth, googleProvider);
+  } catch (error) {
+    if (error.code === "auth/popup-blocked") {
+      await signInWithRedirect(auth, googleProvider);
+      return;
+    }
+    showAuthError(error);
+  }
+}
+
+googleButton.addEventListener("click", startGoogleLogin);
+getRedirectResult(auth).catch(showAuthError);
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    accountTrigger.textContent = "Connexion";
+    googleButton.hidden = false;
+    setGoogleButton(false);
+    return;
+  }
+
+  const name = user.displayName || user.email || "Membre";
+  accountTrigger.textContent = name.split(" ")[0];
+  authStatus.innerHTML = `Connecté·e en tant que <strong>${name}</strong> · <button class="sign-out" type="button">Se déconnecter</button>`;
+  googleButton.hidden = true;
+  authStatus.querySelector(".sign-out").addEventListener("click", () => signOut(auth));
 });
