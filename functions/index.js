@@ -13,7 +13,7 @@ const STATE_COOKIE = "heivoli_discord_state";
 
 function getConfig() {
   const config = discordOAuth.value();
-  if (!config?.clientId || !config?.clientSecret) throw new Error("Configuration Discord absente.");
+  if (!config?.clientId || !config?.clientSecret || !config?.botToken || !config?.guildId) throw new Error("Configuration Discord absente.");
   return config;
 }
 
@@ -40,7 +40,7 @@ exports.discordLogin = onRequest({ region: "europe-west1", secrets: [discordOAut
       client_id: clientId,
       response_type: "code",
       redirect_uri: CALLBACK_URL,
-      scope: "identify email",
+      scope: "identify email guilds.join",
       state,
     });
     res.redirect(`https://discord.com/oauth2/authorize?${params}`);
@@ -61,7 +61,7 @@ exports.discordCallback = onRequest({ region: "europe-west1", secrets: [discordO
   }
 
   try {
-    const { clientId, clientSecret } = getConfig();
+    const { clientId, clientSecret, botToken, guildId } = getConfig();
     const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
       headers: {
@@ -77,6 +77,15 @@ exports.discordCallback = onRequest({ region: "europe-west1", secrets: [discordO
     });
     if (!userResponse.ok) throw new Error("Profil Discord indisponible.");
     const user = await userResponse.json();
+    const joinResponse = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members/${user.id}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bot ${botToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ access_token: tokens.access_token }),
+    });
+    if (!joinResponse.ok && joinResponse.status !== 204) throw new Error("Ajout au serveur refusé.");
     const name = user.global_name || user.username || "Membre Heivoli";
     const avatar = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256` : "";
     const customToken = await getAuth().createCustomToken(`discord-${user.id}`, {
