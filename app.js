@@ -81,6 +81,17 @@ const modalAction = document.querySelector("#modal-action");
 const accountTrigger = document.querySelector("#account-trigger");
 const googleButton = document.querySelector(".google-login");
 const authStatus = document.querySelector("#auth-status");
+const profileSignedOut = document.querySelector("#profile-signed-out");
+const profileForm = document.querySelector("#profile-form");
+const profileName = document.querySelector("#profile-name");
+const profileEmail = document.querySelector("#profile-email");
+const profileSubtitle = document.querySelector("#profile-subtitle");
+const profileDescription = document.querySelector("#profile-description");
+const descriptionCount = document.querySelector("#description-count");
+const profileSaveStatus = document.querySelector("#profile-save-status");
+const profileInitial = document.querySelector("#profile-initial");
+const profilePhoto = document.querySelector("#profile-photo");
+let currentUser = null;
 
 function showNotice(kind) {
   if (kind === "discord" && CONFIG.discordInvite) {
@@ -100,6 +111,7 @@ document.querySelectorAll(".discord-trigger").forEach((button) =>
 document.querySelectorAll(".account-trigger").forEach((button) =>
   button.addEventListener("click", () => showNotice("account")),
 );
+accountTrigger.addEventListener("click", () => document.querySelector("#compte").scrollIntoView({ behavior: "smooth" }));
 document.querySelector(".modal-close").addEventListener("click", () => modal.close());
 modal.addEventListener("click", (event) => {
   if (event.target === modal) modal.close();
@@ -114,6 +126,19 @@ function setGoogleButton(isLoading) {
     ? '<span class="google-icon">…</span> Connexion en cours…'
     : '<span class="google-icon">G</span> Continuer avec Google';
 }
+
+function updateDescriptionCount() {
+  descriptionCount.textContent = `${profileDescription.value.length} / 280`;
+}
+
+profileDescription.addEventListener("input", updateDescriptionCount);
+
+profileForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (!currentUser) return;
+  localStorage.setItem(`heivoli-profile-${currentUser.uid}`, profileDescription.value.trim());
+  profileSaveStatus.textContent = "Description enregistrée sur cet appareil.";
+});
 
 function showAuthError(error) {
   const messages = {
@@ -140,15 +165,34 @@ getRedirectResult(auth).catch(showAuthError);
 
 onAuthStateChanged(auth, (user) => {
   if (!user) {
+    currentUser = null;
     accountTrigger.textContent = "Connexion";
     googleButton.hidden = false;
+    profileSignedOut.hidden = false;
+    profileForm.hidden = true;
+    profileSubtitle.textContent = "Connecte-toi avec Google pour créer ton profil Heivoli.";
+    profileInitial.hidden = false;
+    profileInitial.textContent = "H";
+    profilePhoto.hidden = true;
+    profileSaveStatus.textContent = "";
     setGoogleButton(false);
     return;
   }
 
+  currentUser = user;
   const name = user.displayName || user.email || "Membre";
   accountTrigger.textContent = name.split(" ")[0];
-  authStatus.innerHTML = `Connecté·e en tant que <strong>${name}</strong> · <button class="sign-out" type="button">Se déconnecter</button>`;
-  googleButton.hidden = true;
-  authStatus.querySelector(".sign-out").addEventListener("click", () => signOut(auth));
+  profileSignedOut.hidden = true;
+  profileForm.hidden = false;
+  profileName.textContent = name;
+  profileEmail.textContent = user.email || "Compte Google";
+  profileSubtitle.textContent = "Personnalise ton profil et prépare ta liaison avec Discord.";
+  profileDescription.value = localStorage.getItem(`heivoli-profile-${user.uid}`) || "";
+  updateDescriptionCount();
+  profileInitial.textContent = name.charAt(0).toUpperCase();
+  profileInitial.hidden = Boolean(user.photoURL);
+  profilePhoto.hidden = !user.photoURL;
+  profilePhoto.src = user.photoURL || "";
+  profileSaveStatus.innerHTML = 'Connecté·e · <button class="sign-out" type="button">Se déconnecter</button>';
+  profileSaveStatus.querySelector(".sign-out").addEventListener("click", () => signOut(auth));
 });

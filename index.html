@@ -111,20 +111,25 @@
       </section>
 
       <section id="compte" class="section-shell account-section">
-        <div class="account-card">
-          <div class="account-orb" aria-hidden="true">H</div>
-          <div>
+        <div class="account-card profile-card">
+          <div id="profile-avatar" class="account-orb" aria-hidden="true"><span id="profile-initial">H</span><img id="profile-photo" alt="" hidden /></div>
+          <div class="profile-intro">
             <p class="eyebrow"><span></span> Espace membre</p>
-            <h2>Connecte ton<br /><em>compte.</em></h2>
-            <p>
-              Connecte-toi avec Google pour préparer ton profil Heivoli. La connexion Discord arrivera avec le futur bot.
-            </p>
+            <h2>Mon<br /><em>profil.</em></h2>
+            <p id="profile-subtitle">Connecte-toi avec Google pour créer ton profil Heivoli.</p>
           </div>
-          <div class="login-options" aria-label="Méthodes de connexion">
+          <div id="profile-signed-out" class="login-options" aria-label="Méthodes de connexion">
             <button class="login-button account-trigger" type="button"><span class="discord-icon">⌁</span> Continuer avec Discord</button>
             <button class="login-button google-login" type="button"><span class="google-icon">G</span> Continuer avec Google</button>
             <p id="auth-status" class="auth-status" aria-live="polite"></p>
           </div>
+          <form id="profile-form" class="profile-form" hidden>
+            <div class="profile-info"><span id="profile-name">Membre Heivoli</span><span id="profile-email"></span></div>
+            <label for="profile-description">Ma description</label>
+            <textarea id="profile-description" maxlength="280" placeholder="Présente-toi à la communauté : tes jeux préférés, ta console, ce que tu recherches…"></textarea>
+            <div class="profile-form-footer"><span id="description-count">0 / 280</span><button class="button button-primary" type="submit">Enregistrer</button></div>
+            <p id="profile-save-status" class="auth-status" aria-live="polite"></p>
+          </form>
         </div>
       </section>
     </main>
