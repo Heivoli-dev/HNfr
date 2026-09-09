@@ -33,6 +33,12 @@
           <label class="featured-choice"><input id="announcement-featured" type="checkbox" /> Mettre cette annonce en avant</label>
           <div class="profile-form-footer"><span id="admin-status" class="auth-status" aria-live="polite"></span><button class="button button-primary" type="submit">Publier l’annonce</button></div>
         </form>
+        <section id="admin-management" class="admin-management" hidden>
+          <div class="admin-list-heading"><h2>Les administrateurs</h2><p>Ajoute les comptes Google autorisés à gérer les annonces.</p></div>
+          <form id="admin-add-form" class="admin-add-form"><input id="admin-email" type="email" required placeholder="adresse@gmail.com" /><button class="button button-quiet" type="submit">Ajouter un admin</button></form>
+          <p id="admin-management-status" class="auth-status" aria-live="polite"></p>
+          <div id="admin-list" class="admin-announcements"></div>
+        </section>
         <div class="admin-list-heading"><h2>Annonces publiées</h2><p>Supprime une annonce si elle n’est plus d’actualité.</p></div>
         <div id="admin-announcements" class="admin-announcements"></div>
       </section>

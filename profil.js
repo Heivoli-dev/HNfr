@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, getAuth, getRedirectResult, onAuthStateChanged, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { doc, getDoc, getFirestore } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk",
@@ -11,7 +12,9 @@ const firebaseConfig = {
 };
 const CREATOR_EMAIL = "heivolipro@gmail.com";
 
-const auth = getAuth(initializeApp(firebaseConfig));
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
 const provider = new GoogleAuthProvider();
 const lockedProfile = document.querySelector("#profile-locked");
 const profileContent = document.querySelector("#profile-content");
@@ -62,7 +65,7 @@ document.querySelector("#profile-form").addEventListener("submit", (event) => {
   profileSaveStatus.textContent = "Description enregistrée sur cet appareil.";
 });
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   lockedProfile.hidden = Boolean(user);
   profileContent.hidden = !user;
@@ -80,8 +83,18 @@ onAuthStateChanged(auth, (user) => {
   profilePhoto.hidden = !user.photoURL;
   profilePhoto.src = user.photoURL || "";
   profileDescription.value = localStorage.getItem(`heivoli-profile-${user.uid}`) || "";
-  const isCreator = user.email?.toLowerCase() === CREATOR_EMAIL;
-  profileBadge.hidden = !isCreator;
-  adminLink.hidden = !isCreator;
+  const email = user.email?.toLowerCase() || "";
+  const isCreator = email === CREATOR_EMAIL;
+  let isAdmin = isCreator;
+  if (!isAdmin && email) {
+    try {
+      isAdmin = (await getDoc(doc(db, "admins", email))).exists();
+    } catch {
+      isAdmin = false;
+    }
+  }
+  profileBadge.hidden = !isAdmin;
+  profileBadge.textContent = isCreator ? "✦ Fondateur" : "✦ Administrateur";
+  adminLink.hidden = !isAdmin;
   updateDescriptionCount();
 });

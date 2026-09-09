@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, getAuth, getRedirectResult, onAuthStateChanged, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
-import { addDoc, collection, deleteDoc, doc, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
 const firebaseConfig = {
@@ -23,7 +23,14 @@ const authStatus = document.querySelector("#auth-status");
 const form = document.querySelector("#announcement-form");
 const adminStatus = document.querySelector("#admin-status");
 const announcementList = document.querySelector("#admin-announcements");
+const adminManagement = document.querySelector("#admin-management");
+const adminAddForm = document.querySelector("#admin-add-form");
+const adminEmailInput = document.querySelector("#admin-email");
+const adminManagementStatus = document.querySelector("#admin-management-status");
+const adminList = document.querySelector("#admin-list");
 let isAdmin = false;
+let isFounder = false;
+let adminListListening = false;
 
 function renderAnnouncements(snapshot) {
   announcementList.replaceChildren();
@@ -51,6 +58,39 @@ function renderAnnouncements(snapshot) {
     });
     row.append(copy, remove);
     announcementList.append(row);
+  });
+}
+
+function renderAdmins(snapshot) {
+  adminList.replaceChildren();
+  if (snapshot.empty) {
+    adminList.textContent = "Aucun administrateur ajouté pour l’instant.";
+    return;
+  }
+  snapshot.forEach((item) => {
+    const data = item.data();
+    const row = document.createElement("article");
+    row.className = "admin-announcement";
+    const email = document.createElement("strong");
+    email.textContent = data.email || item.id;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove-announcement";
+    remove.textContent = "Retirer";
+    remove.addEventListener("click", async () => {
+      if (!confirm(`Retirer les droits admin de ${email.textContent} ?`)) return;
+      await deleteDoc(doc(db, "admins", item.id));
+    });
+    row.append(email, remove);
+    adminList.append(row);
+  });
+}
+
+function startAdminList() {
+  if (adminListListening) return;
+  adminListListening = true;
+  onSnapshot(query(collection(db, "admins"), orderBy("email", "asc")), renderAdmins, () => {
+    adminManagementStatus.textContent = "Impossible de charger les administrateurs : vérifie les règles Firebase.";
   });
 }
 
@@ -91,11 +131,43 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
-onAuthStateChanged(auth, (user) => {
-  isAdmin = user?.email?.toLowerCase() === CREATOR_EMAIL;
+adminAddForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!isFounder) return;
+  const email = adminEmailInput.value.trim().toLowerCase();
+  if (!email || email === CREATOR_EMAIL) {
+    adminManagementStatus.textContent = "Ce compte est déjà le fondateur.";
+    return;
+  }
+  adminManagementStatus.textContent = "Ajout…";
+  try {
+    await setDoc(doc(db, "admins", email), { email, createdAt: serverTimestamp() });
+    adminAddForm.reset();
+    adminManagementStatus.textContent = "Administrateur ajouté.";
+  } catch {
+    adminManagementStatus.textContent = "Ajout bloqué : vérifie les règles Firebase.";
+  }
+});
+
+onAuthStateChanged(auth, async (user) => {
+  const email = user?.email?.toLowerCase() || "";
+  isFounder = email === CREATOR_EMAIL;
+  isAdmin = isFounder;
+  if (!isAdmin && email) {
+    try {
+      isAdmin = (await getDoc(doc(db, "admins", email))).exists();
+    } catch {
+      isAdmin = false;
+    }
+  }
   lockedPanel.hidden = isAdmin;
   adminContent.hidden = !isAdmin;
-  if (!user) return;
+  adminManagement.hidden = !isFounder;
+  if (isFounder) startAdminList();
+  if (!user) {
+    googleButton.hidden = false;
+    return;
+  }
   if (!isAdmin) {
     authStatus.textContent = "Ce compte n’est pas autorisé à accéder à l’administration.";
     googleButton.hidden = true;

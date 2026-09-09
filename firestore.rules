@@ -2,11 +2,27 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isFounder() {
+      return signedIn() && request.auth.token.email == "heivolipro@gmail.com";
+    }
+
+    function isAdmin() {
+      return isFounder() || exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+    }
+
     match /announcements/{announcement} {
       allow read: if true;
-      allow create, update, delete: if request.auth != null
-        && request.auth.token.email == "heivolipro@gmail.com"
-        && request.auth.token.email_verified == true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /admins/{email} {
+      allow get: if signedIn() && (isFounder() || request.auth.token.email == email);
+      allow list: if isFounder();
+      allow create, update, delete: if isFounder();
     }
   }
 }
