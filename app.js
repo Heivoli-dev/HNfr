@@ -4,7 +4,6 @@ import {
   getAuth,
   getRedirectResult,
   onAuthStateChanged,
-  signInWithPopup,
   signInWithRedirect,
   signOut,
 } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
@@ -130,12 +129,8 @@ async function startGoogleLogin() {
   setGoogleButton(true);
   authStatus.textContent = "";
   try {
-    await signInWithPopup(auth, googleProvider);
+    await signInWithRedirect(auth, googleProvider);
   } catch (error) {
-    if (error.code === "auth/popup-blocked") {
-      await signInWithRedirect(auth, googleProvider);
-      return;
-    }
     showAuthError(error);
   }
 }
