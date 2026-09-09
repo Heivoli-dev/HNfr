@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Assistance privée de Heivoli Network." />
+    <meta name="theme-color" content="#071a3d" />
+    <title>Tickets — Heivoli Network</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="profile-page">
+    <div class="page-glow glow-one" aria-hidden="true"></div>
+    <div class="page-glow glow-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Heivoli Network — accueil"><span class="brand-mark" aria-hidden="true">H</span><span>Heivoli <strong>Network</strong></span></a>
+      <nav class="site-nav profile-nav" aria-label="Navigation principale"><a href="index.html">Accueil</a><a class="is-current" href="tickets.html">Tickets</a><a href="profil.html">Mon compte</a></nav>
+    </header>
+
+    <main class="profile-shell section-shell">
+      <a class="back-link" href="index.html">← Retour à l’accueil</a>
+
+      <section id="tickets-locked" class="profile-gate">
+        <div class="account-orb" aria-hidden="true">?</div>
+        <p class="eyebrow"><span></span> Assistance privée</p>
+        <h1>Besoin d’un<br /><em>coup de main ?</em></h1>
+        <p>Connecte-toi avec Google pour ouvrir un ticket et discuter en privé avec la modération.</p>
+        <button id="google-login" class="button button-primary" type="button"><span class="google-icon">G</span> Continuer avec Google</button>
+        <p id="auth-status" class="auth-status" aria-live="polite"></p>
+      </section>
+
+      <section id="tickets-content" class="tickets-panel" hidden>
+        <div class="tickets-heading">
+          <div><p class="eyebrow"><span></span> Assistance privée</p><h1>Mes<br /><em>tickets.</em></h1></div>
+          <div class="profile-actions"><span id="moderator-badge" class="creator-badge" hidden>✦ Modération</span><button id="sign-out" class="button button-quiet" type="button">Se déconnecter</button></div>
+        </div>
+
+        <div class="tickets-workspace">
+          <aside class="tickets-sidebar">
+            <form id="ticket-form" class="ticket-form">
+              <h2>Ouvrir un ticket</h2>
+              <label for="ticket-subject">Sujet<input id="ticket-subject" maxlength="80" required placeholder="Ex. Question sur le serveur" /></label>
+              <label for="ticket-category">Catégorie<select id="ticket-category"><option>Question</option><option>Signalement</option><option>Partenariat</option><option>Autre</option></select></label>
+              <p id="ticket-create-status" class="auth-status" aria-live="polite"></p>
+              <button class="button button-primary" type="submit">Créer le ticket</button>
+            </form>
+            <div class="ticket-list-header"><h2 id="ticket-list-title">Mes tickets</h2><p id="ticket-list-note">Seuls toi et la modération peuvent les lire.</p></div>
+            <div id="ticket-list" class="ticket-list" aria-live="polite"></div>
+          </aside>
+
+          <section class="conversation-panel" aria-label="Discussion du ticket">
+            <div id="conversation-empty" class="conversation-empty"><span aria-hidden="true">✦</span><h2>Sélectionne un ticket</h2><p>Ta discussion privée avec la modération apparaîtra ici.</p></div>
+            <div id="conversation-content" hidden>
+              <div class="conversation-heading"><div><p id="conversation-category" class="eyebrow"><span></span> Ticket</p><h2 id="conversation-subject">Ticket</h2></div><button id="close-ticket" class="button button-quiet" type="button" hidden>Fermer le ticket</button></div>
+              <p id="conversation-status" class="ticket-state"></p>
+              <div id="message-list" class="message-list" aria-live="polite"></div>
+              <form id="message-form" class="message-form">
+                <label class="sr-only" for="message-text">Ton message</label>
+                <textarea id="message-text" maxlength="800" required placeholder="Écris ton message…"></textarea>
+                <div class="message-form-footer"><p id="message-status" class="auth-status" aria-live="polite"></p><button id="message-submit" class="button button-primary" type="submit">Envoyer</button></div>
+              </form>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="tickets.js"></script>
+  </body>
+</html>

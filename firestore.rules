@@ -14,6 +14,14 @@ service cloud.firestore {
       return isFounder() || exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
     }
 
+    function ownsTicket(ticketId) {
+      return signedIn() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.creatorId == request.auth.uid;
+    }
+
+    function ticketIsOpen(ticketId) {
+      return get(/databases/$(database)/documents/tickets/$(ticketId)).data.status == "open";
+    }
+
     match /announcements/{announcement} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
@@ -23,6 +31,28 @@ service cloud.firestore {
       allow get: if signedIn() && (isFounder() || request.auth.token.email == email);
       allow list: if isFounder();
       allow create, update, delete: if isFounder();
+    }
+
+    match /tickets/{ticketId} {
+      allow create: if signedIn()
+        && request.resource.data.creatorId == request.auth.uid
+        && request.resource.data.status == "open";
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.creatorId == request.auth.uid);
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.creatorId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["updatedAt"]));
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow get, list: if isAdmin() || ownsTicket(ticketId);
+        allow create: if (isAdmin() || ownsTicket(ticketId))
+          && ticketIsOpen(ticketId)
+          && request.resource.data.authorId == request.auth.uid
+          && (isAdmin() || request.resource.data.authorIsModerator == false);
+        allow update, delete: if isAdmin();
+      }
     }
   }
 }
