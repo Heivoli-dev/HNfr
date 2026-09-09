@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Heivoli Network, la communauté Discord autour de l'univers Nintendo."
+    />
+    <meta name="theme-color" content="#071a3d" />
+    <title>Heivoli Network — Communauté Nintendo</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-glow glow-one" aria-hidden="true"></div>
+    <div class="page-glow glow-two" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#accueil" aria-label="Heivoli Network — accueil">
+        <span class="brand-mark" aria-hidden="true">H</span>
+        <span>Heivoli <strong>Network</strong></span>
+      </a>
+
+      <button class="menu-button" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span class="sr-only">Ouvrir le menu</span>
+        <span></span><span></span>
+      </button>
+
+      <nav id="site-nav" class="site-nav" aria-label="Navigation principale">
+        <a href="#accueil">Accueil</a>
+        <a href="#annonces">Annonces</a>
+        <a href="#communaute">Communauté</a>
+        <a href="#compte">Mon compte</a>
+      </nav>
+      <button class="button button-small account-trigger" type="button">Connexion</button>
+    </header>
+
+    <main>
+      <section id="accueil" class="hero section-shell">
+        <div class="hero-copy">
+          <p class="eyebrow"><span></span> Communauté Discord</p>
+          <h1>Le terrain de jeu<br />de la <em>team Nintendo.</em></h1>
+          <p class="hero-text">
+            Des discussions, des événements et une communauté bienveillante pour partager la passion Nintendo, ensemble.
+          </p>
+          <div class="hero-actions">
+            <button class="button button-primary discord-trigger" type="button">
+              Rejoindre le Discord <span aria-hidden="true">↗</span>
+            </button>
+            <a class="button button-quiet" href="#annonces">Voir les annonces</a>
+          </div>
+          <div class="member-proof" aria-label="Communauté active">
+            <div class="avatar-stack" aria-hidden="true">
+              <span class="avatar avatar-a"></span><span class="avatar avatar-b"></span>
+              <span class="avatar avatar-c"></span><span class="avatar avatar-d"></span>
+            </div>
+            <p><strong>Une communauté qui grandit.</strong><br />Prêt·e à nous rejoindre ?</p>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-label="Univers Heivoli Network">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <div class="game-card card-back"><span>HN</span></div>
+          <div class="game-card card-main">
+            <div class="card-topline"><span class="status-dot"></span> HEIVOLI ONLINE</div>
+            <div class="card-symbol">✦</div>
+            <p>PLAY<br /><strong>TOGETHER</strong></p>
+            <div class="card-footer"><span>NETWORK</span><span>01</span></div>
+          </div>
+          <div class="floating-chip chip-one">EVENTS</div>
+          <div class="floating-chip chip-two">FR • EU</div>
+        </div>
+      </section>
+
+      <section id="annonces" class="section-shell announcements-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow"><span></span> À la une</p>
+            <h2>Les dernières<br /><em>annonces.</em></h2>
+          </div>
+          <p>Ne rate rien de la vie du serveur : événements, nouveautés et rendez-vous de la communauté.</p>
+        </div>
+        <div id="announcements-list" class="announcement-grid" aria-live="polite"></div>
+      </section>
+
+      <section id="communaute" class="section-shell community-section">
+        <div class="community-card">
+          <div>
+            <p class="eyebrow"><span></span> Le serveur</p>
+            <h2>Une communauté,<br /><em>sans pression.</em></h2>
+            <p>
+              Ici, on vient pour partager ses découvertes, organiser des parties et rencontrer des personnes qui aiment le même univers.
+            </p>
+            <button class="text-link discord-trigger" type="button">Découvrir le Discord <span aria-hidden="true">→</span></button>
+          </div>
+          <ul class="community-points">
+            <li><span>01</span><div><strong>Discuter</strong><p>Un espace simple pour échanger au quotidien.</p></div></li>
+            <li><span>02</span><div><strong>Jouer</strong><p>Des salons pour trouver des partenaires de jeu.</p></div></li>
+            <li><span>03</span><div><strong>Participer</strong><p>Des événements et défis imaginés par la communauté.</p></div></li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="compte" class="section-shell account-section">
+        <div class="account-card">
+          <div class="account-orb" aria-hidden="true">H</div>
+          <div>
+            <p class="eyebrow"><span></span> Espace membre</p>
+            <h2>Ton compte<br /><em>arrive bientôt.</em></h2>
+            <p>
+              La connexion Discord et Google sera ajoutée avec le futur bot Heivoli. Elle permettra de relier ton profil au serveur en toute sécurité.
+            </p>
+          </div>
+          <div class="login-options" aria-label="Méthodes de connexion à venir">
+            <button class="login-button account-trigger" type="button"><span class="discord-icon">⌁</span> Continuer avec Discord</button>
+            <button class="login-button account-trigger" type="button"><span class="google-icon">G</span> Continuer avec Google</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer section-shell">
+      <a class="brand" href="#accueil"><span class="brand-mark" aria-hidden="true">H</span><span>Heivoli <strong>Network</strong></span></a>
+      <p>Une communauté indépendante, créée par des fans. Non affiliée à Nintendo.</p>
+      <p>© <span id="year"></span> Heivoli Network</p>
+    </footer>
+
+    <dialog id="notice-modal" class="notice-modal" aria-labelledby="modal-title">
+      <button class="modal-close" type="button" aria-label="Fermer">×</button>
+      <p class="eyebrow"><span></span> Heivoli Network</p>
+      <h2 id="modal-title">À très vite.</h2>
+      <p id="modal-message"></p>
+      <a id="modal-action" class="button button-primary" href="#" target="_blank" rel="noreferrer">Ouvrir Discord <span aria-hidden="true">↗</span></a>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>
