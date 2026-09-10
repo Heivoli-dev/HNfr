@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="fr">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self'; img-src 'self' https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com https://cdn.discordapp.com; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://heivoli-network-408f3.firebaseapp.com; frame-src https://heivoli-network-408f3.firebaseapp.com https://accounts.google.com; base-uri 'none'; object-src 'none'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self'; img-src 'self' data: https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com https://cdn.discordapp.com; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://heivoli-network-408f3.firebaseapp.com; frame-src https://heivoli-network-408f3.firebaseapp.com https://accounts.google.com; base-uri 'none'; object-src 'none'; form-action 'self'; upgrade-insecure-requests" />
     <meta name="referrer" content="no-referrer" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -32,6 +32,7 @@
           <div class="form-row"><label>Catégorie<select id="announcement-type"><option>Bienvenue</option><option>Événement</option><option>Communauté</option><option>Important</option></select></label><label>Date affichée<input id="announcement-date" maxlength="32" value="Aujourd'hui" required /></label></div>
           <label>Titre<input id="announcement-title" maxlength="80" required placeholder="Titre de l’annonce" /></label>
           <label>Message<textarea id="announcement-text" maxlength="320" required placeholder="Écris ton annonce ici…"></textarea></label>
+          <label>Illustration (facultatif)<input id="announcement-image" type="file" accept="image/png,image/jpeg,image/webp" /><small class="form-hint">PNG, JPG ou WebP. L’image sera automatiquement réduite.</small></label>
           <label class="featured-choice"><input id="announcement-featured" type="checkbox" /> Mettre cette annonce en avant</label>
           <div class="profile-form-footer"><span id="admin-status" class="auth-status" aria-live="polite"></span><button class="button button-primary" type="submit">Publier l’annonce</button></div>
         </form>

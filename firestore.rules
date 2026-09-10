@@ -26,10 +26,15 @@ service cloud.firestore {
     function validAnnouncement() {
       let d = request.resource.data;
       return d.keys().hasAll(['type', 'title', 'text', 'date', 'featured', 'createdAt'])
-        && d.keys().hasOnly(['type', 'title', 'text', 'date', 'featured', 'createdAt'])
+        && d.keys().hasOnly(['type', 'title', 'text', 'date', 'featured', 'createdAt', 'imageData'])
         && d.type in ['Bienvenue', 'Événement', 'Communauté', 'Important']
         && text(d.title, 1, 80) && text(d.text, 1, 320) && text(d.date, 1, 32)
-        && d.featured is bool;
+        && d.featured is bool
+        && (!d.keys().hasAny(['imageData']) || (
+          d.imageData is string
+          && d.imageData.size() <= 240000
+          && (d.imageData == '' || d.imageData.matches('^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$'))
+        ));
     }
     match /announcements/{announcement} {
       allow read: if true;

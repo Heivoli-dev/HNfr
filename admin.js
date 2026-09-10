@@ -23,6 +23,7 @@ const adminContent = document.querySelector("#admin-content");
 const googleButton = document.querySelector("#google-login");
 const authStatus = document.querySelector("#auth-status");
 const form = document.querySelector("#announcement-form");
+const imageInput = document.querySelector("#announcement-image");
 const adminStatus = document.querySelector("#admin-status");
 const announcementList = document.querySelector("#admin-announcements");
 const adminManagement = document.querySelector("#admin-management");
@@ -49,6 +50,14 @@ function renderAnnouncements(snapshot) {
     title.textContent = data.title;
     const meta = document.createElement("p");
     meta.textContent = `${data.type} · ${data.date}`;
+    if (typeof data.imageData === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(data.imageData)) {
+      const image = document.createElement("img");
+      image.className = "admin-announcement-image";
+      image.src = data.imageData;
+      image.alt = data.title ? `Illustration : ${data.title}` : "Illustration de l’annonce";
+      image.loading = "lazy";
+      copy.append(image);
+    }
     copy.append(title, meta);
     const remove = document.createElement("button");
     remove.type = "button";
@@ -60,6 +69,37 @@ function renderAnnouncements(snapshot) {
     });
     row.append(copy, remove);
     announcementList.append(row);
+  });
+}
+
+function prepareAnnouncementImage(file) {
+  if (!file) return Promise.resolve("");
+  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) return Promise.reject(new Error("format"));
+  if (file.size > 8 * 1024 * 1024) return Promise.reject(new Error("size"));
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read"));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("image"));
+      image.onload = () => {
+        const scale = Math.min(1, 1200 / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        let quality = 0.82;
+        let output = canvas.toDataURL("image/jpeg", quality);
+        while (output.length > 235000 && quality > 0.42) {
+          quality -= 0.08;
+          output = canvas.toDataURL("image/jpeg", quality);
+        }
+        if (output.length > 240000) reject(new Error("too-large"));
+        else resolve(output);
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
   });
 }
 
@@ -102,13 +142,23 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!isAdmin) return;
   adminStatus.textContent = "Publication…";
+  let imageData = "";
   try {
+    adminStatus.textContent = imageInput.files[0] ? "Préparation de l’image…" : "Publication…";
+    imageData = await prepareAnnouncementImage(imageInput.files[0]);
+  } catch {
+    adminStatus.textContent = "Image invalide ou trop lourde : choisis un PNG, JPG ou WebP plus léger.";
+    return;
+  }
+  try {
+    adminStatus.textContent = "Publication…";
     await addDoc(collection(db, "announcements"), {
       type: document.querySelector("#announcement-type").value,
       title: document.querySelector("#announcement-title").value.trim(),
       text: document.querySelector("#announcement-text").value.trim(),
       date: document.querySelector("#announcement-date").value.trim(),
       featured: document.querySelector("#announcement-featured").checked,
+      imageData,
       createdAt: serverTimestamp(),
     });
     form.reset();

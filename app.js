@@ -27,6 +27,14 @@ function renderAnnouncements(items) {
   for (const announcement of items) {
     const article = document.createElement("article");
     article.className = announcement.featured ? "announcement featured" : "announcement";
+    if (typeof announcement.imageData === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(announcement.imageData)) {
+      const image = document.createElement("img");
+      image.className = "announcement-image";
+      image.src = announcement.imageData;
+      image.alt = announcement.title ? `Illustration : ${announcement.title}` : "Illustration de l’annonce";
+      image.loading = "lazy";
+      article.append(image);
+    }
     for (const [tag, className, value] of [
       ["p", "announcement-type", announcement.type],
       ["h3", "", announcement.title],
