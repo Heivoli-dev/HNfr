@@ -59,15 +59,19 @@ function renderAnnouncements(snapshot) {
       copy.append(image);
     }
     copy.append(title, meta);
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "remove-announcement";
-    remove.textContent = "Supprimer";
-    remove.addEventListener("click", async () => {
-      if (!confirm(`Supprimer « ${data.title} » ?`)) return;
-      await deleteDoc(doc(db, "announcements", item.id));
-    });
-    row.append(copy, remove);
+    if (isFounder) {
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "remove-announcement";
+      remove.textContent = "Supprimer";
+      remove.addEventListener("click", async () => {
+        if (!confirm(`Supprimer « ${data.title} » ?`)) return;
+        await deleteDoc(doc(db, "announcements", item.id));
+      });
+      row.append(copy, remove);
+    } else {
+      row.append(copy);
+    }
     announcementList.append(row);
   });
 }
@@ -140,7 +144,7 @@ document.querySelector("#sign-out").addEventListener("click", () => signOut(auth
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!isAdmin) return;
+  if (!isFounder) return;
   adminStatus.textContent = "Publication…";
   let imageData = "";
   try {
@@ -209,6 +213,7 @@ onAuthStateChanged(auth, async (user) => {
   isAdmin = adminRole;
   lockedPanel.hidden = isAdmin;
   adminContent.hidden = !isAdmin;
+  form.hidden = !isFounder;
   adminManagement.hidden = !isFounder;
   if (isFounder) startAdminList();
   if (!user) {

@@ -38,9 +38,9 @@ service cloud.firestore {
     }
     match /announcements/{announcement} {
       allow read: if true;
-      allow create: if isAdmin() && validAnnouncement() && request.resource.data.createdAt == request.time;
-      allow update: if isAdmin() && validAnnouncement() && request.resource.data.createdAt == resource.data.createdAt;
-      allow delete: if isAdmin();
+      allow create: if isFounder() && validAnnouncement() && request.resource.data.createdAt == request.time;
+      allow update: if isFounder() && validAnnouncement() && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isFounder();
     }
     match /admins/{id} {
       allow get: if signedIn() && (isFounder()

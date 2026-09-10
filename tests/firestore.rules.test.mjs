@@ -25,7 +25,7 @@ test('unverified founder and administrator emails never grant privileges', async
   await assertFails(setDoc(doc(founder(false), 'admins/bob@example.com'), { email: 'bob@example.com', createdAt: serverTimestamp() }));
   await assertSucceeds(setDoc(doc(founder(), 'admins/bob@example.com'), { email: 'bob@example.com', createdAt: serverTimestamp() }));
   await assertFails(setDoc(doc(user('bob', { email: 'bob@example.com', email_verified: false }), 'announcements/a'), announcement));
-  await assertSucceeds(setDoc(doc(user('bob', { email: 'bob@example.com', email_verified: true }), 'announcements/a'), announcement));
+  await assertFails(setDoc(doc(user('bob', { email: 'bob@example.com', email_verified: true }), 'announcements/a'), announcement));
   await assertFails(setDoc(doc(user('bob'), 'admins/bob'), { email: 'bob', createdAt: serverTimestamp() }));
 });
 test('ticket creation rejects forged ownership, unexpected fields, invalid sizes and timestamps', async () => {
@@ -50,9 +50,11 @@ test('messages protect privacy and reject impersonation, edits and closed-ticket
   await assertSucceeds(updateDoc(doc(founder(), 'tickets/t1'), { status: 'closed', updatedAt: serverTimestamp() }));
   await assertFails(setDoc(doc(user(), 'tickets/t1/messages/closed'), message()));
 });
-test('announcements are public but validated and writable only by administrators', async () => {
+test('announcements are public but writable only by the founder', async () => {
   await assertFails(setDoc(doc(user(), 'announcements/a'), announcement));
   await assertSucceeds(setDoc(doc(founder(), 'announcements/a'), announcement));
+  await assertSucceeds(setDoc(doc(founder(), 'admins/admin@example.com'), { email: 'admin@example.com', createdAt: serverTimestamp() }));
+  await assertFails(setDoc(doc(user('admin', { email: 'admin@example.com', email_verified: true }), 'announcements/b'), announcement));
   await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(), 'announcements/a')));
   await assertFails(setDoc(doc(founder(), 'announcements/b'), { ...announcement, text: 'x'.repeat(321) }));
 });

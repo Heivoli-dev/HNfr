@@ -28,7 +28,7 @@
 
       <section id="admin-content" class="admin-panel" hidden>
         <div class="admin-heading"><div><p class="eyebrow"><span></span> Administration</p><h1>Les<br /><em>annonces.</em></h1></div><button id="sign-out" class="button button-quiet" type="button">Se déconnecter</button></div>
-        <form id="announcement-form" class="admin-form">
+        <form id="announcement-form" class="admin-form" hidden>
           <div class="form-row"><label>Catégorie<select id="announcement-type"><option>Bienvenue</option><option>Événement</option><option>Communauté</option><option>Important</option></select></label><label>Date affichée<input id="announcement-date" maxlength="32" value="Aujourd'hui" required /></label></div>
           <label>Titre<input id="announcement-title" maxlength="80" required placeholder="Titre de l’annonce" /></label>
           <label>Message<textarea id="announcement-text" maxlength="320" required placeholder="Écris ton annonce ici…"></textarea></label>
@@ -42,7 +42,7 @@
           <p id="admin-management-status" class="auth-status" aria-live="polite"></p>
           <div id="admin-list" class="admin-announcements"></div>
         </section>
-        <div class="admin-list-heading"><h2>Annonces publiées</h2><p>Supprime une annonce si elle n’est plus d’actualité.</p></div>
+        <div class="admin-list-heading"><h2>Annonces publiées</h2><p id="announcement-list-note">Seul le fondateur peut publier ou supprimer une annonce.</p></div>
         <div id="admin-announcements" class="admin-announcements"></div>
       </section>
     </main>

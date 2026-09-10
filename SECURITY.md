@@ -10,6 +10,8 @@ présent dans ce dépôt, pas sur les comptes et configurations des fournisseurs
 - Les droits fondateur et administrateur exigent une adresse e-mail vérifiée.
   Les autorisations utilisent les documents `admins/{email}` comme l’interface ;
   les anciens documents nommés par UID ne donnent plus de privilèges.
+- Les administrateurs peuvent gérer les tickets, mais seuls le fondateur peut
+  créer, modifier ou supprimer les annonces.
 - Firestore contrôle les champs autorisés, leurs types et longueurs, les auteurs,
   les catégories et les dates serveur. Les propriétaires de tickets ne peuvent
   pas modifier leur identité, leur statut ou les messages déjà envoyés.
