@@ -23,7 +23,6 @@ const adminContent = document.querySelector("#admin-content");
 const googleButton = document.querySelector("#google-login");
 const authStatus = document.querySelector("#auth-status");
 const form = document.querySelector("#announcement-form");
-const imageInput = document.querySelector("#announcement-image");
 const adminStatus = document.querySelector("#admin-status");
 const announcementList = document.querySelector("#admin-announcements");
 const adminManagement = document.querySelector("#admin-management");
@@ -50,14 +49,6 @@ function renderAnnouncements(snapshot) {
     title.textContent = data.title;
     const meta = document.createElement("p");
     meta.textContent = `${data.type} · ${data.date}`;
-    if (typeof data.imageData === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(data.imageData)) {
-      const image = document.createElement("img");
-      image.className = "admin-announcement-image";
-      image.src = data.imageData;
-      image.alt = data.title ? `Illustration : ${data.title}` : "Illustration de l’annonce";
-      image.loading = "lazy";
-      copy.append(image);
-    }
     copy.append(title, meta);
     if (isFounder) {
       const remove = document.createElement("button");
@@ -73,37 +64,6 @@ function renderAnnouncements(snapshot) {
       row.append(copy);
     }
     announcementList.append(row);
-  });
-}
-
-function prepareAnnouncementImage(file) {
-  if (!file) return Promise.resolve("");
-  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) return Promise.reject(new Error("format"));
-  if (file.size > 8 * 1024 * 1024) return Promise.reject(new Error("size"));
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("read"));
-    reader.onload = () => {
-      const image = new Image();
-      image.onerror = () => reject(new Error("image"));
-      image.onload = () => {
-        const scale = Math.min(1, 1200 / Math.max(image.naturalWidth, image.naturalHeight));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
-        let quality = 0.82;
-        let output = canvas.toDataURL("image/jpeg", quality);
-        while (output.length > 235000 && quality > 0.42) {
-          quality -= 0.08;
-          output = canvas.toDataURL("image/jpeg", quality);
-        }
-        if (output.length > 240000) reject(new Error("too-large"));
-        else resolve(output);
-      };
-      image.src = reader.result;
-    };
-    reader.readAsDataURL(file);
   });
 }
 
@@ -146,14 +106,6 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!isFounder) return;
   adminStatus.textContent = "Publication…";
-  let imageData = "";
-  try {
-    adminStatus.textContent = imageInput.files[0] ? "Préparation de l’image…" : "Publication…";
-    imageData = await prepareAnnouncementImage(imageInput.files[0]);
-  } catch {
-    adminStatus.textContent = "Image invalide ou trop lourde : choisis un PNG, JPG ou WebP plus léger.";
-    return;
-  }
   try {
     adminStatus.textContent = "Publication…";
     await addDoc(collection(db, "announcements"), {
@@ -162,16 +114,20 @@ form.addEventListener("submit", async (event) => {
       text: document.querySelector("#announcement-text").value.trim(),
       date: document.querySelector("#announcement-date").value.trim(),
       featured: document.querySelector("#announcement-featured").checked,
-      imageData,
       createdAt: serverTimestamp(),
     });
     form.reset();
     document.querySelector("#announcement-date").value = "Aujourd'hui";
     adminStatus.textContent = "Annonce publiée.";
   } catch {
-    adminStatus.textContent = isFounder
-      ? "Publication bloquée par Firebase : vérifie que les règles Firestore publiées correspondent à cette version."
-      : "Publication réservée au fondateur du site.";
+    const signedInEmail = auth.currentUser?.email?.toLowerCase() || "";
+    if (signedInEmail === CREATOR_EMAIL && !auth.currentUser?.emailVerified) {
+      adminStatus.textContent = "Cette adresse fondatrice doit être vérifiée dans Firebase avant de publier.";
+    } else if (signedInEmail !== CREATOR_EMAIL) {
+      adminStatus.textContent = "Publication réservée au compte fondateur configuré dans le site.";
+    } else {
+      adminStatus.textContent = "Publication bloquée par Firebase : publie les règles Firestore à jour puis reconnecte-toi.";
+    }
   }
 });
 
@@ -221,6 +177,9 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) {
     googleButton.hidden = false;
     return;
+  }
+  if (email === CREATOR_EMAIL && !user.emailVerified) {
+    authStatus.textContent = "Adresse fondatrice non vérifiée : vérifie-la dans Firebase Authentication.";
   }
   if (!isAdmin) {
     authStatus.textContent = "Ce compte n’est pas autorisé à accéder à l’administration.";
