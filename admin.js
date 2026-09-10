@@ -169,7 +169,9 @@ form.addEventListener("submit", async (event) => {
     document.querySelector("#announcement-date").value = "Aujourd'hui";
     adminStatus.textContent = "Annonce publiée.";
   } catch {
-    adminStatus.textContent = "Publication bloquée : vérifie les règles Firebase.";
+    adminStatus.textContent = isFounder
+      ? "Publication bloquée par Firebase : vérifie que les règles Firestore publiées correspondent à cette version."
+      : "Publication réservée au fondateur du site.";
   }
 });
 
