@@ -1,5 +1,7 @@
+import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
-import { GoogleAuthProvider, getAuth, getRedirectResult, onAuthStateChanged, signInWithCustomToken, signInWithRedirect, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { GoogleAuthProvider, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { setupGoogleLogin } from "./google-login.js";
 import { doc, getDoc, getFirestore } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -15,9 +17,9 @@ const DISCORD_LOGIN_URL = "https://heivoli-discord-auth.heivoli-discord-auth.wor
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
+await setPersistence(auth, browserSessionPersistence);
 const db = getFirestore(firebaseApp);
 const provider = new GoogleAuthProvider();
-provider.setCustomParameters({ prompt: "select_account" });
 const lockedProfile = document.querySelector("#profile-locked");
 const profileContent = document.querySelector("#profile-content");
 const googleButton = document.querySelector("#google-login");
@@ -38,18 +40,8 @@ function updateDescriptionCount() {
   descriptionCount.textContent = `${profileDescription.value.length} / 280`;
 }
 
-function showAuthError(error) {
-  const messages = {
-    "auth/operation-not-allowed": "La connexion Google doit être activée dans Firebase.",
-    "auth/unauthorized-domain": "Ce domaine doit être ajouté aux domaines autorisés dans Firebase.",
-  };
-  authStatus.textContent = messages[error.code] || "La connexion n’a pas pu aboutir. Réessaie dans un instant.";
-  googleButton.disabled = false;
-}
-
 async function finishDiscordLogin() {
-  const params = new URLSearchParams(window.location.hash.slice(1));
-  const customToken = params.get("discordToken");
+  const customToken = consumeDiscordToken();
   if (!customToken) return;
   history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
   authStatus.textContent = "Connexion Discord en cours…";
@@ -66,21 +58,12 @@ async function finishDiscordLogin() {
   }
 }
 
-googleButton.addEventListener("click", async () => {
-  googleButton.disabled = true;
-  googleButton.textContent = "Connexion en cours…";
-  try {
-    await signInWithRedirect(auth, provider);
-  } catch (error) {
-    showAuthError(error);
-  }
-});
+setupGoogleLogin({ auth, provider, button: googleButton, status: authStatus, signInWithPopup });
 
 discordButton.addEventListener("click", () => {
-  window.location.assign(DISCORD_LOGIN_URL);
+  beginDiscordLogin(DISCORD_LOGIN_URL);
 });
 
-getRedirectResult(auth).catch(showAuthError);
 finishDiscordLogin();
 document.querySelector("#sign-out").addEventListener("click", () => signOut(auth));
 
@@ -97,6 +80,10 @@ onAuthStateChanged(auth, async (user) => {
   lockedProfile.hidden = Boolean(user);
   profileContent.hidden = !user;
   if (!user) {
+    profileName.textContent = "";
+    profileEmail.textContent = "";
+    profileDescription.value = "";
+    profilePhoto.removeAttribute("src");
     profileBadge.hidden = true;
     adminLink.hidden = true;
     return;
@@ -105,6 +92,7 @@ onAuthStateChanged(auth, async (user) => {
   const name = user.displayName || user.email || "Membre";
   profileName.textContent = name;
   const tokenClaims = (await user.getIdTokenResult()).claims;
+  if (auth.currentUser !== user) return;
   const isDiscordAccount = Boolean(tokenClaims.discordId);
   profileEmail.textContent = isDiscordAccount ? "Compte Discord" : (user.email || "Compte Google");
   profileInitial.textContent = name.charAt(0).toUpperCase();
@@ -112,7 +100,7 @@ onAuthStateChanged(auth, async (user) => {
   profilePhoto.hidden = !user.photoURL;
   profilePhoto.src = user.photoURL || "";
   profileDescription.value = localStorage.getItem(`heivoli-profile-${user.uid}`) || "";
-  const email = isDiscordAccount ? "" : (user.email?.toLowerCase() || "");
+  const email = !user.emailVerified || isDiscordAccount ? "" : (user.email?.toLowerCase() || "");
   const isCreator = email === CREATOR_EMAIL;
   let isAdmin = isCreator;
   if (!isAdmin && email) {
@@ -122,6 +110,7 @@ onAuthStateChanged(auth, async (user) => {
       isAdmin = false;
     }
   }
+  if (auth.currentUser !== user) return;
   profileBadge.hidden = !isAdmin;
   profileBadge.textContent = isCreator ? "✦ Fondateur" : "✦ Administrateur";
   adminLink.hidden = !isAdmin;

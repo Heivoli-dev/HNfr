@@ -2,3 +2,13 @@ functions/node_modules/
 functions/.env*
 discord-worker/node_modules/
 discord-worker/.dev.vars*
+node_modules/
+.env
+.env.*
+*.pem
+*.key
+*service-account*.json
+*serviceAccount*.json
+firebase-debug.log*
+firestore-debug.log*
+.wrangler/

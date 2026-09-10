@@ -1,5 +1,7 @@
+import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
-import { GoogleAuthProvider, getAuth, getRedirectResult, onAuthStateChanged, signInWithCustomToken, signInWithRedirect, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { GoogleAuthProvider, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { setupGoogleLogin } from "./google-login.js";
 import { addDoc, collection, doc, getDoc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
@@ -15,6 +17,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+await setPersistence(auth, browserSessionPersistence);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 const locked = document.querySelector("#tickets-locked");
@@ -51,18 +54,8 @@ function formatDate(timestamp) {
   return timestamp.toDate().toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-function showAuthError(error) {
-  const messages = {
-    "auth/operation-not-allowed": "La connexion Google doit être activée dans Firebase.",
-    "auth/unauthorized-domain": "Ce domaine doit être ajouté aux domaines autorisés dans Firebase.",
-  };
-  authStatus.textContent = messages[error.code] || "La connexion n’a pas pu aboutir. Réessaie dans un instant.";
-  googleButton.disabled = false;
-}
-
 async function finishDiscordLogin() {
-  const params = new URLSearchParams(window.location.hash.slice(1));
-  const customToken = params.get("discordToken");
+  const customToken = consumeDiscordToken();
   if (!customToken) return;
   history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
   authStatus.textContent = "Connexion Discord en cours…";
@@ -141,7 +134,7 @@ function renderTickets(snapshot) {
   }
   let matchingSelected = null;
   snapshot.forEach((item) => {
-    const data = { id: item.id, ...item.data() };
+    const data = { ...item.data(), id: item.id };
     if (selectedTicket?.id === item.id) matchingSelected = data;
     const button = document.createElement("button");
     button.type = "button";
@@ -167,21 +160,12 @@ function listenToTickets() {
   });
 }
 
-googleButton.addEventListener("click", async () => {
-  googleButton.disabled = true;
-  googleButton.textContent = "Connexion en cours…";
-  try {
-    await signInWithRedirect(auth, provider);
-  } catch (error) {
-    showAuthError(error);
-  }
-});
+setupGoogleLogin({ auth, provider, button: googleButton, status: authStatus, signInWithPopup });
 
 discordButton.addEventListener("click", () => {
-  window.location.assign(DISCORD_LOGIN_URL);
+  beginDiscordLogin(DISCORD_LOGIN_URL);
 });
 
-getRedirectResult(auth).catch(showAuthError);
 finishDiscordLogin();
 document.querySelector("#sign-out").addEventListener("click", () => signOut(auth));
 
@@ -192,7 +176,7 @@ ticketForm.addEventListener("submit", async (event) => {
   try {
     const ticket = await addDoc(collection(db, "tickets"), {
       creatorId: currentUser.uid,
-      creatorName: currentUser.displayName || "Membre Heivoli",
+      creatorName: (currentUser.displayName || "Membre Heivoli").slice(0, 120),
       creatorEmail: currentUser.email || "",
       subject: document.querySelector("#ticket-subject").value.trim(),
       category: document.querySelector("#ticket-category").value,
@@ -217,7 +201,7 @@ messageForm.addEventListener("submit", async (event) => {
   try {
     await addDoc(collection(db, "tickets", selectedTicket.id, "messages"), {
       authorId: currentUser.uid,
-      authorName: currentUser.displayName || currentUser.email || "Membre Heivoli",
+      authorName: (currentUser.displayName || currentUser.email || "Membre Heivoli").slice(0, 120),
       authorIsModerator: isModerator,
       text,
       createdAt: serverTimestamp(),
@@ -241,6 +225,12 @@ closeTicket.addEventListener("click", async () => {
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
+  isModerator = false;
+  ticketList.replaceChildren();
+  messageList.replaceChildren();
+  messageText.value = "";
+  conversationSubject.textContent = "";
+  conversationContent.hidden = true;
   if (stopTickets) stopTickets();
   if (stopMessages) stopMessages();
   stopTickets = null;
@@ -248,18 +238,21 @@ onAuthStateChanged(auth, async (user) => {
   selectedTicket = null;
   locked.hidden = Boolean(user);
   content.hidden = !user;
+  moderatorBadge.hidden = true;
   if (!user) return;
 
   const tokenClaims = (await user.getIdTokenResult()).claims;
-  const email = tokenClaims.discordId ? "" : (user.email?.toLowerCase() || "");
-  isModerator = email === CREATOR_EMAIL;
-  if (!isModerator && email) {
+  const email = !user.emailVerified || tokenClaims.discordId ? "" : (user.email?.toLowerCase() || "");
+  let moderatorRole = email === CREATOR_EMAIL;
+  if (!moderatorRole && email) {
     try {
-      isModerator = (await getDoc(doc(db, "admins", email))).exists();
+      moderatorRole = (await getDoc(doc(db, "admins", email))).exists();
     } catch {
-      isModerator = false;
+      moderatorRole = false;
     }
   }
+  if (auth.currentUser !== user) return;
+  isModerator = moderatorRole;
   moderatorBadge.hidden = !isModerator;
   ticketListTitle.textContent = isModerator ? "Tous les tickets" : "Mes tickets";
   ticketListNote.textContent = isModerator ? "Tu peux répondre aux membres et fermer un ticket." : "Seuls toi et la modération peuvent les lire.";

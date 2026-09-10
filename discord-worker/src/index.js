@@ -1,5 +1,5 @@
 const SITE_ORIGIN = "https://heivoli-network.fr";
-const COOKIE_NAME = "heivoli_discord_state";
+const COOKIE_NAME = "__Host-heivoli_discord_state";
 const FIREBASE_AUDIENCE = "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit";
 
 function getReturnPath(value) {
@@ -24,7 +24,7 @@ function privateKeyToBytes(privateKey) {
 
 function readCookie(request, name) {
   const item = (request.headers.get("Cookie") || "").split(";").map((value) => value.trim()).find((value) => value.startsWith(`${name}=`));
-  return item ? decodeURIComponent(item.slice(name.length + 1)) : "";
+  try { return item ? decodeURIComponent(item.slice(name.length + 1)) : ""; } catch { return ""; }
 }
 
 function sessionCookie(value) {
@@ -43,7 +43,7 @@ async function createFirebaseCustomToken(serviceAccount, uid, claims) {
     sub: serviceAccount.client_email,
     aud: FIREBASE_AUDIENCE,
     iat: now,
-    exp: now + 3600,
+    exp: now + 300,
     uid,
     claims,
   });
@@ -63,25 +63,27 @@ function error(message, status = 500) {
 }
 
 async function login(request, env) {
-  if (!env.DISCORD_CLIENT_SECRET || !env.DISCORD_BOT_TOKEN || !env.DISCORD_GUILD_ID || !env.FIREBASE_SERVICE_ACCOUNT) {
+  if (!env.DISCORD_CLIENT_ID || !env.DISCORD_CLIENT_SECRET || !env.DISCORD_BOT_TOKEN || !env.DISCORD_GUILD_ID || !env.FIREBASE_SERVICE_ACCOUNT) {
     return error("La connexion Discord est en cours de configuration.");
   }
   const state = base64Url(crypto.getRandomValues(new Uint8Array(32)));
   const requestUrl = new URL(request.url);
+  const clientState = requestUrl.searchParams.get("clientState");
+  if (!/^[a-f0-9]{64}$/.test(clientState || "")) return error("Demande de connexion invalide.", 400);
   const returnPath = getReturnPath(requestUrl.searchParams.get("returnTo"));
   const callbackUrl = `${requestUrl.origin}/callback`;
   const params = new URLSearchParams({
     client_id: env.DISCORD_CLIENT_ID,
     response_type: "code",
     redirect_uri: callbackUrl,
-    scope: "identify email guilds.join",
+    scope: "identify guilds.join",
     state,
   });
   return new Response(null, {
     status: 302,
     headers: {
       Location: `https://discord.com/oauth2/authorize?${params}`,
-      "Set-Cookie": sessionCookie(`${state}.${returnPath}`),
+      "Set-Cookie": sessionCookie(JSON.stringify([state, returnPath, clientState])),
     },
   });
 }
@@ -89,10 +91,13 @@ async function login(request, env) {
 async function callback(request, env) {
   const requestUrl = new URL(request.url);
   const saved = readCookie(request, COOKIE_NAME);
-  const separator = saved.indexOf(".");
-  const savedState = separator > 0 ? saved.slice(0, separator) : "";
-  const returnPath = separator > 0 ? saved.slice(separator + 1) : "/profil.html";
-  if (!requestUrl.searchParams.get("code") || !savedState || requestUrl.searchParams.get("state") !== savedState) {
+  let values;
+  try { values = JSON.parse(saved); } catch { values = []; }
+  const [savedState, returnPath, clientState, extra] = Array.isArray(values) ? values : [];
+  if (!requestUrl.searchParams.get("code") || !/^[A-Za-z0-9_-]{43}$/.test(savedState || "")
+    || !["/profil.html", "/tickets.html"].includes(returnPath)
+    || !/^[a-f0-9]{64}$/.test(clientState || "") || extra !== undefined
+    || requestUrl.searchParams.get("state") !== savedState) {
     return new Response("La demande de connexion Discord a expiré. Recommence depuis le site.", { status: 400, headers: { "Set-Cookie": clearCookie() } });
   }
 
@@ -111,6 +116,7 @@ async function callback(request, env) {
     const userResponse = await fetch("https://discord.com/api/users/@me", { headers: { Authorization: `Bearer ${tokens.access_token}` } });
     if (!userResponse.ok) throw new Error("Profil Discord indisponible.");
     const user = await userResponse.json();
+    if (!/^[0-9]{17,20}$/.test(user.id || "")) throw new Error("Invalid Discord identity");
     const joinResponse = await fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members/${user.id}`, {
       method: "PUT",
       headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`, "Content-Type": "application/json" },
@@ -120,14 +126,14 @@ async function callback(request, env) {
 
     const serviceAccount = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
     const name = user.global_name || user.username || "Membre Heivoli";
-    const avatar = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256` : "";
+    const avatar = typeof user.avatar === "string" && /^(a_)?[a-f0-9]{32}$/.test(user.avatar) ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256` : "";
     const customToken = await createFirebaseCustomToken(serviceAccount, `discord-${user.id}`, {
       discordId: user.id,
       discordName: name.slice(0, 120),
       discordAvatar: avatar,
     });
     const target = new URL(`${SITE_ORIGIN}${returnPath}`);
-    target.hash = `discordToken=${encodeURIComponent(customToken)}`;
+    target.hash = new URLSearchParams({ discordToken: customToken, clientState }).toString();
     return new Response(null, { status: 302, headers: { Location: target.toString(), "Set-Cookie": clearCookie() } });
   } catch {
     return new Response("La connexion Discord n’a pas pu aboutir. Réessaie dans un instant.", { status: 500, headers: { "Set-Cookie": clearCookie() } });
@@ -136,9 +142,24 @@ async function callback(request, env) {
 
 export default {
   async fetch(request, env) {
-    const pathname = new URL(request.url).pathname;
-    if (request.method === "GET" && pathname === "/login") return login(request, env);
-    if (request.method === "GET" && pathname === "/callback") return callback(request, env);
-    return new Response("Heivoli Discord authentication service", { status: 200 });
+    let response;
+    try {
+      const pathname = new URL(request.url).pathname;
+      if (request.method !== "GET") response = new Response("Method not allowed", { status: 405, headers: { Allow: "GET" } });
+      else if (pathname === "/login") response = await login(request, env);
+      else if (pathname === "/callback") response = await callback(request, env);
+      else response = error("Not found", 404);
+    } catch {
+      response = error("La connexion est temporairement indisponible.");
+    }
+    const headers = new Headers(response.headers);
+    headers.set("Cache-Control", "no-store");
+    headers.set("Pragma", "no-cache");
+    headers.set("Referrer-Policy", "no-referrer");
+    headers.set("X-Content-Type-Options", "nosniff");
+    headers.set("X-Frame-Options", "DENY");
+    headers.set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
+    headers.set("Strict-Transport-Security", "max-age=31536000");
+    return new Response(response.body, { status: response.status, headers });
   },
 };

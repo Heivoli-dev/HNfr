@@ -1,60 +1,86 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
+    function signedIn() { return request.auth != null; }
+    function verifiedEmail() {
+      return signedIn() && request.auth.token.get('email_verified', false) == true
+        && request.auth.token.get('email', '') is string
+        && request.auth.token.get('email', '') != '';
     }
-
     function isFounder() {
-      return signedIn() && request.auth.token.email == "heivolipro@gmail.com";
+      return verifiedEmail() && request.auth.token.email == 'heivolipro@gmail.com';
     }
-
     function isAdmin() {
-      return isFounder()
-        || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-        || (request.auth.token.email != null
-          && exists(/databases/$(database)/documents/admins/$(request.auth.token.email)));
+      return signedIn() && (isFounder()
+        || (verifiedEmail() && exists(/databases/$(database)/documents/admins/$(request.auth.token.email))));
     }
-
+    function text(value, min, max) {
+      return value is string && value.size() >= min && value.size() <= max;
+    }
     function ownsTicket(ticketId) {
       return signedIn() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.creatorId == request.auth.uid;
     }
-
     function ticketIsOpen(ticketId) {
-      return get(/databases/$(database)/documents/tickets/$(ticketId)).data.status == "open";
+      return get(/databases/$(database)/documents/tickets/$(ticketId)).data.status == 'open';
     }
-
+    function validAnnouncement() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['type', 'title', 'text', 'date', 'featured', 'createdAt'])
+        && d.keys().hasOnly(['type', 'title', 'text', 'date', 'featured', 'createdAt'])
+        && d.type in ['Bienvenue', 'Événement', 'Communauté', 'Important']
+        && text(d.title, 1, 80) && text(d.text, 1, 320) && text(d.date, 1, 32)
+        && d.featured is bool;
+    }
     match /announcements/{announcement} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin() && validAnnouncement() && request.resource.data.createdAt == request.time;
+      allow update: if isAdmin() && validAnnouncement() && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin();
     }
-
-    match /admins/{email} {
-      allow get: if signedIn() && (isFounder() || request.auth.token.email == email);
+    match /admins/{id} {
+      allow get: if signedIn() && (isFounder()
+        || (verifiedEmail() && request.auth.token.email == id));
       allow list: if isFounder();
-      allow create, update, delete: if isFounder();
+      allow create, update: if isFounder()
+        && request.resource.data.keys().hasAll(['email', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['email', 'createdAt'])
+        && text(request.resource.data.email, 3, 254)
+        && request.resource.data.email == id
+        && request.resource.data.createdAt == request.time;
+      allow delete: if isFounder();
     }
-
     match /tickets/{ticketId} {
       allow create: if signedIn()
+        && request.resource.data.keys().hasAll(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt'])
         && request.resource.data.creatorId == request.auth.uid
-        && request.resource.data.status == "open";
-      allow get, list: if isAdmin()
-        || (signedIn() && resource.data.creatorId == request.auth.uid);
-      allow update: if isAdmin()
-        || (signedIn()
-          && resource.data.creatorId == request.auth.uid
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["updatedAt"]));
+        && text(request.resource.data.creatorName, 1, 120)
+        && request.resource.data.creatorEmail == request.auth.token.get('email', '')
+        && text(request.resource.data.subject, 1, 80)
+        && request.resource.data.category in ['Question', 'Signalement', 'Partenariat', 'Autre']
+        && request.resource.data.status == 'open'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow get, list: if isAdmin() || (signedIn() && resource.data.creatorId == request.auth.uid);
+      allow update: if request.resource.data.updatedAt == request.time
+        && ((isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+          && request.resource.data.status in ['open', 'closed'])
+        || (signedIn() && resource.data.creatorId == request.auth.uid && resource.data.status == 'open'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['updatedAt'])));
       allow delete: if isAdmin();
-
       match /messages/{messageId} {
         allow get, list: if isAdmin() || ownsTicket(ticketId);
-        allow create: if (isAdmin() || ownsTicket(ticketId))
-          && ticketIsOpen(ticketId)
+        allow create: if signedIn() && (isAdmin() || ownsTicket(ticketId)) && ticketIsOpen(ticketId)
+          && request.resource.data.keys().hasAll(['authorId', 'authorName', 'authorIsModerator', 'text', 'createdAt'])
+          && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'authorIsModerator', 'text', 'createdAt'])
           && request.resource.data.authorId == request.auth.uid
-          && (isAdmin() || request.resource.data.authorIsModerator == false);
-        allow update, delete: if isAdmin();
+          && text(request.resource.data.authorName, 1, 120)
+          && request.resource.data.authorIsModerator == isAdmin()
+          && text(request.resource.data.text, 1, 800)
+          && request.resource.data.createdAt == request.time;
+        allow update: if false;
+        allow delete: if isAdmin();
       }
     }
   }

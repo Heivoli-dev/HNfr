@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
-import { GoogleAuthProvider, getAuth, getRedirectResult, onAuthStateChanged, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { GoogleAuthProvider, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { setupGoogleLogin } from "./google-login.js";
 import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
@@ -14,6 +15,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+await setPersistence(auth, browserSessionPersistence);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 const lockedPanel = document.querySelector("#admin-locked");
@@ -30,7 +32,7 @@ const adminManagementStatus = document.querySelector("#admin-management-status")
 const adminList = document.querySelector("#admin-list");
 let isAdmin = false;
 let isFounder = false;
-let adminListListening = false;
+let stopAdminList = null;
 
 function renderAnnouncements(snapshot) {
   announcementList.replaceChildren();
@@ -87,27 +89,13 @@ function renderAdmins(snapshot) {
 }
 
 function startAdminList() {
-  if (adminListListening) return;
-  adminListListening = true;
-  onSnapshot(query(collection(db, "admins"), orderBy("email", "asc")), renderAdmins, () => {
+  if (stopAdminList) return;
+  stopAdminList = onSnapshot(query(collection(db, "admins"), orderBy("email", "asc")), renderAdmins, () => {
     adminManagementStatus.textContent = "Impossible de charger les administrateurs : vérifie les règles Firebase.";
   });
 }
 
-googleButton.addEventListener("click", async () => {
-  googleButton.disabled = true;
-  googleButton.textContent = "Connexion en cours…";
-  try {
-    await signInWithRedirect(auth, provider);
-  } catch {
-    authStatus.textContent = "La connexion n’a pas pu aboutir. Réessaie dans un instant.";
-    googleButton.disabled = false;
-  }
-});
-
-getRedirectResult(auth).catch(() => {
-  authStatus.textContent = "La connexion n’a pas pu aboutir. Réessaie dans un instant.";
-});
+setupGoogleLogin({ auth, provider, button: googleButton, status: authStatus, signInWithPopup });
 document.querySelector("#sign-out").addEventListener("click", () => signOut(auth));
 
 form.addEventListener("submit", async (event) => {
@@ -150,16 +138,25 @@ adminAddForm.addEventListener("submit", async (event) => {
 });
 
 onAuthStateChanged(auth, async (user) => {
-  const email = user?.email?.toLowerCase() || "";
-  isFounder = email === CREATOR_EMAIL;
-  isAdmin = isFounder;
-  if (!isAdmin && email) {
+  if (stopAdminList) stopAdminList();
+  stopAdminList = null;
+  adminList.replaceChildren();
+  isAdmin = false;
+  isFounder = false;
+  adminContent.hidden = true;
+  const email = user?.emailVerified ? (user.email?.toLowerCase() || "") : "";
+  const founderRole = email === CREATOR_EMAIL;
+  let adminRole = founderRole;
+  if (!adminRole && email) {
     try {
-      isAdmin = (await getDoc(doc(db, "admins", email))).exists();
+      adminRole = (await getDoc(doc(db, "admins", email))).exists();
     } catch {
-      isAdmin = false;
+      adminRole = false;
     }
   }
+  if (auth.currentUser !== user) return;
+  isFounder = founderRole;
+  isAdmin = adminRole;
   lockedPanel.hidden = isAdmin;
   adminContent.hidden = !isAdmin;
   adminManagement.hidden = !isFounder;
