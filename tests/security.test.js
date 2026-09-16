@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import worker from '../discord-worker/src/index.js';
 import { beginDiscordLogin, consumeDiscordToken } from '../security.js';
+import { formatAnnouncementDate } from '../announcement-date.js';
 
 const env = { DISCORD_CLIENT_ID: '123', DISCORD_CLIENT_SECRET: 'secret', DISCORD_BOT_TOKEN: 'bot', DISCORD_GUILD_ID: '123' , FIREBASE_SERVICE_ACCOUNT: '{}' };
 const state = 'a'.repeat(64);
@@ -88,7 +89,7 @@ test('Announcements display stored attack payloads as text, never HTML', async (
   function element() { return { children: [], append(child) { this.children.push(child); }, replaceChildren() { this.children = []; }, set innerHTML(_) { throw new Error('Unsafe HTML sink'); } }; }
   const list = element();
   const attack = '<img src=x onerror=alert(document.cookie)>';
-  const context = vm.createContext({ document: { createElement: element }, announcementList: list });
+  const context = vm.createContext({ document: { createElement: element }, announcementList: list, formatAnnouncementDate });
   vm.runInContext(body + '\nrenderAnnouncements(' + JSON.stringify([{ type: attack, title: attack, text: attack, date: attack }]) + ')', context);
   assert.equal(list.children.length, 1);
   for (const node of list.children[0].children) assert.equal(node.textContent, attack);

@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { setupGoogleLogin } from "./google-login.js";
+import { formatAnnouncementDate } from "./announcement-date.js";
 import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
@@ -48,7 +49,7 @@ function renderAnnouncements(snapshot) {
     const title = document.createElement("strong");
     title.textContent = data.title;
     const meta = document.createElement("p");
-    meta.textContent = `${data.type} · ${data.date}`;
+    meta.textContent = `${data.type} · ${formatAnnouncementDate(data)}`;
     copy.append(title, meta);
     if (isFounder) {
       const remove = document.createElement("button");
@@ -112,12 +113,11 @@ form.addEventListener("submit", async (event) => {
       type: document.querySelector("#announcement-type").value,
       title: document.querySelector("#announcement-title").value.trim(),
       text: document.querySelector("#announcement-text").value.trim(),
-      date: document.querySelector("#announcement-date").value.trim(),
+      date: formatAnnouncementDate({ createdAt: { toDate: () => new Date() } }),
       featured: document.querySelector("#announcement-featured").checked,
       createdAt: serverTimestamp(),
     });
     form.reset();
-    document.querySelector("#announcement-date").value = "Aujourd'hui";
     adminStatus.textContent = "Annonce publiée.";
   } catch {
     const signedInEmail = auth.currentUser?.email?.toLowerCase() || "";

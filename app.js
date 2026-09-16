@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+import { formatAnnouncementDate } from "./announcement-date.js";
 import { browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { collection, getFirestore, limit, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
@@ -39,7 +40,7 @@ function renderAnnouncements(items) {
       ["p", "announcement-type", announcement.type],
       ["h3", "", announcement.title],
       ["p", "", announcement.text],
-      ["p", "announcement-date", announcement.date],
+      ["p", "announcement-date", formatAnnouncementDate(announcement)],
     ]) {
       const element = document.createElement(tag);
       element.className = className;

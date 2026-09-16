@@ -29,7 +29,8 @@
       <section id="admin-content" class="admin-panel" hidden>
         <div class="admin-heading"><div><p class="eyebrow"><span></span> Administration</p><h1>Les<br /><em>annonces.</em></h1></div><button id="sign-out" class="button button-quiet" type="button">Se déconnecter</button></div>
         <form id="announcement-form" class="admin-form" hidden>
-          <div class="form-row"><label>Catégorie<select id="announcement-type"><option>Bienvenue</option><option>Événement</option><option>Communauté</option><option>Important</option></select></label><label>Date affichée<input id="announcement-date" maxlength="32" value="Aujourd'hui" required /></label></div>
+          <label>Catégorie<select id="announcement-type"><option>Bienvenue</option><option>Événement</option><option>Communauté</option><option>Important</option></select></label>
+          <p class="form-hint">La date de publication est enregistrée automatiquement.</p>
           <label>Titre<input id="announcement-title" maxlength="80" required placeholder="Titre de l’annonce" /></label>
           <label>Message<textarea id="announcement-text" maxlength="320" required placeholder="Écris ton annonce ici…"></textarea></label>
           <label class="featured-choice"><input id="announcement-featured" type="checkbox" /> Mettre cette annonce en avant</label>
