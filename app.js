@@ -17,12 +17,6 @@ const firebaseConfig = {
   appId: "1:761703200496:web:967e8fd7330db657ca7435",
 };
 
-const announcements = [
-  { type: "Bienvenue", title: "Heivoli Network prend vie.", text: "Le nouveau point de rendez-vous des fans Nintendo ouvre ses portes.", date: "Aujourd'hui", featured: true },
-  { type: "Événement", title: "Des sessions de jeu à venir.", text: "Les premiers rendez-vous communautaires seront annoncés ici.", date: "Bientôt" },
-  { type: "Communauté", title: "Le futur bot Heivoli arrive.", text: "Il reliera progressivement ton compte au serveur Discord.", date: "En développement" },
-];
-
 const announcementList = document.querySelector("#announcements-list");
 const commentViews = new Map();
 function renderAnnouncements(items) {
@@ -65,7 +59,12 @@ function renderAnnouncements(items) {
   }
   announcementList.replaceChildren(...articles);
 }
-renderAnnouncements(announcements);
+function showAnnouncementStatus(message) {
+  renderAnnouncements([]);
+  const status = document.createElement("p");
+  status.textContent = message;
+  announcementList.append(status);
+}
 document.querySelector("#year").textContent = new Date().getFullYear();
 
 const modal = document.querySelector("#notice-modal");
@@ -85,7 +84,8 @@ onAuthStateChanged(auth, (user) => {
 });
 
 onSnapshot(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(12)), (snapshot) => {
-  renderAnnouncements(snapshot.empty ? announcements : snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+  if (snapshot.empty) showAnnouncementStatus("Aucune annonce pour le moment.");
+  else renderAnnouncements(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
 }, () => {
-  // Les annonces de présentation restent visibles tant que la base n'est pas activée.
+  showAnnouncementStatus("Impossible de charger les annonces. Vérifie ta connexion puis recharge la page.");
 });
