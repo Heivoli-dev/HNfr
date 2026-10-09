@@ -1,6 +1,6 @@
 // Keep the result on the site's origin: cross-domain redirects can lose
 // their session when the browser partitions third-party storage.
-export function setupGoogleLogin({ auth, provider, button, status, signInWithPopup }) {
+export function setupGoogleLogin({ auth, provider, button, status, signInWithPopup, beforeLogin }) {
   provider.setCustomParameters({ prompt: "select_account" });
   button.addEventListener("click", async () => {
     if (button.disabled) return;
@@ -9,6 +9,7 @@ export function setupGoogleLogin({ auth, provider, button, status, signInWithPop
     status.textContent = pendingMessage;
     try {
       // Start directly in the click handler so browsers allow the popup.
+      if (beforeLogin) await beforeLogin();
       await signInWithPopup(auth, provider);
       if (status.textContent === pendingMessage) status.textContent = "Connexion réussie.";
     } catch (error) {

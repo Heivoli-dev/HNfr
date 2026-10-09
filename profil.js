@@ -1,6 +1,6 @@
 import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
-import { GoogleAuthProvider, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { GoogleAuthProvider, browserLocalPersistence, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { setupGoogleLogin } from "./google-login.js";
 import { doc, getDoc, getFirestore } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
@@ -17,13 +17,13 @@ const DISCORD_LOGIN_URL = "https://heivoli-discord-auth.heivoli-discord-auth.wor
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
-await setPersistence(auth, browserSessionPersistence);
 const db = getFirestore(firebaseApp);
 const provider = new GoogleAuthProvider();
 const lockedProfile = document.querySelector("#profile-locked");
 const profileContent = document.querySelector("#profile-content");
 const googleButton = document.querySelector("#google-login");
 const discordButton = document.querySelector("#discord-login");
+const rememberDevice = document.querySelector("#remember-device");
 const authStatus = document.querySelector("#auth-status");
 const profileName = document.querySelector("#profile-name");
 const profileEmail = document.querySelector("#profile-email");
@@ -35,6 +35,21 @@ const profileSaveStatus = document.querySelector("#profile-save-status");
 const profileBadge = document.querySelector("#profile-badge");
 const adminLink = document.querySelector("#admin-link");
 let currentUser = null;
+
+async function applySelectedPersistence() {
+  await setPersistence(auth, rememberDevice.checked ? browserLocalPersistence : browserSessionPersistence);
+}
+
+rememberDevice.addEventListener("change", async () => {
+  try {
+    await applySelectedPersistence();
+    authStatus.textContent = rememberDevice.checked
+      ? "Compte mémorisé sur cet appareil."
+      : "Compte conservé seulement pour cette session.";
+  } catch {
+    authStatus.textContent = "Le réglage de mémorisation n’a pas pu être appliqué.";
+  }
+});
 
 function updateDescriptionCount() {
   descriptionCount.textContent = `${profileDescription.value.length} / 280`;
@@ -58,9 +73,12 @@ async function finishDiscordLogin() {
   }
 }
 
-setupGoogleLogin({ auth, provider, button: googleButton, status: authStatus, signInWithPopup });
+setupGoogleLogin({ auth, provider, button: googleButton, status: authStatus, signInWithPopup, beforeLogin: applySelectedPersistence });
 
-discordButton.addEventListener("click", () => {
+discordButton.addEventListener("click", async () => {
+  discordButton.disabled = true;
+  authStatus.textContent = "Préparation de la connexion Discord…";
+  await applySelectedPersistence();
   beginDiscordLogin(DISCORD_LOGIN_URL);
 });
 
