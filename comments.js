@@ -14,7 +14,7 @@ export function attachComments(article, announcementId, { db, auth }) {
   const list = node("ul", "", "comment-list");
   const status = node("p", "", "comment-status");
   status.setAttribute("role", "status");
-  const login = node("a", "Connecte-toi pour commenter.", "comment-login");
+  const login = node("a", "Se connecter pour écrire un commentaire", "comment-login");
   login.href = "profil.html";
   const form = node("form", "", "comment-form");
   const label = node("label", "Ton commentaire");
@@ -102,5 +102,6 @@ export function attachComments(article, announcementId, { db, auth }) {
     finally { busy = false; send.disabled = false; input.disabled = false; }
   });
   render();
+  panel.open = true;
   return () => { active = false; unsubscribe?.(); stopAuth(); };
 }

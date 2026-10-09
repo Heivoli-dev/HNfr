@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { formatAnnouncementDate } from "./announcement-date.js";
-import { attachComments } from "./comments.js";
+import { attachComments } from "./comments.js?v=visible-2";
 import { browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { collection, getFirestore, limit, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
