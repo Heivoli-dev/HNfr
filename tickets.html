@@ -1,25 +1,28 @@
 <!doctype html>
 <html lang="fr">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self'; img-src 'self' https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com https://cdn.discordapp.com; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://heivoli-network-408f3.firebaseapp.com; frame-src https://heivoli-network-408f3.firebaseapp.com https://accounts.google.com; base-uri 'none'; object-src 'none'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self'; img-src 'self' https://i.ibb.co https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com https://cdn.discordapp.com; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://heivoli-network-408f3.firebaseapp.com; frame-src https://heivoli-network-408f3.firebaseapp.com https://accounts.google.com; base-uri 'none'; object-src 'none'; form-action 'self'; upgrade-insecure-requests" />
     <meta name="referrer" content="no-referrer" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Assistance privée de Heivoli Network." />
-    <meta name="theme-color" content="#071a3d" />
+    <meta name="theme-color" content="#5149dc" />
     <title>Tickets — Heivoli Network</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="redesign.css?v=hosted-1" />
   </head>
   <body class="profile-page">
     <div class="page-glow glow-one" aria-hidden="true"></div>
     <div class="page-glow glow-two" aria-hidden="true"></div>
 
-    <header class="site-header">
-      <a class="brand" href="index.html" aria-label="Heivoli Network — accueil"><span class="brand-mark" aria-hidden="true">H</span><span>Heivoli <strong>Network</strong></span></a>
-      <nav class="site-nav profile-nav" aria-label="Navigation principale"><a href="index.html">Accueil</a><a class="is-current" href="tickets.html">Tickets</a><a href="profil.html">Mon compte</a></nav>
-    </header>
+    <header class="site-header"><a class="brand" href="index.html" aria-label="Heivoli Network — accueil"><span class="brand-image-frame"><img class="brand-image" src="https://i.ibb.co/b5B2zZrW/Design-sans-titre-removebg-preview.png" alt="HN" width="500" height="500" /></span></a>
+ <nav id="site-nav" class="site-nav" aria-label="Navigation principale">
+ <a href="index.html#annonces">Annonces</a><a href="tickets.html" aria-current="page">Tickets</a>
+ <a id="account-trigger" class="account-link" href="profil.html" aria-label="Mon compte" ><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="currentColor"/><path d="M6 26c1-10 19-10 20 0" fill="currentColor"/></svg></a></nav>
+ <span class="header-note">La passion Nintendo, ensemble.</span></header>
 
-    <main class="profile-shell section-shell">
+    <a class="skip-link" href="#main-content">Aller au contenu</a>
+    <main id="main-content" class="profile-shell section-shell">
       <a class="back-link" href="index.html">← Retour à l’accueil</a>
 
       <section id="tickets-locked" class="profile-gate">

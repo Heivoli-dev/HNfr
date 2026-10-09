@@ -53,17 +53,6 @@ function renderAnnouncements(items) {
 renderAnnouncements(announcements);
 document.querySelector("#year").textContent = new Date().getFullYear();
 
-const menuButton = document.querySelector(".menu-button");
-const nav = document.querySelector(".site-nav");
-menuButton.addEventListener("click", () => {
-  const isOpen = nav.classList.toggle("is-open");
-  menuButton.setAttribute("aria-expanded", String(isOpen));
-});
-document.querySelectorAll(".site-nav a").forEach((link) => link.addEventListener("click", () => {
-  nav.classList.remove("is-open");
-  menuButton.setAttribute("aria-expanded", "false");
-}));
-
 const modal = document.querySelector("#notice-modal");
 document.querySelectorAll(".discord-trigger").forEach((button) => button.addEventListener("click", () => {
   window.open(CONFIG.discordInvite, "_blank", "noopener,noreferrer");
@@ -77,7 +66,7 @@ await setPersistence(auth, browserSessionPersistence);
 const db = getFirestore(firebaseApp);
 const accountTrigger = document.querySelector("#account-trigger");
 onAuthStateChanged(auth, (user) => {
-  accountTrigger.textContent = user ? (user.displayName || "Profil").split(" ")[0] : "Connexion";
+  accountTrigger.setAttribute("aria-label", user ? `Mon compte : ${user.displayName || "Profil"}` : "Mon compte — Connexion");
 });
 
 onSnapshot(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(12)), (snapshot) => {

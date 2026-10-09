@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="fr">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self'; img-src 'self' data: https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com https://cdn.discordapp.com; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://heivoli-network-408f3.firebaseapp.com; frame-src https://heivoli-network-408f3.firebaseapp.com https://accounts.google.com; base-uri 'none'; object-src 'none'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self'; img-src 'self' https://i.ibb.co data: https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com https://cdn.discordapp.com; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://heivoli-network-408f3.firebaseapp.com; frame-src https://heivoli-network-408f3.firebaseapp.com https://accounts.google.com; base-uri 'none'; object-src 'none'; form-action 'self'; upgrade-insecure-requests" />
     <meta name="referrer" content="no-referrer" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,86 +9,47 @@
       name="description"
       content="Heivoli Network, la communauté Discord autour de l'univers Nintendo."
     />
-    <meta name="theme-color" content="#071a3d" />
+    <meta name="theme-color" content="#5149dc" />
     <title>Heivoli Network — Communauté Nintendo</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="redesign.css?v=hosted-1" />
   </head>
   <body>
     <div class="page-glow glow-one" aria-hidden="true"></div>
     <div class="page-glow glow-two" aria-hidden="true"></div>
 
-    <header class="site-header">
-      <a class="brand" href="#accueil" aria-label="Heivoli Network — accueil">
-        <span class="brand-mark" aria-hidden="true">H</span>
-        <span>Heivoli <strong>Network</strong></span>
-      </a>
+    <header class="site-header"><a class="brand" href="index.html" aria-label="Heivoli Network — accueil"><span class="brand-image-frame"><img class="brand-image" src="https://i.ibb.co/b5B2zZrW/Design-sans-titre-removebg-preview.png" alt="HN" width="500" height="500" /></span></a>
+ <nav id="site-nav" class="site-nav" aria-label="Navigation principale">
+ <a href="index.html#annonces">Annonces</a><a href="tickets.html" >Tickets</a>
+ <a id="account-trigger" class="account-link" href="profil.html" aria-label="Mon compte" ><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="16" cy="12" r="5" fill="currentColor"/><path d="M6 26c1-10 19-10 20 0" fill="currentColor"/></svg></a></nav>
+ <span class="header-note">La passion Nintendo, ensemble.</span></header>
 
-      <button class="menu-button" type="button" aria-expanded="false" aria-controls="site-nav">
-        <span class="sr-only">Ouvrir le menu</span>
-        <span></span><span></span>
-      </button>
-
-      <nav id="site-nav" class="site-nav" aria-label="Navigation principale">
-        <a href="#accueil">Accueil</a>
-        <a href="#annonces">Annonces</a>
-        <a href="#communaute">Communauté</a>
-        <a href="tickets.html">Tickets</a>
-        <a href="profil.html">Mon compte</a>
-      </nav>
-      <a id="account-trigger" class="button button-small" href="profil.html">Connexion</a>
-    </header>
-
-    <main>
+    <a class="skip-link" href="#main-content">Aller au contenu</a>
+    <main id="main-content">
       <section id="accueil" class="hero section-shell">
-        <div class="hero-copy">
-          <p class="eyebrow"><span></span> Communauté Discord</p>
-          <h1>Le terrain de jeu<br />de la <em>team Nintendo.</em></h1>
-          <p class="hero-text">
-            Des discussions, des événements et une communauté bienveillante pour partager la passion Nintendo, ensemble.
-          </p>
-          <div class="hero-actions">
-            <button class="button button-primary discord-trigger" type="button">
-              Rejoindre le Discord <span aria-hidden="true">↗</span>
-            </button>
-            <a class="button button-quiet" href="#annonces">Voir les annonces</a>
-          </div>
-          <div class="member-proof" aria-label="Communauté active">
-            <div class="avatar-stack" aria-hidden="true">
-              <span class="avatar avatar-a"></span><span class="avatar avatar-b"></span>
-              <span class="avatar avatar-c"></span><span class="avatar avatar-d"></span>
-            </div>
-            <p><strong>Une communauté qui grandit.</strong><br />Prêt·e à nous rejoindre ?</p>
-          </div>
+        <div class="console-scene" aria-label="Console Nintendo 2DS et cercles colorés animés">
+          <div class="scene-disc" aria-hidden="true"></div><div class="scene-ring" aria-hidden="true"></div>
+          <span class="scene-dot dot-orange" aria-hidden="true"></span><span class="scene-dot dot-yellow" aria-hidden="true"></span><span class="scene-dot dot-green" aria-hidden="true"></span><span class="scene-dot dot-blue" aria-hidden="true"></span>
+          <img class="console-art" src="https://i.ibb.co/HfcNL8FB/Console-Nintendo-2-DS-XL-personnalis-e-et-flottante-removebg-preview.png" alt="Nintendo 2DS XL personnalisée Heivoli Network, blanche aux boutons orange" width="500" height="500" />
+          <span class="console-caption">Petite console. Grande communauté.</span>
         </div>
-
-        <div class="hero-visual" aria-label="Univers Heivoli Network">
-          <div class="orbit orbit-one"></div>
-          <div class="orbit orbit-two"></div>
-          <div class="handheld handheld-back" aria-hidden="true">
-            <span class="back-camera"></span><span class="back-logo">HN</span>
-          </div>
-          <div class="handheld handheld-main" aria-label="Console portable Heivoli Network">
-            <div class="console-screen screen-top">
-              <span class="screen-label"><i></i> HEIVOLI ONLINE</span>
-              <strong>HEIVOLI<br />NETWORK</strong><span class="screen-spark">✦</span>
-            </div>
-            <div class="console-hinge" aria-hidden="true"></div>
-            <div class="console-screen screen-bottom"><span class="screen-grid" aria-hidden="true"></span><span class="screen-message">READY<br /><b>PLAYER ONE</b></span></div>
-            <div class="console-controls" aria-hidden="true">
-              <span class="circle-pad"></span><span class="d-pad"></span>
-              <span class="action-buttons"><i>A</i><i>B</i></span><span class="start-buttons"><i></i><i></i></span>
-            </div>
-          </div>
-          <div class="floating-chip chip-one">EVENTS</div>
-          <div class="floating-chip chip-two">FR • EU</div>
+        <div class="hero-copy">
+          <p class="hero-kicker">LE NOUVEAU RENDEZ-VOUS DES PASSIONNÉS</p>
+          <h1 class="wordmark official-wordmark"><img src="https://i.ibb.co/7JRz5ZgM/new-hn-removebg-preview.png" alt="new heivoli network" width="2000" height="2000" /></h1><div class="intro-card"><span class="card-label">ON A TANT À PARTAGER.</span>
+          <p>Heivoli Network rassemble les passionnés de Nintendo, et tout particulièrement de la famille Nintendo 3DS.</p>
+          <p>Échange, joue et fais de nouvelles rencontres. Rejoins-nous pour faire grandir ce projet communautaire !</p>
+          <a class="join-link" href="https://discord.gg/nXDYpkWTDV" target="_blank" rel="noreferrer">Rejoindre la communauté <span aria-hidden="true">↗</span></a></div>
+          <div class="social-bar" aria-label="Réseaux de la communauté"><a href="https://discord.gg/nXDYpkWTDV" target="_blank" rel="noreferrer" aria-label="Rejoindre notre Discord"><svg class="social-svg discord-svg" viewBox="0 0 32 26" aria-hidden="true"><path d="M7 3 12 1l1 3h6l1-3 5 2c4 6 6 12 5 18l-7 4-2-3 3-2c-6 3-10 3-16 0l3 2-2 3-7-4C1 15 3 8 7 3Z" fill="currentColor"/><ellipse cx="11" cy="14" rx="2.5" ry="3" fill="#49494f"/><ellipse cx="21" cy="14" rx="2.5" ry="3" fill="#49494f"/></svg>Discord <span aria-hidden="true">↗</span></a><button type="button" class="social-pending" data-network="Reddit"><svg class="social-svg" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#ff5700"/><path d="m16 12 2-7 6 2" fill="none" stroke="white" stroke-width="2"/><circle cx="25" cy="7" r="2.5" fill="white"/><circle cx="6" cy="16" r="3" fill="white"/><circle cx="26" cy="16" r="3" fill="white"/><ellipse cx="16" cy="19" rx="11" ry="8" fill="white"/><circle cx="12" cy="18" r="2" fill="#ff5700"/><circle cx="21" cy="18" r="2" fill="#ff5700"/><path d="M12 23q4 3 8 0" fill="none" stroke="#ff5700" stroke-width="1.5" stroke-linecap="round"/></svg>Reddit</button><button type="button" class="social-pending" data-network="X"><span class="social-icon x-symbol" aria-hidden="true">𝕏</span>X</button></div>
+          <p class="social-status" id="social-status" aria-live="polite"></p>
         </div>
       </section>
+      <div class="discovery-line section-shell"><span>Une passion. Toutes les générations.</span><a href="#annonces">La vie du réseau <span aria-hidden="true">↓</span></a></div>
 
       <section id="annonces" class="section-shell announcements-section">
         <div class="section-heading">
           <div>
-            <p class="eyebrow"><span></span> À la une</p>
-            <h2>Les dernières<br /><em>annonces.</em></h2>
+            <p class="eyebrow"><span></span> Le journal du réseau</p>
+            <h2>Du nouveau<br /><em>dans le réseau.</em></h2>
           </div>
           <p>Ne rate rien de la vie du serveur : événements, nouveautés et rendez-vous de la communauté.</p>
         </div>
@@ -129,6 +90,7 @@
       <a id="modal-action" class="button button-primary" href="#" target="_blank" rel="noreferrer">Ouvrir Discord <span aria-hidden="true">↗</span></a>
     </dialog>
 
-    <script type="module" src="app.js"></script>
+    <script src="site-ui.js" defer></script>
+    <script type="module" src="app.js?v=design-20261009"></script>
   </body>
 </html>
