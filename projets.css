@@ -1,0 +1,20 @@
+.projects-main{padding-block:35px 70px}
+.projects-heading{margin-bottom:36px}
+.projects-heading h1{font-size:clamp(38px,4.4vw,62px);max-width:850px;line-height:1.05}
+.projects-heading>p:last-child{font-size:15px;line-height:1.6;color:#34304f;margin-top:18px}
+.projects-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(180px,1fr);align-items:center;gap:55px}
+.project-list{list-style:none;margin:0;padding:26px;display:grid;gap:22px;border-radius:36px;background:#545454;box-shadow:0 20px 55px #29215515}
+.project-link{display:flex;align-items:center;gap:24px;padding:9px 24px 9px 12px;min-height:90px;border-radius:70px;background:#c8d1d8;color:#292638;transition:background .2s,transform .2s}
+.project-link:hover{background:#e5eaf0;transform:translateX(4px)}
+.project-name{font-size:clamp(25px,3.1vw,43px);font-weight:750;letter-spacing:-.035em;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:7px}
+.project-arrow{margin-left:auto;font-size:48px;font-weight:400;line-height:1}
+.project-icon{flex-shrink:0;width:68px;height:68px;border-radius:50%;background-image:url('assets/community-projects-reference.png');background-size:2178.7234% 1225.5319%;background-repeat:no-repeat}
+.pretendo{background-position:9.0583% 25.7089%}
+.themeplaza{background-position:9.0583% 40.0756%}
+.brewtendo{background-position:9.0583% 53.4972%}
+.iisu{background-position:9.0583% 67.4858%}
+.projects-brand{position:relative;width:100%;aspect-ratio:1.85;overflow:hidden}
+.projects-brand img{position:absolute;width:150%;max-width:none;left:-25%;top:-94%;height:auto}
+.projects-disclaimer{color:#353047;font-size:13px;line-height:1.6;margin:18px 22px 0}
+@media(max-width:800px){.projects-layout{grid-template-columns:1fr;gap:32px}.projects-brand{width:150px;justify-self:center}.projects-heading{margin-bottom:26px}}
+@media(max-width:500px){.projects-main{padding-top:24px}.project-list{padding:16px;gap:15px;border-radius:28px}.project-link{min-height:72px;padding:8px 16px 8px 8px;gap:14px}.project-icon{width:50px;height:50px}.project-name{font-size:25px}.project-arrow{font-size:32px}.projects-disclaimer{margin-inline:10px}}

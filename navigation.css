@@ -1,0 +1,2 @@
+@media(max-width:600px){.site-header{height:auto;min-height:100px;flex-wrap:wrap;justify-content:center;gap:10px;padding-block:15px}.site-nav{margin-left:0;max-width:100%}.site-nav a{padding-inline:12px;font-size:13px}.site-nav .account-link{width:36px}.site-header .brand-image-frame{width:49px}}
+@media(max-width:380px){.site-nav a{padding-inline:9px;font-size:12px}}
