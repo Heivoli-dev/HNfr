@@ -4,7 +4,7 @@ import { browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged 
 import { collection, getFirestore, limit, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const CONFIG = {
-  discordInvite: "https://discord.gg/nXDYpkWTDV",
+  discordInvite: "https://discord.gg/J4HkUzrNdu",
 };
 
 const firebaseConfig = {
