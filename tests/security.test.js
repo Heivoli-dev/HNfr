@@ -86,10 +86,10 @@ test('Browser rejects unsolicited, expired and replayed login tokens and clears 
 test('Announcements display stored attack payloads as text, never HTML', async () => {
   const source = await readFile(new URL('../app.js', import.meta.url), 'utf8');
   const body = source.slice(source.indexOf('function renderAnnouncements('), source.indexOf('\nrenderAnnouncements(announcements)'));
-  function element() { return { children: [], append(child) { this.children.push(child); }, replaceChildren() { this.children = []; }, set innerHTML(_) { throw new Error('Unsafe HTML sink'); } }; }
+  function element() { return { children: [], append(child) { this.children.push(child); }, replaceChildren(...children) { this.children = children; }, set innerHTML(_) { throw new Error('Unsafe HTML sink'); } }; }
   const list = element();
   const attack = '<img src=x onerror=alert(document.cookie)>';
-  const context = vm.createContext({ document: { createElement: element }, announcementList: list, formatAnnouncementDate });
+  const context = vm.createContext({ document: { createElement: element }, announcementList: list, formatAnnouncementDate, commentViews: new Map() });
   vm.runInContext(body + '\nrenderAnnouncements(' + JSON.stringify([{ type: attack, title: attack, text: attack, date: attack }]) + ')', context);
   assert.equal(list.children.length, 1);
   for (const node of list.children[0].children) assert.equal(node.textContent, attack);

@@ -36,6 +36,21 @@ service cloud.firestore {
       allow create: if isFounder() && validAnnouncement() && request.resource.data.createdAt == request.time;
       allow update: if isFounder() && validAnnouncement() && request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if isFounder();
+      match /comments/{commentId} {
+        allow read: if exists(/databases/$(database)/documents/announcements/$(announcement));
+        allow create: if signedIn()
+          && exists(/databases/$(database)/documents/announcements/$(announcement))
+          && request.resource.data.keys().hasAll(['authorId', 'authorName', 'text', 'createdAt'])
+          && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'text', 'createdAt'])
+          && request.resource.data.authorId == request.auth.uid
+          && request.resource.data.authorName == request.auth.token.get('discordName', request.auth.token.get('name', 'Membre'))
+          && text(request.resource.data.authorName, 1, 120)
+          && text(request.resource.data.text, 1, 800)
+          && request.resource.data.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+          && request.resource.data.createdAt == request.time;
+        allow update: if false;
+        allow delete: if signedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+      }
     }
     match /admins/{id} {
       allow get: if signedIn() && (isFounder()

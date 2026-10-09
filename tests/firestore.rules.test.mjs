@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { before, after, beforeEach, test } from 'node:test';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, setDoc, getDoc, getDocs, collection, query, where, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, getDocs, collection, query, where, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 let env;
 before(async () => { env = await initializeTestEnvironment({ projectId: 'demo-heivoli', firestore: { rules: await readFile(new URL('../firestore.rules', import.meta.url), 'utf8'), host: '127.0.0.1', port: 8080 } }); });
 after(async () => { await env?.cleanup(); });
@@ -11,6 +11,40 @@ const founder = (verified = true) => user('founder', { email: 'heivolipro@gmail.
 const ticket = (extra = {}) => ({ creatorId: 'alice', creatorName: 'Alice', creatorEmail: '', subject: 'Question', category: 'Question', status: 'open', createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...extra });
 const message = (extra = {}) => ({ authorId: 'alice', authorName: 'Alice', authorIsModerator: false, text: 'Bonjour', createdAt: serverTimestamp(), ...extra });
 const announcement = { type: 'Bienvenue', title: 'Bonjour', text: 'Bienvenue', date: 'Aujourd’hui', featured: false, createdAt: serverTimestamp() };
+const comment = (extra = {}) => ({ authorId: 'alice', authorName: 'Membre', text: 'Super projet !', createdAt: serverTimestamp(), ...extra });
+test('comments are public on real announcements and authenticated members can post', async () => {
+  await assertSucceeds(setDoc(doc(founder(), 'announcements/a'), announcement));
+  await assertSucceeds(setDoc(doc(user(), 'announcements/a/comments/c'), comment()));
+  await assertSucceeds(getDocs(collection(env.unauthenticatedContext().firestore(), 'announcements/a/comments')));
+  await assertFails(setDoc(doc(env.unauthenticatedContext().firestore(), 'announcements/a/comments/anon'), comment()));
+  await assertFails(setDoc(doc(user(), 'announcements/missing/comments/c'), comment()));
+  await assertSucceeds(setDoc(doc(user('bob', { name: 'Bob' }), 'announcements/a/comments/bob'), comment({ authorId: 'bob', authorName: 'Bob', text: 'Bonjour\nà tous !' })));
+  await assertSucceeds(setDoc(doc(user('discord', { discordName: 'Discord member' }), 'announcements/a/comments/discord'), comment({ authorId: 'discord', authorName: 'Discord member' })));
+});
+test('comments reject forged authors, empty text, oversized messages, timestamps and edits', async () => {
+  await setDoc(doc(founder(), 'announcements/a'), announcement);
+  for (const extra of [{ authorId: 'bob' }, { authorName: 'Fondateur' }, { text: '' }, { text: '  \n ' }, { text: 'x'.repeat(801) }, { createdAt: new Date(0) }, { admin: true }]) {
+    await assertFails(setDoc(doc(user(), 'announcements/a/comments/c'), comment(extra)));
+  }
+  await setDoc(doc(user(), 'announcements/a/comments/c'), comment());
+  await assertFails(updateDoc(doc(user(), 'announcements/a/comments/c'), { text: 'Modifié' }));
+});
+test('only the author or moderators can delete comments; deleted announcements hide comments', async () => {
+  await setDoc(doc(founder(), 'announcements/a'), announcement);
+  const path = 'announcements/a/comments/c';
+  await setDoc(doc(user(), path), comment());
+  await assertFails(deleteDoc(doc(user('bob'), path)));
+  await assertFails(deleteDoc(doc(env.unauthenticatedContext().firestore(), path)));
+  await assertSucceeds(deleteDoc(doc(user(), path)));
+  await setDoc(doc(user(), path), comment());
+  await assertSucceeds(deleteDoc(doc(founder(), path)));
+  await setDoc(doc(user(), path), comment());
+  await setDoc(doc(founder(), 'admins/mod@example.com'), { email: 'mod@example.com', createdAt: serverTimestamp() });
+  await assertSucceeds(deleteDoc(doc(user('mod', { email: 'mod@example.com', email_verified: true }), path)));
+  await setDoc(doc(user(), path), comment());
+  await deleteDoc(doc(founder(), 'announcements/a'));
+  await assertFails(getDocs(collection(user(), 'announcements/a/comments')));
+});
 async function seed() { await assertSucceeds(setDoc(doc(user(), 'tickets/t1'), ticket())); }
 test('private tickets deny anonymous users and other members, including collection queries', async () => {
   await seed();

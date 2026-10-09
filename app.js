@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { formatAnnouncementDate } from "./announcement-date.js";
+import { attachComments } from "./comments.js";
 import { browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { collection, getFirestore, limit, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
@@ -23,8 +24,13 @@ const announcements = [
 ];
 
 const announcementList = document.querySelector("#announcements-list");
+const commentViews = new Map();
 function renderAnnouncements(items) {
-  announcementList.replaceChildren();
+  const liveIds = new Set(items.map(item => item.id).filter(Boolean));
+  for (const [id, view] of commentViews) {
+    if (!liveIds.has(id)) { view.cleanup(); commentViews.delete(id); }
+  }
+  const articles = [];
   for (const announcement of items) {
     const article = document.createElement("article");
     article.className = announcement.featured ? "announcement featured" : "announcement";
@@ -47,8 +53,17 @@ function renderAnnouncements(items) {
       element.textContent = typeof value === "string" ? value : "";
       article.append(element);
     }
-    announcementList.append(article);
+    if (announcement.id) {
+      const oldView = commentViews.get(announcement.id);
+      if (oldView) article.append(oldView.panel);
+      else {
+        const cleanup = attachComments(article, announcement.id, { db, auth });
+        commentViews.set(announcement.id, { panel: article.querySelector('.comments'), cleanup });
+      }
+    }
+    articles.push(article);
   }
+  announcementList.replaceChildren(...articles);
 }
 renderAnnouncements(announcements);
 document.querySelector("#year").textContent = new Date().getFullYear();
@@ -70,8 +85,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 onSnapshot(query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(12)), (snapshot) => {
-  if (snapshot.empty) return;
-  renderAnnouncements(snapshot.docs.map((doc) => doc.data()));
+  renderAnnouncements(snapshot.empty ? announcements : snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
 }, () => {
   // Les annonces de présentation restent visibles tant que la base n'est pas activée.
 });
