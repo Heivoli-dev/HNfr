@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { formatAnnouncementDate } from "./announcement-date.js";
-import { attachComments } from "./comments.js?v=visible-2";
-import { browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { collection, getFirestore, limit, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const CONFIG = {
@@ -18,12 +17,7 @@ const firebaseConfig = {
 };
 
 const announcementList = document.querySelector("#announcements-list");
-const commentViews = new Map();
 function renderAnnouncements(items) {
-  const liveIds = new Set(items.map(item => item.id).filter(Boolean));
-  for (const [id, view] of commentViews) {
-    if (!liveIds.has(id)) { view.cleanup(); commentViews.delete(id); }
-  }
   const articles = [];
   for (const announcement of items) {
     const article = document.createElement("article");
@@ -48,12 +42,11 @@ function renderAnnouncements(items) {
       article.append(element);
     }
     if (announcement.id) {
-      const oldView = commentViews.get(announcement.id);
-      if (oldView) article.append(oldView.panel);
-      else {
-        const cleanup = attachComments(article, announcement.id, { db, auth });
-        commentViews.set(announcement.id, { panel: article.querySelector('.comments'), cleanup });
-      }
+      const link = document.createElement("a");
+      link.className = "comment-login";
+      link.href = `annonce.html?id=${encodeURIComponent(announcement.id)}#discussion`;
+      link.textContent = "Lire et écrire les commentaires ↗";
+      article.append(link);
     }
     articles.push(article);
   }
@@ -76,7 +69,6 @@ modal.addEventListener("click", (event) => { if (event.target === modal) modal.c
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
-await setPersistence(auth, browserSessionPersistence);
 const db = getFirestore(firebaseApp);
 const accountTrigger = document.querySelector("#account-trigger");
 onAuthStateChanged(auth, (user) => {

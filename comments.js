@@ -39,6 +39,15 @@ export function attachComments(article, announcementId, { db, auth }) {
     list.replaceChildren();
     for (const record of records) {
       const row = node("li", "", "comment-item");
+      const avatar = node("span", (record.authorName || "M").slice(0, 1).toUpperCase(), "comment-avatar");
+      avatar.setAttribute("aria-hidden", "true");
+      if (typeof record.authorPhotoURL === "string" && /^https:\/\/(lh[3-6]\.googleusercontent\.com|cdn\.discordapp\.com)\//.test(record.authorPhotoURL)) {
+        const image = node("img");
+        image.src = record.authorPhotoURL; image.alt = ""; image.loading = "lazy"; image.referrerPolicy = "no-referrer";
+        image.addEventListener("error", () => image.remove());
+        avatar.append(image);
+      }
+      row.append(avatar);
       const meta = node("div", "", "comment-meta");
       meta.append(node("strong", record.authorName || "Membre"));
       const date = record.createdAt?.toDate?.();
@@ -95,7 +104,8 @@ export function attachComments(article, announcementId, { db, auth }) {
     status.textContent = "Publication en cours…";
     try {
       const { claims } = await current.getIdTokenResult();
-      await addDoc(ref, { authorId: current.uid, authorName: claims.discordName ?? claims.name ?? "Membre", text, createdAt: serverTimestamp() });
+      const authorPhotoURL = claims.discordAvatar ?? claims.picture ?? "";
+      await addDoc(ref, { authorId: current.uid, authorName: claims.discordName ?? claims.name ?? "Membre", authorPhotoURL, text, createdAt: serverTimestamp() });
       input.value = "";
       status.textContent = "Commentaire publié.";
     } catch { status.textContent = "Publication impossible. Ton texte est conservé ; réessaie dans un instant."; }

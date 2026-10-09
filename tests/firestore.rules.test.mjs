@@ -20,6 +20,9 @@ test('comments are public on real announcements and authenticated members can po
   await assertFails(setDoc(doc(user(), 'announcements/missing/comments/c'), comment()));
   await assertSucceeds(setDoc(doc(user('bob', { name: 'Bob' }), 'announcements/a/comments/bob'), comment({ authorId: 'bob', authorName: 'Bob', text: 'Bonjour\nà tous !' })));
   await assertSucceeds(setDoc(doc(user('discord', { discordName: 'Discord member' }), 'announcements/a/comments/discord'), comment({ authorId: 'discord', authorName: 'Discord member' })));
+  const photo = 'https://lh3.googleusercontent.com/avatar';
+  await assertSucceeds(setDoc(doc(user('alice', { picture: photo }), 'announcements/a/comments/photo'), comment({ authorPhotoURL: photo })));
+  await assertFails(setDoc(doc(user(), 'announcements/a/comments/forged-photo'), comment({ authorPhotoURL: photo })));
 });
 test('comments reject forged authors, empty text, oversized messages, timestamps and edits', async () => {
   await setDoc(doc(founder(), 'announcements/a'), announcement);

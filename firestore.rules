@@ -41,7 +41,10 @@ service cloud.firestore {
         allow create: if signedIn()
           && exists(/databases/$(database)/documents/announcements/$(announcement))
           && request.resource.data.keys().hasAll(['authorId', 'authorName', 'text', 'createdAt'])
-          && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'text', 'createdAt'])
+          && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'authorPhotoURL', 'text', 'createdAt'])
+          && request.resource.data.get('authorPhotoURL', '') is string
+          && request.resource.data.get('authorPhotoURL', '').size() <= 2048
+          && (!('authorPhotoURL' in request.resource.data) || request.resource.data.authorPhotoURL == request.auth.token.get('discordAvatar', request.auth.token.get('picture', '')))
           && request.resource.data.authorId == request.auth.uid
           && request.resource.data.authorName == request.auth.token.get('discordName', request.auth.token.get('name', 'Membre'))
           && text(request.resource.data.authorName, 1, 120)
