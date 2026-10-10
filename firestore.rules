@@ -22,32 +22,6 @@ service cloud.firestore {
       return signedIn() && !isFounder() && exists(path)
         && (get(path).data.expiresAt == null || get(path).data.expiresAt > request.time);
     }
-    function networkBlocked(hash) {
-      let path = /databases/$(database)/documents/networkBans/$(hash);
-      return !isFounder() && exists(path)
-        && (get(path).data.expiresAt == null || get(path).data.expiresAt > request.time);
-    }
-    function permitted(action, target) {
-      let path = /databases/$(database)/documents/writePermits/$(request.resource.data.networkPermit);
-      let permit = get(path).data;
-      return permit.uid == request.auth.uid && permit.action == action && permit.target == target
-        && permit.expiresAt > request.time && permit.usedAt == null
-        && !networkBlocked(permit.ipHash)
-        && getAfter(path).data.usedAt == request.time;
-    }
-    match /writePermits/{id} {
-      allow get: if signedIn() && resource.data.uid == request.auth.uid;
-      allow update: if signedIn() && resource.data.uid == request.auth.uid
-        && resource.data.usedAt == null && resource.data.expiresAt > request.time
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedAt'])
-        && request.resource.data.usedAt == request.time;
-      allow create, delete, list: if false;
-    }
-    match /networkUsers/{uid} { allow read, write: if false; }
-    match /networkBans/{hash} {
-      allow read: if isAdmin();
-      allow write: if false;
-    }
     match /bans/{uid} {
       allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
       allow list: if isAdmin();
@@ -94,8 +68,7 @@ service cloud.firestore {
         allow create: if signedIn() && !isBanned()
           && exists(/databases/$(database)/documents/announcements/$(announcement))
           && request.resource.data.keys().hasAll(['authorId', 'authorName', 'text', 'createdAt'])
-          && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'authorPhotoURL', 'text', 'createdAt', 'networkPermit'])
-          && permitted('comment', announcement + '/' + commentId)
+          && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'authorPhotoURL', 'text', 'createdAt'])
           && request.resource.data.get('authorPhotoURL', '') is string
           && request.resource.data.get('authorPhotoURL', '').size() <= 2048
           && (!('authorPhotoURL' in request.resource.data) || request.resource.data.authorPhotoURL == request.auth.token.get('discordAvatar', request.auth.token.get('picture', '')))
@@ -144,8 +117,7 @@ service cloud.firestore {
     match /tickets/{ticketId} {
       allow create: if signedIn() && !isBanned()
         && request.resource.data.keys().hasAll(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt'])
-        && request.resource.data.keys().hasOnly(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt', 'networkPermit'])
-        && permitted('ticket', ticketId)
+        && request.resource.data.keys().hasOnly(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt'])
         && request.resource.data.creatorId == request.auth.uid
         && text(request.resource.data.creatorName, 1, 120)
         && request.resource.data.creatorEmail == request.auth.token.get('email', '')
@@ -166,8 +138,7 @@ service cloud.firestore {
         allow get, list: if isAdmin() || ownsTicket(ticketId);
         allow create: if signedIn() && !isBanned() && (isAdmin() || ownsTicket(ticketId)) && ticketIsOpen(ticketId)
           && request.resource.data.keys().hasAll(['authorId', 'authorName', 'authorIsModerator', 'text', 'createdAt'])
-          && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'authorIsModerator', 'text', 'createdAt', 'networkPermit'])
-          && permitted('message', ticketId + '/' + messageId)
+          && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'authorIsModerator', 'text', 'createdAt'])
           && request.resource.data.authorId == request.auth.uid
           && text(request.resource.data.authorName, 1, 120)
           && request.resource.data.authorIsModerator == isAdmin()

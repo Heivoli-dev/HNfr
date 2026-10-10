@@ -1,21 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { before, after, beforeEach, test } from 'node:test';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, setDoc as rawSetDoc, getDoc, getDocs, collection, query, where, updateDoc, deleteDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
-async function grant(uid, action, target, ipHash = 'test-ip') {
-  const id = crypto.randomUUID();
-  await env.withSecurityRulesDisabled(ctx => rawSetDoc(doc(ctx.firestore(), 'writePermits', id), {uid,action,target,ipHash,expiresAt:new Date(Date.now()+60000),usedAt:null}));
-  return id;
-}
-async function setDoc(ref, data) {
-  if (!ref.path.startsWith('tickets/')) return rawSetDoc(ref,data);
-  const parts=ref.path.split('/'), action=parts.length===2?'ticket':'message';
-  const target=action==='ticket'?parts[1]:parts[1]+'/'+parts[3];
-  const networkPermit=await grant(data.creatorId||data.authorId,action,target);
-  const batch=writeBatch(ref.firestore);
-  batch.set(ref,{...data,networkPermit}); batch.update(doc(ref.firestore,'writePermits',networkPermit),{usedAt:serverTimestamp()});
-  return batch.commit();
-}
+import { doc, setDoc, getDoc, getDocs, collection, query, where, updateDoc, deleteDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 let env;
 before(async () => { env = await initializeTestEnvironment({ projectId: 'demo-heivoli', firestore: { rules: await readFile(new URL('../firestore.rules', import.meta.url), 'utf8'), host: '127.0.0.1', port: 8080 } }); });
 after(async () => { await env?.cleanup(); });
@@ -28,9 +14,7 @@ const announcement = { type: 'Bienvenue', title: 'Bonjour', text: 'Bienvenue', d
 const comment = (extra = {}) => ({ authorId: 'alice', authorName: 'Membre', text: 'Super projet !', createdAt: serverTimestamp(), ...extra });
 async function post(db, id = 'c', extra = {}, uid = 'alice', announcementId = 'a') {
   const data = comment(extra), batch = writeBatch(db);
-  const networkPermit = await grant(uid, 'comment', announcementId+'/'+id);
-  batch.set(doc(db, `announcements/${announcementId}/comments/${id}`), {...data,networkPermit});
-  batch.update(doc(db,'writePermits',networkPermit),{usedAt:serverTimestamp()});
+  batch.set(doc(db, `announcements/${announcementId}/comments/${id}`), data);
   batch.set(doc(db, `commentThrottle/${uid}`), { createdAt: serverTimestamp(), lastText: data.text.toLowerCase(), commentId: id, announcementId });
   return batch.commit();
 }
@@ -85,28 +69,6 @@ test('only authors or moderators delete comments and deleted announcements hide 
 });
 async function seed() { await assertSucceeds(setDoc(doc(user(), 'tickets/t1'), ticket())); }
 const ban = (extra = {}) => ({ reason: 'Spam répété', expiresAt: null, createdAt: serverTimestamp(), createdBy: 'founder', ...extra });
-test('network bans stop new accounts and forged, missing or replayed permits', async () => {
-  await setDoc(doc(founder(), 'announcements/a'), announcement);
-  await assertFails(rawSetDoc(doc(user(), 'tickets/direct'), ticket()));
-  const p=await grant('alice','ticket','one');
-  const sender=user();
-  const send=(id,permit=p)=>{
-    const batch=writeBatch(sender); batch.set(doc(sender,'tickets',id),{...ticket(),networkPermit:permit});
-    batch.update(doc(sender,'writePermits',permit),{usedAt:serverTimestamp()}); return batch.commit();
-  };
-  await assertFails(send('wrong'));
-  await assertSucceeds(send('one'));
-  await assertFails(send('one'));
-  await assertFails(rawSetDoc(doc(user(),'writePermits','fake'),{uid:'alice'}));
-  await env.withSecurityRulesDisabled(ctx=>rawSetDoc(doc(ctx.firestore(),'networkBans/test-ip'),{reason:'Spam',expiresAt:null}));
-  await assertFails(post(user('new-account'),'new',{authorId:'new-account'},'new-account'));
-  await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'announcements/a')));
-  await assertFails(getDoc(doc(user(),'networkUsers/alice')));
-  await assertFails(getDoc(doc(user(),'networkBans/test-ip')));
-  await assertFails(deleteDoc(doc(user(),'networkBans/test-ip')));
-  await env.withSecurityRulesDisabled(ctx=>rawSetDoc(doc(ctx.firestore(),'networkBans/test-ip'),{reason:'Spam',expiresAt:new Date(Date.now()-60000)}));
-  await assertSucceeds(post(user('new-account'),'new',{authorId:'new-account'},'new-account'));
-});
 test('bans block comments, new tickets and ticket messages while preserving reads', async () => {
   await setDoc(doc(founder(), 'announcements/a'), announcement); await seed();
   await assertSucceeds(setDoc(doc(founder(), 'bans/alice'), ban()));

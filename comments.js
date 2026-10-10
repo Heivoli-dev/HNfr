@@ -1,7 +1,6 @@
 import { collection, deleteDoc, doc, getDoc, limit, onSnapshot, orderBy, query, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { commentModerationError } from "./comment-moderation.js";
 import { watchBan } from './ban-status.js';
-import { authorizeWrite } from './network-access.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 
 const node = (tag, text, className) => {
@@ -28,7 +27,7 @@ export function attachComments(article, announcementId, { db, auth }) {
   input.rows = 3;
   input.placeholder = "Partage ton avis avec la communauté…";
   label.htmlFor = input.id;
-  const hint = node("small", "Commentaires publics · 800 caractères maximum · Sans insultes ni liens · 30 secondes entre deux envois. La connexion est vérifiée pour limiter les contournements de bannissement.");
+  const hint = node("small", "Commentaires publics · 800 caractères maximum · Sans insultes ni liens · 30 secondes entre deux envois.");
   const send = node("button", "Publier", "button button-primary");
   send.type = "submit";
   form.append(label, input, hint, send);
@@ -129,13 +128,12 @@ export function attachComments(article, announcementId, { db, auth }) {
       }
       const commentRef = doc(ref);
       const batch = writeBatch(db);
-      const networkPermit = await authorizeWrite(auth, db, batch, 'comment', `${announcementId}/${commentRef.id}`);
-      batch.set(commentRef, { authorId: current.uid, authorName: claims.discordName ?? claims.name ?? "Membre", authorPhotoURL, text, createdAt: serverTimestamp(), networkPermit });
+      batch.set(commentRef, { authorId: current.uid, authorName: claims.discordName ?? claims.name ?? "Membre", authorPhotoURL, text, createdAt: serverTimestamp() });
       batch.set(throttleRef, { createdAt: serverTimestamp(), lastText: text.toLowerCase(), commentId: commentRef.id, announcementId });
       await batch.commit();
       input.value = "";
       status.textContent = "Commentaire publié.";
-    } catch (error) { status.textContent = error.code === "permission-denied" ? "Envoi refusé. Respecte les règles des commentaires et attends 30 secondes avant de réessayer. Ton texte est conservé." : error.message || "Publication impossible. Ton texte est conservé ; réessaie dans un instant."; }
+    } catch (error) { status.textContent = error.code === "permission-denied" ? "Envoi refusé. Respecte les règles des commentaires et attends 30 secondes avant de réessayer. Ton texte est conservé." : "Publication impossible. Ton texte est conservé ; réessaie dans un instant."; }
     finally { busy = false; send.disabled = false; input.disabled = false; }
   });
   render();
