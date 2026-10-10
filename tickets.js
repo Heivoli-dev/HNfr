@@ -2,6 +2,7 @@ import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { setupGoogleLogin } from "./google-login.js";
+import { watchBan } from './ban-status.js';
 import { addDoc, collection, doc, getDoc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
@@ -48,6 +49,9 @@ let isModerator = false;
 let selectedTicket = null;
 let stopTickets = null;
 let stopMessages = null;
+let stopBan = null, blocked = true;
+const banNotice = document.createElement('p'); banNotice.className = 'auth-status'; banNotice.setAttribute('role', 'status');
+ticketForm.before(banNotice);
 
 function formatDate(timestamp) {
   if (!timestamp?.toDate) return "À l’instant";
@@ -87,8 +91,8 @@ function setSelectedTicket(ticket) {
   conversationStatus.textContent = isOpen ? "Ticket ouvert · La modération peut te répondre ici." : "Ticket fermé · Cette discussion est terminée.";
   conversationStatus.classList.toggle("is-closed", !isOpen);
   closeTicket.hidden = !isModerator || !isOpen;
-  messageText.disabled = !isOpen;
-  messageSubmit.disabled = !isOpen;
+  messageText.disabled = !isOpen || blocked;
+  messageSubmit.disabled = !isOpen || blocked;
   messageText.placeholder = isOpen ? "Écris ton message…" : "Ce ticket est fermé.";
   messageList.replaceChildren();
 
@@ -146,6 +150,10 @@ function renderTickets(snapshot) {
     button.append(top, bottom);
     button.addEventListener("click", () => setSelectedTicket(data));
     ticketList.append(button);
+    if (isModerator && data.creatorId !== currentUser.uid) {
+      const ban = document.createElement('a'); ban.textContent = 'Bannir ce compte';
+      ban.href = `admin.html?ban=${encodeURIComponent(data.creatorId)}`; ticketList.append(ban);
+    }
   });
   if (matchingSelected) setSelectedTicket(matchingSelected);
 }
@@ -171,7 +179,7 @@ document.querySelector("#sign-out").addEventListener("click", () => signOut(auth
 
 ticketForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!currentUser) return;
+  if (!currentUser || blocked) return;
   ticketCreateStatus.textContent = "Création…";
   try {
     const ticket = await addDoc(collection(db, "tickets"), {
@@ -194,7 +202,7 @@ ticketForm.addEventListener("submit", async (event) => {
 
 messageForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!currentUser || !selectedTicket || selectedTicket.status === "closed") return;
+  if (!currentUser || blocked || !selectedTicket || selectedTicket.status === "closed") return;
   const text = messageText.value.trim();
   if (!text) return;
   messageStatus.textContent = "Envoi…";
@@ -224,6 +232,7 @@ closeTicket.addEventListener("click", async () => {
 });
 
 onAuthStateChanged(auth, async (user) => {
+  stopBan?.(); stopBan = null; blocked = true; banNotice.textContent = ''; ticketForm.hidden = true;
   currentUser = user;
   isModerator = false;
   ticketList.replaceChildren();
@@ -240,6 +249,11 @@ onAuthStateChanged(auth, async (user) => {
   content.hidden = !user;
   moderatorBadge.hidden = true;
   if (!user) return;
+  stopBan = watchBan(db, user, state => {
+    blocked = state.blocked; banNotice.textContent = state.message; ticketForm.hidden = blocked;
+    messageText.disabled = blocked || !selectedTicket || selectedTicket.status === 'closed';
+    messageSubmit.disabled = messageText.disabled;
+  });
 
   const tokenClaims = (await user.getIdTokenResult()).claims;
   const email = !user.emailVerified || tokenClaims.discordId ? "" : (user.email?.toLowerCase() || "");

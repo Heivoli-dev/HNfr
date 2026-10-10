@@ -68,6 +68,44 @@ test('only authors or moderators delete comments and deleted announcements hide 
   await assertFails(getDocs(collection(user(), 'announcements/a/comments')));
 });
 async function seed() { await assertSucceeds(setDoc(doc(user(), 'tickets/t1'), ticket())); }
+const ban = (extra = {}) => ({ reason: 'Spam répété', expiresAt: null, createdAt: serverTimestamp(), createdBy: 'founder', ...extra });
+test('bans block comments, new tickets and ticket messages while preserving reads', async () => {
+  await setDoc(doc(founder(), 'announcements/a'), announcement); await seed();
+  await assertSucceeds(setDoc(doc(founder(), 'bans/alice'), ban()));
+  await assertSucceeds(getDoc(doc(user(), 'bans/alice')));
+  await assertSucceeds(getDoc(doc(user(), 'announcements/a')));
+  await assertSucceeds(getDoc(doc(user(), 'tickets/t1')));
+  await assertFails(post(user()));
+  await assertFails(setDoc(doc(user(), 'tickets/new'), ticket()));
+  await assertFails(setDoc(doc(user(), 'tickets/t1/messages/m'), message()));
+  await assertFails(updateDoc(doc(user(), 'tickets/t1'), { updatedAt: serverTimestamp() }));
+  await assertSucceeds(deleteDoc(doc(founder(), 'bans/alice')));
+  await assertSucceeds(post(user()));
+  await assertSucceeds(setDoc(doc(user(), 'tickets/new'), ticket()));
+});
+test('temporary bans expire and active bans block writes', async () => {
+  await setDoc(doc(founder(), 'announcements/a'), announcement);
+  await assertSucceeds(setDoc(doc(founder(), 'bans/alice'), ban({ expiresAt: new Date(Date.now() + 60000) })));
+  await assertFails(post(user()));
+  await env.withSecurityRulesDisabled(async ctx => setDoc(doc(ctx.firestore(), 'bans/alice'), ban({ expiresAt: new Date(Date.now() - 60000) })));
+  await assertSucceeds(post(user()));
+});
+test('only moderators manage bans and users cannot read another ban or unban themselves', async () => {
+  await assertFails(setDoc(doc(user(), 'bans/bob'), ban({createdBy:'alice'})));
+  await assertFails(setDoc(doc(founder(), 'bans/founder'), ban()));
+  await assertFails(setDoc(doc(founder(), 'bans/alice'), ban({expiresAt:new Date(0)})));
+  await assertFails(setDoc(doc(founder(), 'bans/alice'), ban({createdBy:'someone'})));
+  await assertFails(setDoc(doc(founder(), 'bans/alice'), ban({reason:''})));
+  await setDoc(doc(founder(), 'bans/alice'), ban());
+  await assertFails(getDoc(doc(user('bob'), 'bans/alice')));
+  await assertFails(deleteDoc(doc(user(), 'bans/alice')));
+  await assertFails(getDocs(collection(user(), 'bans')));
+  await setDoc(doc(founder(), 'admins/mod@example.com'), {email:'mod@example.com',createdAt:serverTimestamp()});
+  const mod = user('mod', {email:'mod@example.com',email_verified:true});
+  await assertSucceeds(setDoc(doc(mod, 'bans/bob'), ban({createdBy:'mod'})));
+  await setDoc(doc(founder(), 'bans/mod'), ban());
+  await assertFails(deleteDoc(doc(mod, 'bans/bob')));
+});
 test('private tickets deny anonymous users and other members, including collection queries', async () => {
   await seed();
   await assertSucceeds(getDoc(doc(user(), 'tickets/t1')));

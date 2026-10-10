@@ -11,11 +11,29 @@ service cloud.firestore {
       return verifiedEmail() && request.auth.token.email == 'heivolipro@gmail.com';
     }
     function isAdmin() {
-      return signedIn() && (isFounder()
+      return signedIn() && !isBanned() && (isFounder()
         || (verifiedEmail() && exists(/databases/$(database)/documents/admins/$(request.auth.token.email))));
     }
     function text(value, min, max) {
       return value is string && value.size() >= min && value.size() <= max;
+    }
+    function isBanned() {
+      let path = /databases/$(database)/documents/bans/$(request.auth.uid);
+      return signedIn() && !isFounder() && exists(path)
+        && (get(path).data.expiresAt == null || get(path).data.expiresAt > request.time);
+    }
+    match /bans/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+      allow create, update: if isAdmin() && uid != request.auth.uid
+        && request.resource.data.keys().hasAll(['reason', 'expiresAt', 'createdAt', 'createdBy'])
+        && request.resource.data.keys().hasOnly(['reason', 'expiresAt', 'createdAt', 'createdBy'])
+        && text(request.resource.data.reason, 1, 300)
+        && (request.resource.data.expiresAt == null
+          || (request.resource.data.expiresAt is timestamp && request.resource.data.expiresAt > request.time))
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow delete: if isAdmin();
     }
     function acceptableComment(value) {
       return !value.lower().matches('[\\s\\S]*(https?://|www[.]|discord[.]gg/|discord(app)?[.]com/invite/)[\\s\\S]*')
@@ -47,7 +65,7 @@ service cloud.firestore {
       allow delete: if isFounder();
       match /comments/{commentId} {
         allow read: if exists(/databases/$(database)/documents/announcements/$(announcement));
-        allow create: if signedIn()
+        allow create: if signedIn() && !isBanned()
           && exists(/databases/$(database)/documents/announcements/$(announcement))
           && request.resource.data.keys().hasAll(['authorId', 'authorName', 'text', 'createdAt'])
           && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'authorPhotoURL', 'text', 'createdAt'])
@@ -72,7 +90,7 @@ service cloud.firestore {
     match /commentThrottle/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list, delete: if false;
-      allow create, update: if signedIn() && request.auth.uid == uid
+      allow create, update: if signedIn() && !isBanned() && request.auth.uid == uid
         && request.resource.data.keys().hasAll(['createdAt', 'lastText', 'commentId', 'announcementId'])
         && request.resource.data.keys().hasOnly(['createdAt', 'lastText', 'commentId', 'announcementId'])
         && text(request.resource.data.lastText, 1, 800)
@@ -97,7 +115,7 @@ service cloud.firestore {
       allow delete: if isFounder();
     }
     match /tickets/{ticketId} {
-      allow create: if signedIn()
+      allow create: if signedIn() && !isBanned()
         && request.resource.data.keys().hasAll(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt'])
         && request.resource.data.keys().hasOnly(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt'])
         && request.resource.data.creatorId == request.auth.uid
@@ -113,12 +131,12 @@ service cloud.firestore {
         && ((isAdmin()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
           && request.resource.data.status in ['open', 'closed'])
-        || (signedIn() && resource.data.creatorId == request.auth.uid && resource.data.status == 'open'
+        || (signedIn() && !isBanned() && resource.data.creatorId == request.auth.uid && resource.data.status == 'open'
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['updatedAt'])));
       allow delete: if isAdmin();
       match /messages/{messageId} {
         allow get, list: if isAdmin() || ownsTicket(ticketId);
-        allow create: if signedIn() && (isAdmin() || ownsTicket(ticketId)) && ticketIsOpen(ticketId)
+        allow create: if signedIn() && !isBanned() && (isAdmin() || ownsTicket(ticketId)) && ticketIsOpen(ticketId)
           && request.resource.data.keys().hasAll(['authorId', 'authorName', 'authorIsModerator', 'text', 'createdAt'])
           && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'authorIsModerator', 'text', 'createdAt'])
           && request.resource.data.authorId == request.auth.uid

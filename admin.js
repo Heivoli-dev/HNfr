@@ -2,7 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebas
 import { GoogleAuthProvider, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { setupGoogleLogin } from "./google-login.js";
 import { formatAnnouncementDate } from "./announcement-date.js";
-import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+import { watchBan } from './ban-status.js';
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
 const firebaseConfig = {
@@ -34,6 +35,50 @@ const adminList = document.querySelector("#admin-list");
 let isAdmin = false;
 let isFounder = false;
 let stopAdminList = null;
+let stopBanList = null, stopOwnBan = null;
+const banForm = document.querySelector('#ban-form');
+const banStatus = document.querySelector('#ban-status');
+const banList = document.querySelector('#ban-list');
+const banUid = document.querySelector('#ban-uid');
+banUid.value = new URLSearchParams(location.search).get('ban') || '';
+
+function startBans() {
+  stopBanList = onSnapshot(query(collection(db, 'bans'), orderBy('createdAt', 'desc')), snapshot => {
+    banList.replaceChildren();
+    snapshot.forEach(item => {
+      const data = item.data(), expiry = data.expiresAt?.toDate?.();
+      const row = document.createElement('article'); row.className = 'admin-announcement';
+      const copy = document.createElement('div');
+      const title = document.createElement('strong'); title.textContent = item.id;
+      const info = document.createElement('p');
+      info.textContent = `${expiry ? (expiry > new Date() ? 'Jusqu’au ' : 'Expiré le ') + expiry.toLocaleString('fr-FR') : 'Permanent'} · ${data.reason}`;
+      copy.append(title, info);
+      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'remove-announcement'; remove.textContent = 'Débannir';
+      remove.addEventListener('click', async () => {
+        remove.disabled = true;
+        try { await deleteDoc(item.ref); banStatus.textContent = 'Compte débanni.'; }
+        catch { banStatus.textContent = 'Débannissement impossible.'; remove.disabled = false; }
+      });
+      row.append(copy, remove); banList.append(row);
+    });
+    if (snapshot.empty) banList.textContent = 'Aucun bannissement.';
+  }, () => { banStatus.textContent = 'Impossible de charger les bannissements. Vérifie les règles Firebase.'; });
+}
+banForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!isAdmin || !auth.currentUser) return;
+  const uid = banUid.value.trim(), reason = document.querySelector('#ban-reason').value.trim();
+  const duration = document.querySelector('#ban-duration').value;
+  if (!uid || uid.includes('/') || uid === auth.currentUser.uid || !reason) {
+    banStatus.textContent = 'Choisis un autre compte et indique un motif.'; return;
+  }
+  const button = banForm.querySelector('button'); button.disabled = true;
+  try {
+    await setDoc(doc(db, 'bans', uid), { reason, expiresAt: duration === 'permanent' ? null : Timestamp.fromMillis(Date.now() + Number(duration) * 3600000), createdAt: serverTimestamp(), createdBy: auth.currentUser.uid });
+    banForm.reset(); banStatus.textContent = 'Compte banni. Le motif lui sera affiché.';
+  } catch { banStatus.textContent = 'Bannissement refusé. Vérifie tes droits et les règles Firebase.'; }
+  finally { button.disabled = false; }
+});
 
 function renderAnnouncements(snapshot) {
   announcementList.replaceChildren();
@@ -150,6 +195,7 @@ adminAddForm.addEventListener("submit", async (event) => {
 });
 
 onAuthStateChanged(auth, async (user) => {
+  stopBanList?.(); stopBanList = null; stopOwnBan?.(); stopOwnBan = null; banList.replaceChildren();
   if (stopAdminList) stopAdminList();
   stopAdminList = null;
   adminList.replaceChildren();
@@ -174,6 +220,13 @@ onAuthStateChanged(auth, async (user) => {
   form.hidden = !isFounder;
   adminManagement.hidden = !isFounder;
   if (isFounder) startAdminList();
+  if (isAdmin) {
+    startBans();
+    stopOwnBan = watchBan(db, user, state => {
+      if (state.blocked) { adminContent.hidden = true; authStatus.textContent = state.message; }
+      else adminContent.hidden = false;
+    });
+  }
   if (!user) {
     googleButton.hidden = false;
     return;

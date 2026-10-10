@@ -1,5 +1,6 @@
 import { collection, deleteDoc, doc, getDoc, limit, onSnapshot, orderBy, query, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { commentModerationError } from "./comment-moderation.js";
+import { watchBan } from './ban-status.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 
 const node = (tag, text, className) => {
@@ -33,9 +34,12 @@ export function attachComments(article, announcementId, { db, auth }) {
   panel.append(summary, list, status, login, form);
   article.append(panel);
   let active = true, unsubscribe, user = auth.currentUser, moderator = false, records = [], busy = false;
+  let stopBan, blocked = true;
+  const banNotice = node('p', '', 'comment-status'); banNotice.setAttribute('role', 'status');
+  panel.insertBefore(banNotice, form);
   const ref = collection(db, "announcements", announcementId, "comments");
   function render() {
-    form.hidden = !user;
+    form.hidden = !user || blocked;
     login.hidden = !!user;
     list.replaceChildren();
     for (const record of records) {
@@ -69,11 +73,17 @@ export function attachComments(article, announcementId, { db, auth }) {
         });
         row.append(remove);
       }
+      if (moderator && record.authorId !== user?.uid) {
+        const ban = node('a', 'Bannir ce compte', 'comment-delete');
+        ban.href = `admin.html?ban=${encodeURIComponent(record.authorId)}`; row.append(ban);
+      }
       list.append(row);
     }
   }
   const stopAuth = onAuthStateChanged(auth, async (nextUser) => {
+    stopBan?.(); stopBan = undefined; blocked = true; banNotice.textContent = '';
     user = nextUser;
+    if (user) stopBan = watchBan(db, user, state => { blocked = state.blocked; banNotice.textContent = state.message; render(); });
     moderator = !!user?.emailVerified && user.email === "heivolipro@gmail.com";
     render();
     if (user?.emailVerified && user.email && !moderator) {
@@ -100,6 +110,7 @@ export function attachComments(article, announcementId, { db, auth }) {
     const current = auth.currentUser;
     const text = input.value.trim();
     if (!current) { status.textContent = "Connecte-toi pour publier un commentaire."; return; }
+    if (blocked) { status.textContent = banNotice.textContent; return; }
     const moderationError = commentModerationError(text);
     if (moderationError) { status.textContent = moderationError; input.focus(); return; }
     busy = true; send.disabled = true; input.disabled = true;
@@ -127,5 +138,5 @@ export function attachComments(article, announcementId, { db, auth }) {
   });
   render();
   panel.open = true;
-  return () => { active = false; unsubscribe?.(); stopAuth(); };
+  return () => { active = false; unsubscribe?.(); stopBan?.(); stopAuth(); };
 }
