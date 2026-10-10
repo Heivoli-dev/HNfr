@@ -47,3 +47,7 @@ Déployer les nouvelles règles puis les fichiers du site dans la même interven
 les anciennes versions du formulaire sans écriture atomique seront refusées.
 Recharger la page après déploiement. Les règles n’accordent aucune exemption aux
 modérateurs pour publier des liens ou contourner le délai.
+
+## Profils membres
+
+`profil.html` permet de sauvegarder un pseudo (60 caractères), une description (280 caractères) et une photo via un lien HTTPS imgbb/Google/Discord. Les profils sont publics dans `profiles/{uid}` ; ils ne contiennent ni e-mail ni rôle d’administration. `profil.html?uid=…` affiche un membre et réserve le formulaire au propriétaire. Les commentaires utilisent le profil actuel, avec le nom et la photo d’origine en secours. Les nouvelles annonces enregistrent l’auteur pour rendre son profil accessible. Les modifications nécessitent un permis serveur à usage unique et respectent les bans par compte et connexion.
