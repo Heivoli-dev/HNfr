@@ -1,3 +1,4 @@
+import { networkAPI } from './network.js';
 const SITE_ORIGIN = "https://heivoli-network.fr";
 const COOKIE_NAME = "__Host-heivoli_discord_state";
 const FIREBASE_AUDIENCE = "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit";
@@ -145,7 +146,8 @@ export default {
     let response;
     try {
       const pathname = new URL(request.url).pathname;
-      if (request.method !== "GET") response = new Response("Method not allowed", { status: 405, headers: { Allow: "GET" } });
+      if (pathname.startsWith('/api/')) response = await networkAPI(request, env);
+      else if (request.method !== "GET") response = new Response("Method not allowed", { status: 405, headers: { Allow: "GET" } });
       else if (pathname === "/login") response = await login(request, env);
       else if (pathname === "/callback") response = await callback(request, env);
       else response = error("Not found", 404);
