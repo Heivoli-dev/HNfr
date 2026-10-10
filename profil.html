@@ -13,7 +13,7 @@
     <title>Mon profil — Heivoli Network</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="redesign.css?v=projects-1" />
-  <link rel="stylesheet" href="navigation.css" />
+  <link rel="stylesheet" href="navigation.css" /><link rel="stylesheet" href="profiles.css" />
   </head>
   <body class="profile-page">
     <div class="page-glow glow-one" aria-hidden="true"></div>
@@ -33,7 +33,7 @@
         <div class="account-orb" aria-hidden="true">H</div>
         <p class="eyebrow"><span></span> Espace membre</p>
         <h1>Ton profil<br /><em>Network.</em></h1>
-        <p>Connecte-toi avec Google ou Discord pour accéder à tes informations et modifier ta description. Avec Discord, tu rejoins aussi automatiquement le serveur Heivoli Network.</p>
+        <p>Connecte-toi avec Google ou Discord pour accéder à tes informations et personnaliser ton profil public. Avec Discord, tu rejoins aussi automatiquement le serveur Heivoli Network.</p>
         <button id="google-login" class="button button-primary" type="button"><span class="google-icon">G</span> Continuer avec Google</button>
         <button id="discord-login" class="button button-discord" type="button">Continuer avec Discord</button>
         <label class="remember-device"><input id="remember-device" type="checkbox" /> <span>Se souvenir de moi sur cet appareil</span></label>
@@ -43,12 +43,12 @@
       <section id="profile-content" class="profile-panel" hidden>
         <div class="profile-heading">
           <div id="profile-avatar" class="account-orb"><span id="profile-initial">H</span><img id="profile-photo" alt="Photo de profil" hidden /></div>
-          <div><p class="eyebrow"><span></span> Espace membre</p><h1>Mon<br /><em>profil.</em></h1><span id="profile-badge" class="creator-badge" hidden>✦ Fondateur</span></div>
+          <div><p class="eyebrow"><span></span> Espace membre</p><h1 id="profile-title">Mon profil</h1><span id="profile-badge" class="creator-badge" hidden>✦ Fondateur</span></div>
           <div class="profile-actions"><a id="admin-link" class="button button-quiet" href="admin.html" hidden>Administration</a><button id="sign-out" class="button button-quiet" type="button">Se déconnecter</button></div>
         </div>
         <div class="profile-details">
           <div class="profile-info"><span id="profile-name">Membre Heivoli</span><span id="profile-email"></span></div>
-          <form id="profile-form" class="profile-form">
+          <p id="public-description" hidden></p><p id="public-profile-status" role="status"></p><form id="profile-form" class="profile-form"><p>Ton pseudo, ta photo et ta description seront visibles par tous.</p><label for="profile-display-name">Mon pseudo</label><input id="profile-display-name" maxlength="60" required /><label for="profile-photo-url">Ma photo (lien d’image HTTPS, facultatif)</label><input id="profile-photo-url" type="url" maxlength="2048" placeholder="https://i.ibb.co/…" /><small>Image hébergée sur imgbb, Google ou Discord. Vide pour afficher ton initiale.</small>
             <label for="profile-description">Ma description</label>
             <textarea id="profile-description" maxlength="280" placeholder="Présente-toi à la communauté : tes jeux préférés, ta console, ce que tu recherches…"></textarea>
             <div class="profile-form-footer"><span id="description-count">0 / 280</span><button class="button button-primary" type="submit">Enregistrer</button></div>

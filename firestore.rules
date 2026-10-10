@@ -79,10 +79,25 @@ service cloud.firestore {
     function validAnnouncement() {
       let d = request.resource.data;
       return d.keys().hasAll(['type', 'title', 'text', 'date', 'featured', 'createdAt'])
-        && d.keys().hasOnly(['type', 'title', 'text', 'date', 'featured', 'createdAt'])
+        && d.keys().hasOnly(['type', 'title', 'text', 'date', 'featured', 'createdAt', 'authorId'])
+        && (!('authorId' in d) || d.authorId == request.auth.uid)
         && d.type in ['Bienvenue', 'Événement', 'Communauté', 'Important']
         && text(d.title, 1, 80) && text(d.text, 1, 320) && text(d.date, 1, 32)
         && d.featured is bool;
+    }
+    match /profiles/{uid} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if signedIn() && !isBanned() && request.auth.uid == uid
+        && request.resource.data.keys().hasAll(['displayName', 'bio', 'photoURL', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['displayName', 'bio', 'photoURL', 'updatedAt', 'networkPermit'])
+        && permitted('profile', uid)
+        && text(request.resource.data.displayName, 1, 60) && text(request.resource.data.bio, 0, 280)
+        && acceptableComment(request.resource.data.displayName) && acceptableComment(request.resource.data.bio)
+        && text(request.resource.data.photoURL, 0, 2048)
+        && (request.resource.data.photoURL == '' || request.resource.data.photoURL.matches('https://(i[.]ibb[.]co|lh[3-6][.]googleusercontent[.]com|cdn[.]discordapp[.]com)/[^\\s]+'))
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
     }
     match /announcements/{announcement} {
       allow read: if true;

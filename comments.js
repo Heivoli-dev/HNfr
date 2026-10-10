@@ -1,3 +1,4 @@
+import { profileIdentity } from './profiles.js';
 import { collection, deleteDoc, doc, getDoc, limit, onSnapshot, orderBy, query, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { commentModerationError } from "./comment-moderation.js";
 import { watchBan } from './ban-status.js';
@@ -45,17 +46,8 @@ export function attachComments(article, announcementId, { db, auth }) {
     list.replaceChildren();
     for (const record of records) {
       const row = node("li", "", "comment-item");
-      const avatar = node("span", (record.authorName || "M").slice(0, 1).toUpperCase(), "comment-avatar");
-      avatar.setAttribute("aria-hidden", "true");
-      if (typeof record.authorPhotoURL === "string" && /^https:\/\/(lh[3-6]\.googleusercontent\.com|cdn\.discordapp\.com)\//.test(record.authorPhotoURL)) {
-        const image = node("img");
-        image.src = record.authorPhotoURL; image.alt = ""; image.loading = "lazy"; image.referrerPolicy = "no-referrer";
-        image.addEventListener("error", () => image.remove());
-        avatar.append(image);
-      }
-      row.append(avatar);
       const meta = node("div", "", "comment-meta");
-      meta.append(node("strong", record.authorName || "Membre"));
+      meta.append(profileIdentity(db, record.authorId, record.authorName || "Membre", record.authorPhotoURL));
       const date = record.createdAt?.toDate?.();
       if (date) {
         const time = node("time", new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short" }).format(date));

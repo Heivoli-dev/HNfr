@@ -1,0 +1,1 @@
+.profile-form input{width:100%;padding:12px;border:1px solid #9a91b4;border-radius:12px;font:inherit;box-sizing:border-box;background:white;color:#292638}.profile-form{display:grid;gap:12px}#public-description{white-space:pre-wrap;overflow-wrap:anywhere;font-size:18px;line-height:1.6}#profile-title{font-size:clamp(30px,5vw,60px)}

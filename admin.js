@@ -179,6 +179,7 @@ form.addEventListener("submit", async (event) => {
       date: formatAnnouncementDate({ createdAt: { toDate: () => new Date() } }),
       featured: document.querySelector("#announcement-featured").checked,
       createdAt: serverTimestamp(),
+      authorId: auth.currentUser.uid,
     });
     form.reset();
     adminStatus.textContent = "Annonce publiée.";

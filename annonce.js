@@ -1,3 +1,4 @@
+import { profileIdentity } from './profiles.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
@@ -33,6 +34,7 @@ else onSnapshot(doc(db, 'announcements', id), snapshot => {
   if (typeof data.imageData === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(data.imageData)) {
     const image = document.createElement('img'); image.src = data.imageData; image.alt = data.title || 'Illustration de l’annonce'; image.className = 'announcement-full-image'; content.append(image);
   }
+    if (data.authorId) content.append(profileIdentity(db, data.authorId, 'Équipe Heivoli'));
   document.title = `${data.title || 'Annonce'} — Heivoli Network`;
   if (!cleanup) cleanup = attachComments(discussion, id, { db, auth });
 }, () => { status.textContent = 'Impossible de charger cette annonce. Recharge la page pour réessayer.'; });

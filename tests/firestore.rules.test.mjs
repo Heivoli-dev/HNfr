@@ -8,6 +8,11 @@ async function grant(uid, action, target, ipHash = 'test-ip') {
   return id;
 }
 async function setDoc(ref, data) {
+  if (ref.path.startsWith('profiles/')) {
+    const uid = ref.path.split('/')[1], networkPermit = await grant(uid, 'profile', uid);
+    const batch = writeBatch(ref.firestore); batch.set(ref,{...data,networkPermit});
+    batch.update(doc(ref.firestore,'writePermits',networkPermit),{usedAt:serverTimestamp()}); return batch.commit();
+  }
   if (!ref.path.startsWith('tickets/')) return rawSetDoc(ref,data);
   const parts=ref.path.split('/'), action=parts.length===2?'ticket':'message';
   const target=action==='ticket'?parts[1]:parts[1]+'/'+parts[3];
@@ -189,4 +194,19 @@ test('announcements are public but writable only by the founder', async () => {
   await assertFails(setDoc(doc(user('admin', { email: 'admin@example.com', email_verified: true }), 'announcements/b'), announcement));
   await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(), 'announcements/a')));
   await assertFails(setDoc(doc(founder(), 'announcements/b'), { ...announcement, text: 'x'.repeat(321) }));
+});
+
+test('public profiles protect ownership, private fields and moderated content', async () => {
+  const profile = {displayName:'Alice', bio:'Fan de 3DS', photoURL:'https://i.ibb.co/example/avatar.png', updatedAt:serverTimestamp()};
+  await assertSucceeds(setDoc(doc(user(),'profiles/alice'), profile));
+  await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(),'profiles/alice')));
+  await assertFails(setDoc(doc(user('bob'),'profiles/alice'), profile));
+  await assertFails(setDoc(doc(user(),'profiles/alice'), {...profile,email:'private@example.com'}));
+  await assertFails(setDoc(doc(user(),'profiles/alice'), {...profile,role:'admin'}));
+  await assertFails(setDoc(doc(user(),'profiles/alice'), {...profile,photoURL:'https://evil.example/avatar.png'}));
+  await assertFails(setDoc(doc(user(),'profiles/alice'), {...profile,bio:'www.spam.fr'}));
+  await assertFails(setDoc(doc(user(),'profiles/alice'), {...profile,displayName:'connard'}));
+  await assertFails(setDoc(doc(user(),'profiles/alice'), {...profile,bio:'a'.repeat(281)}));
+  await env.withSecurityRulesDisabled(ctx => rawSetDoc(doc(ctx.firestore(),'bans/alice'),{expiresAt:null}));
+  await assertFails(setDoc(doc(user(),'profiles/alice'), {...profile,bio:'Nouveau texte'}));
 });

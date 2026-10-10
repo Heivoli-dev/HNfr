@@ -1,3 +1,4 @@
+import { profileIdentity } from './profiles.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { formatAnnouncementDate } from "./announcement-date.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
@@ -41,6 +42,7 @@ function renderAnnouncements(items) {
       element.textContent = typeof value === "string" ? value : "";
       article.append(element);
     }
+    if (announcement.authorId) article.append(profileIdentity(db, announcement.authorId, 'Équipe Heivoli'));
     if (announcement.id) {
       const link = document.createElement("a");
       link.className = "comment-login";

@@ -73,7 +73,7 @@ export async function networkAPI(request,env) {
       await commit([update(`bans/${body.uid}`,fields),update(`networkBans/${history.ipHash}`,{...fields,uid:field(body.uid)})]); return reply({ok:true});
     }
     if(path!=='/api/permit') return reply({error:'Route inconnue.'},404);
-    const patterns={comment:/^[A-Za-z0-9_-]{1,1500}\/[A-Za-z0-9_-]{1,128}$/,ticket:/^[A-Za-z0-9_-]{1,128}$/,message:/^[A-Za-z0-9_-]{1,1500}\/[A-Za-z0-9_-]{1,128}$/};
+    const patterns={profile:/^[A-Za-z0-9:_-]{1,128}$/,comment:/^[A-Za-z0-9_-]{1,1500}\/[A-Za-z0-9_-]{1,128}$/,ticket:/^[A-Za-z0-9_-]{1,128}$/,message:/^[A-Za-z0-9_-]{1,1500}\/[A-Za-z0-9_-]{1,128}$/};
     if(!patterns[body.action]?.test(body.target||'')) return reply({error:'Demande invalide.'},400);
     const ip=request.headers.get('CF-Connecting-IPv6')||request.headers.get('CF-Connecting-IP');
     if(!ip || !request.cf) return reply({error:'Connexion non vérifiable.'},403);
