@@ -4,6 +4,7 @@ import { setupGoogleLogin } from "./google-login.js";
 import { formatAnnouncementDate } from "./announcement-date.js";
 import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { watchBan } from './ban-status.js';
+import { networkRequest } from './network-access.js';
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
 const firebaseConfig = {
@@ -35,7 +36,7 @@ const adminList = document.querySelector("#admin-list");
 let isAdmin = false;
 let isFounder = false;
 let stopAdminList = null;
-let stopBanList = null, stopOwnBan = null;
+let stopBanList = null, stopOwnBan = null, stopNetworkBans = null;
 const banForm = document.querySelector('#ban-form');
 const banStatus = document.querySelector('#ban-status');
 const banList = document.querySelector('#ban-list');
@@ -43,6 +44,22 @@ const banUid = document.querySelector('#ban-uid');
 banUid.value = new URLSearchParams(location.search).get('ban') || '';
 
 function startBans() {
+  stopNetworkBans = onSnapshot(query(collection(db, 'networkBans'), orderBy('createdAt', 'desc')), snapshot => {
+    const list = document.querySelector('#network-ban-list'); list.replaceChildren();
+    snapshot.forEach(item => {
+      const data = item.data(), expiry = data.expiresAt?.toDate?.();
+      const row = document.createElement('article'); row.className = 'admin-announcement';
+      const text = document.createElement('p'); text.textContent = `${data.uid} · ${data.reason} · ${expiry ? 'Fin : ' + expiry.toLocaleString('fr-FR') : 'Permanent'}`;
+      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'remove-announcement'; remove.textContent = 'Débloquer la connexion';
+      remove.addEventListener('click', async () => {
+        remove.disabled = true;
+        try { await networkRequest(auth, 'network-unban', {id:item.id}); banStatus.textContent = 'Connexion débloquée. Le ban du compte se gère séparément.'; }
+        catch(error) { banStatus.textContent = error.message; remove.disabled = false; }
+      });
+      row.append(text,remove); list.append(row);
+    });
+    if(snapshot.empty) list.textContent = 'Aucune connexion bannie.';
+  }, () => { banStatus.textContent = 'Chargement des connexions bannies impossible.'; });
   stopBanList = onSnapshot(query(collection(db, 'bans'), orderBy('createdAt', 'desc')), snapshot => {
     banList.replaceChildren();
     snapshot.forEach(item => {
@@ -74,9 +91,10 @@ banForm.addEventListener('submit', async event => {
   }
   const button = banForm.querySelector('button'); button.disabled = true;
   try {
-    await setDoc(doc(db, 'bans', uid), { reason, expiresAt: duration === 'permanent' ? null : Timestamp.fromMillis(Date.now() + Number(duration) * 3600000), createdAt: serverTimestamp(), createdBy: auth.currentUser.uid });
+    if(document.querySelector('#ban-network').checked) await networkRequest(auth, 'network-ban', {uid,reason,hours:duration==='permanent'?'permanent':Number(duration)});
+    else await setDoc(doc(db, 'bans', uid), { reason, expiresAt: duration === 'permanent' ? null : Timestamp.fromMillis(Date.now() + Number(duration) * 3600000), createdAt: serverTimestamp(), createdBy: auth.currentUser.uid });
     banForm.reset(); banStatus.textContent = 'Compte banni. Le motif lui sera affiché.';
-  } catch { banStatus.textContent = 'Bannissement refusé. Vérifie tes droits et les règles Firebase.'; }
+  } catch (error) { banStatus.textContent = error.message || 'Bannissement refusé. Vérifie tes droits et les règles Firebase.'; }
   finally { button.disabled = false; }
 });
 
@@ -195,6 +213,7 @@ adminAddForm.addEventListener("submit", async (event) => {
 });
 
 onAuthStateChanged(auth, async (user) => {
+  stopNetworkBans?.(); stopNetworkBans = null; document.querySelector('#network-ban-list').replaceChildren();
   stopBanList?.(); stopBanList = null; stopOwnBan?.(); stopOwnBan = null; banList.replaceChildren();
   if (stopAdminList) stopAdminList();
   stopAdminList = null;

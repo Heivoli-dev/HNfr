@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="fr">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self'; img-src 'self' https://i.ibb.co data: https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com https://cdn.discordapp.com; connect-src https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://heivoli-network-408f3.firebaseapp.com; frame-src https://heivoli-network-408f3.firebaseapp.com https://accounts.google.com; base-uri 'none'; object-src 'none'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com https://apis.google.com; style-src 'self'; img-src 'self' https://i.ibb.co data: https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com https://cdn.discordapp.com; connect-src https://heivoli-discord-auth.heivoli-discord-auth.workers.dev https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://heivoli-network-408f3.firebaseapp.com; frame-src https://heivoli-network-408f3.firebaseapp.com https://accounts.google.com; base-uri 'none'; object-src 'none'; form-action 'self'; upgrade-insecure-requests" />
     <meta name="referrer" content="no-referrer" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -56,10 +56,14 @@
             <label>Identifiant du compte<input id="ban-uid" required maxlength="128" placeholder="Identifiant du membre" /></label>
             <label>Motif<textarea id="ban-reason" required maxlength="300" placeholder="Motif visible par le membre"></textarea></label>
             <label>Durée<select id="ban-duration"><option value="1">1 heure</option><option value="24">24 heures</option><option value="168">7 jours</option><option value="720">30 jours</option><option value="permanent">Permanent</option></select></label>
+            <label class="featured-choice"><input id="ban-network" type="checkbox" /> Bannir aussi sa dernière connexion (adresse IP)</label>
+            <p class="form-hint">Peut bloquer d’autres personnes partageant cette connexion. Disponible après un commentaire ou un ticket envoyé avec le nouveau système.</p>
             <button class="button button-primary" type="submit">Bannir le compte</button>
           </form>
           <p id="ban-status" class="auth-status" role="status"></p>
           <div id="ban-list" class="admin-announcements"></div>
+          <h3>Connexions bannies</h3>
+          <div id="network-ban-list" class="admin-announcements"></div>
         </section>
         <div class="admin-list-heading"><h2>Annonces publiées</h2><p id="announcement-list-note">Seul le fondateur peut publier ou supprimer une annonce.</p></div>
         <div id="admin-announcements" class="admin-announcements"></div>

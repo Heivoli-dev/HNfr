@@ -3,7 +3,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebas
 import { GoogleAuthProvider, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { setupGoogleLogin } from "./google-login.js";
 import { watchBan } from './ban-status.js';
-import { addDoc, collection, doc, getDoc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+import { authorizeWrite } from './network-access.js';
+import { collection, doc, getDoc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
 const DISCORD_LOGIN_URL = "https://heivoli-discord-auth.heivoli-discord-auth.workers.dev/login?returnTo=tickets";
@@ -182,7 +183,10 @@ ticketForm.addEventListener("submit", async (event) => {
   if (!currentUser || blocked) return;
   ticketCreateStatus.textContent = "Création…";
   try {
-    const ticket = await addDoc(collection(db, "tickets"), {
+    const ticket = doc(collection(db, 'tickets'));
+    const batch = writeBatch(db);
+    const networkPermit = await authorizeWrite(auth, db, batch, 'ticket', ticket.id);
+    batch.set(ticket, {
       creatorId: currentUser.uid,
       creatorName: (currentUser.displayName || "Membre Heivoli").slice(0, 120),
       creatorEmail: currentUser.email || "",
@@ -191,12 +195,14 @@ ticketForm.addEventListener("submit", async (event) => {
       status: "open",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      networkPermit,
     });
+    await batch.commit();
     ticketForm.reset();
     ticketCreateStatus.textContent = "Ticket créé. Explique maintenant ta demande à droite.";
     setSelectedTicket({ id: ticket.id, subject: "Nouveau ticket", category: "Ticket", status: "open" });
-  } catch {
-    ticketCreateStatus.textContent = "Création bloquée : vérifie les règles Firebase.";
+  } catch (error) {
+    ticketCreateStatus.textContent = error.message || "Création bloquée : vérifie les règles Firebase.";
   }
 });
 
@@ -207,18 +213,23 @@ messageForm.addEventListener("submit", async (event) => {
   if (!text) return;
   messageStatus.textContent = "Envoi…";
   try {
-    await addDoc(collection(db, "tickets", selectedTicket.id, "messages"), {
+    const message = doc(collection(db, 'tickets', selectedTicket.id, 'messages'));
+    const batch = writeBatch(db);
+    const networkPermit = await authorizeWrite(auth, db, batch, 'message', `${selectedTicket.id}/${message.id}`);
+    batch.set(message, {
       authorId: currentUser.uid,
       authorName: (currentUser.displayName || currentUser.email || "Membre Heivoli").slice(0, 120),
       authorIsModerator: isModerator,
       text,
       createdAt: serverTimestamp(),
+      networkPermit,
     });
-    await updateDoc(doc(db, "tickets", selectedTicket.id), { updatedAt: serverTimestamp() });
+    batch.update(doc(db, 'tickets', selectedTicket.id), { updatedAt: serverTimestamp() });
+    await batch.commit();
     messageText.value = "";
     messageStatus.textContent = "";
-  } catch {
-    messageStatus.textContent = "Envoi bloqué : vérifie les règles Firebase.";
+  } catch (error) {
+    messageStatus.textContent = error.message || "Envoi bloqué : vérifie les règles Firebase.";
   }
 });
 
