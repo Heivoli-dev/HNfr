@@ -26,3 +26,24 @@ Un envoi sur GitHub ne déploie pas les règles Firebase. Vérifier ensuite avec
 comptes : publication, lecture après rechargement, suppression de son message et
 refus de suppression du message d’un autre membre. Les tests de règles nécessitent
 l’émulateur Firestore sur localhost:8080 (`npm run test:rules`).
+
+### Modération automatique
+
+Le filtre refuse une liste d’insultes (sans distinction majuscules/minuscules)
+et les liens explicites HTTP(S), www et invitations Discord. Ce filtre déterministe
+ne détecte pas toutes les insultes déguisées ni toutes les formes de harcèlement.
+Les modérateurs peuvent toujours supprimer un commentaire manuellement.
+Les mêmes contrôles sont appliqués dans le navigateur et dans les règles Firestore.
+
+Chaque commentaire et son compteur privé `commentThrottle/{uid}` sont écrits dans
+un même lot : délai minimal de 30 secondes par compte, toutes annonces confondues,
+et refus d’un texte identique au dernier message (sans distinction de casse).
+Le compteur ne peut pas être supprimé par le membre. Il conserve uniquement le
+dernier texte et ses identifiants pour cette protection, et n’est lisible que par
+son propriétaire. Les anciens commentaires restent lisibles ; ils ne sont pas
+modérés rétroactivement.
+
+Déployer les nouvelles règles puis les fichiers du site dans la même intervention :
+les anciennes versions du formulaire sans écriture atomique seront refusées.
+Recharger la page après déploiement. Les règles n’accordent aucune exemption aux
+modérateurs pour publier des liens ou contourner le délai.

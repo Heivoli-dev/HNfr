@@ -1,4 +1,5 @@
-import { addDoc, collection, deleteDoc, doc, getDoc, limit, onSnapshot, orderBy, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+import { collection, deleteDoc, doc, getDoc, limit, onSnapshot, orderBy, query, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+import { commentModerationError } from "./comment-moderation.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 
 const node = (tag, text, className) => {
@@ -25,7 +26,7 @@ export function attachComments(article, announcementId, { db, auth }) {
   input.rows = 3;
   input.placeholder = "Partage ton avis avec la communauté…";
   label.htmlFor = input.id;
-  const hint = node("small", "Les commentaires sont publics · 800 caractères maximum.");
+  const hint = node("small", "Commentaires publics · 800 caractères maximum · Sans insultes ni liens · 30 secondes entre deux envois.");
   const send = node("button", "Publier", "button button-primary");
   send.type = "submit";
   form.append(label, input, hint, send);
@@ -99,16 +100,29 @@ export function attachComments(article, announcementId, { db, auth }) {
     const current = auth.currentUser;
     const text = input.value.trim();
     if (!current) { status.textContent = "Connecte-toi pour publier un commentaire."; return; }
-    if (!text) { status.textContent = "Écris un commentaire avant de le publier."; input.focus(); return; }
+    const moderationError = commentModerationError(text);
+    if (moderationError) { status.textContent = moderationError; input.focus(); return; }
     busy = true; send.disabled = true; input.disabled = true;
     status.textContent = "Publication en cours…";
     try {
       const { claims } = await current.getIdTokenResult();
       const authorPhotoURL = claims.discordAvatar ?? claims.picture ?? "";
-      await addDoc(ref, { authorId: current.uid, authorName: claims.discordName ?? claims.name ?? "Membre", authorPhotoURL, text, createdAt: serverTimestamp() });
+      const throttleRef = doc(db, "commentThrottle", current.uid);
+      const previous = await getDoc(throttleRef);
+      if (previous.exists()) {
+        const data = previous.data();
+        const elapsed = Date.now() - (data.createdAt?.toMillis?.() || 0);
+        if (elapsed < 30000) { status.textContent = `Attends encore ${Math.max(1, Math.ceil((30000 - elapsed) / 1000))} secondes avant de commenter.`; return; }
+        if (data.lastText === text.toLowerCase()) { status.textContent = "Ce commentaire est identique à ton dernier message. Évite les doublons."; return; }
+      }
+      const commentRef = doc(ref);
+      const batch = writeBatch(db);
+      batch.set(commentRef, { authorId: current.uid, authorName: claims.discordName ?? claims.name ?? "Membre", authorPhotoURL, text, createdAt: serverTimestamp() });
+      batch.set(throttleRef, { createdAt: serverTimestamp(), lastText: text.toLowerCase(), commentId: commentRef.id, announcementId });
+      await batch.commit();
       input.value = "";
       status.textContent = "Commentaire publié.";
-    } catch { status.textContent = "Publication impossible. Ton texte est conservé ; réessaie dans un instant."; }
+    } catch (error) { status.textContent = error.code === "permission-denied" ? "Envoi refusé. Respecte les règles des commentaires et attends 30 secondes avant de réessayer. Ton texte est conservé." : "Publication impossible. Ton texte est conservé ; réessaie dans un instant."; }
     finally { busy = false; send.disabled = false; input.disabled = false; }
   });
   render();

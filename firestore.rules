@@ -17,6 +17,15 @@ service cloud.firestore {
     function text(value, min, max) {
       return value is string && value.size() >= min && value.size() <= max;
     }
+    function acceptableComment(value) {
+      return !value.lower().matches('[\\s\\S]*(https?://|www[.]|discord[.]gg/|discord(app)?[.]com/invite/)[\\s\\S]*')
+        && !value.lower().matches('[\\s\\S]*(^|[^a-zà-ÿ0-9])(connards?|connasses?|encul[eé]s?|salope?s?|pute?s?|fdp|ntm|n[i1]gg(er|a)s?)([^a-zà-ÿ0-9]|$)[\\s\\S]*');
+    }
+    function commentCooldown(uid, value) {
+      let path = /databases/$(database)/documents/commentThrottle/$(uid);
+      return !exists(path) || (request.time >= get(path).data.createdAt + duration.value(30, 's')
+        && get(path).data.lastText != value.lower());
+    }
     function ownsTicket(ticketId) {
       return signedIn() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.creatorId == request.auth.uid;
     }
@@ -50,10 +59,30 @@ service cloud.firestore {
           && text(request.resource.data.authorName, 1, 120)
           && text(request.resource.data.text, 1, 800)
           && request.resource.data.text.matches('[\\s\\S]*[^\\s][\\s\\S]*')
+          && acceptableComment(request.resource.data.text)
+          && commentCooldown(request.auth.uid, request.resource.data.text)
+          && getAfter(/databases/$(database)/documents/commentThrottle/$(request.auth.uid)).data.commentId == commentId
+          && getAfter(/databases/$(database)/documents/commentThrottle/$(request.auth.uid)).data.announcementId == announcement
+          && getAfter(/databases/$(database)/documents/commentThrottle/$(request.auth.uid)).data.createdAt == request.time
           && request.resource.data.createdAt == request.time;
         allow update: if false;
         allow delete: if signedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
       }
+    }
+    match /commentThrottle/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, delete: if false;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasAll(['createdAt', 'lastText', 'commentId', 'announcementId'])
+        && request.resource.data.keys().hasOnly(['createdAt', 'lastText', 'commentId', 'announcementId'])
+        && text(request.resource.data.lastText, 1, 800)
+        && text(request.resource.data.commentId, 1, 1500)
+        && text(request.resource.data.announcementId, 1, 1500)
+        && request.resource.data.createdAt == request.time
+        && commentCooldown(uid, request.resource.data.lastText)
+        && getAfter(/databases/$(database)/documents/announcements/$(request.resource.data.announcementId)/comments/$(request.resource.data.commentId)).data.authorId == uid
+        && getAfter(/databases/$(database)/documents/announcements/$(request.resource.data.announcementId)/comments/$(request.resource.data.commentId)).data.createdAt == request.time
+        && getAfter(/databases/$(database)/documents/announcements/$(request.resource.data.announcementId)/comments/$(request.resource.data.commentId)).data.text.lower() == request.resource.data.lastText;
     }
     match /admins/{id} {
       allow get: if signedIn() && (isFounder()
