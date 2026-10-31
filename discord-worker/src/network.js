@@ -31,6 +31,23 @@ export async function networkAPI(request,env) {
     if(!env.TURNSTILE_SITE_KEY || !env.TURNSTILE_SECRET_KEY) return reply({error:'Protection anti-spam indisponible.'},503);
     return reply({enabled:true,siteKey:env.TURNSTILE_SITE_KEY});
   }
+  if(request.method==='POST' && new URL(request.url).pathname==='/api/signup-captcha') {
+    try {
+      if(env.TURNSTILE_ENABLED!=='true' || !env.TURNSTILE_SECRET_KEY) return reply({error:'Vérification indisponible.'},503);
+      const text=await request.text();
+      if(text.length>4096) return reply({error:'Demande trop longue.'},413);
+      const {token}=JSON.parse(text);
+      if(typeof token!=='string' || !token || token.length>2048) return reply({error:'Valide le captcha.'},400);
+      const verification=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({secret:env.TURNSTILE_SECRET_KEY,response:token,remoteip:request.headers.get('CF-Connecting-IP')||undefined}),signal:AbortSignal.timeout(10000)
+      });
+      if(!verification.ok) return reply({error:'Vérification indisponible.'},503);
+      const result=await verification.json();
+      if(result.success!==true || result.hostname!=='heivoli-network.fr' || result.action!=='signup') return reply({error:'Vérification refusée. Réessaie.'},403);
+      return reply({verified:true});
+    } catch { return reply({error:'Vérification indisponible. Réessaie.'},503); }
+  }
   if(request.method==='GET' && new URL(request.url).pathname==='/api/health') {
     try {
       const token=await serviceToken(JSON.parse(env.FIREBASE_SERVICE_ACCOUNT));

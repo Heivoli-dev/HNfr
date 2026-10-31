@@ -1,5 +1,5 @@
 let scriptPromise;
-function loadScript() {
+export function loadScript() {
   if (window.turnstile) return Promise.resolve();
   if (!scriptPromise) scriptPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');

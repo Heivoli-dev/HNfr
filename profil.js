@@ -1,3 +1,4 @@
+import { setupSignupCaptcha } from './signup-captcha.js';
 import { authorizeWrite } from './network-access.js';
 import { safeProfilePhoto } from './profiles.js';
 import { commentModerationError } from './comment-moderation.js';
@@ -76,13 +77,26 @@ async function finishDiscordLogin() {
   }
 }
 
-setupGoogleLogin({ auth, provider, button: googleButton, status: authStatus, signInWithPopup, beforeLogin: applySelectedPersistence });
+const signupCaptcha = setupSignupCaptcha({
+  server: 'https://heivoli-discord-auth.heivoli-discord-auth.workers.dev',
+  container: document.querySelector('#signup-captcha'),
+  status: document.querySelector('#captcha-status'),
+  buttons: [googleButton, discordButton]
+});
+
+setupGoogleLogin({ isLoginAllowed: signupCaptcha.isVerified, auth, provider, button: googleButton, status: authStatus, signInWithPopup, beforeLogin: applySelectedPersistence });
 
 discordButton.addEventListener("click", async () => {
+  if (!signupCaptcha.isVerified()) return;
   discordButton.disabled = true;
   authStatus.textContent = "Préparation de la connexion Discord…";
-  await applySelectedPersistence();
-  beginDiscordLogin(DISCORD_LOGIN_URL);
+  try {
+    await applySelectedPersistence();
+    beginDiscordLogin(DISCORD_LOGIN_URL);
+  } catch {
+    authStatus.textContent = "Connexion indisponible. Réessaie.";
+    discordButton.disabled = !signupCaptcha.isVerified();
+  }
 });
 
 finishDiscordLogin();

@@ -65,3 +65,23 @@ test('Turnstile configuration never exposes the secret and fails closed when inc
   const result=await networkAPI(req(),{TURNSTILE_ENABLED:'true',TURNSTILE_SITE_KEY:'public-key',TURNSTILE_SECRET_KEY:'private-key'});
   assert.deepEqual(await result.json(),{enabled:true,siteKey:'public-key'});
 });
+
+test('signup captcha validates anonymous tokens with Cloudflare before unlocking login',async()=>{
+  const original=global.fetch;
+  const req=token=>new Request('https://worker.test/api/signup-captcha',{method:'POST',headers:{Origin:'https://heivoli-network.fr','Content-Type':'application/json'},body:JSON.stringify({token})});
+  const env={TURNSTILE_ENABLED:'true',TURNSTILE_SECRET_KEY:'test-secret'};
+  try {
+    assert.equal((await networkAPI(req(''),env)).status,400);
+    for (const result of [{success:false},{success:true,hostname:'other.example',action:'signup'},{success:true,hostname:'heivoli-network.fr',action:'comment'}]) {
+      global.fetch=async()=>Response.json(result);
+      assert.equal((await networkAPI(req('token'),env)).status,403);
+    }
+    global.fetch=async(url,options)=>{
+      assert.equal(JSON.parse(options.body).response,'token');
+      return Response.json({success:true,hostname:'heivoli-network.fr',action:'signup'});
+    };
+    assert.deepEqual(await (await networkAPI(req('token'),env)).json(),{verified:true});
+    global.fetch=async()=>{throw new Error('offline');};
+    assert.equal((await networkAPI(req('token'),env)).status,503);
+  } finally { global.fetch=original; }
+});

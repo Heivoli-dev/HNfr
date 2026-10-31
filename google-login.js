@@ -1,9 +1,9 @@
 // Keep the result on the site's origin: cross-domain redirects can lose
 // their session when the browser partitions third-party storage.
-export function setupGoogleLogin({ auth, provider, button, status, signInWithPopup, beforeLogin }) {
+export function setupGoogleLogin({ auth, provider, button, status, signInWithPopup, beforeLogin, isLoginAllowed = () => true }) {
   provider.setCustomParameters({ prompt: "select_account" });
   button.addEventListener("click", async () => {
-    if (button.disabled) return;
+    if (button.disabled || !isLoginAllowed()) return;
     button.disabled = true;
     const pendingMessage = "Choisis ton compte dans la fenêtre Google. Si aucune fenêtre ne s’affiche dans le navigateur intégré, ouvre le site dans Safari ou Chrome.";
     status.textContent = pendingMessage;
@@ -23,7 +23,7 @@ export function setupGoogleLogin({ auth, provider, button, status, signInWithPop
       };
       status.textContent = messages[error.code] || "La connexion n’a pas pu aboutir. Réessaie dans un instant.";
     } finally {
-      button.disabled = false;
+      button.disabled = !isLoginAllowed();
     }
   });
 }
