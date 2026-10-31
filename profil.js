@@ -1,11 +1,11 @@
-import { setupSignupCaptcha } from './signup-captcha.js';
+import { signupCaptcha } from './signup-gate.js';
 import { authorizeWrite } from './network-access.js';
 import { safeProfilePhoto } from './profiles.js';
 import { commentModerationError } from './comment-moderation.js';
 import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, browserLocalPersistence, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
-import { setupGoogleLogin } from "./google-login.js";
+import { setupGoogleLogin } from "./google-login.js?v=signup-1";
 import { doc, getDoc, getFirestore, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -76,13 +76,6 @@ async function finishDiscordLogin() {
     authStatus.textContent = "La connexion Discord n’a pas pu aboutir. Réessaie dans un instant.";
   }
 }
-
-const signupCaptcha = setupSignupCaptcha({
-  server: 'https://heivoli-discord-auth.heivoli-discord-auth.workers.dev',
-  container: document.querySelector('#signup-captcha'),
-  status: document.querySelector('#captcha-status'),
-  buttons: [googleButton, discordButton]
-});
 
 setupGoogleLogin({ isLoginAllowed: signupCaptcha.isVerified, auth, provider, button: googleButton, status: authStatus, signInWithPopup, beforeLogin: applySelectedPersistence });
 

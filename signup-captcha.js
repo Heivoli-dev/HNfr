@@ -1,4 +1,4 @@
-import { loadScript } from './turnstile.js';
+import { loadScript } from './turnstile.js?v=signup-1';
 
 export function setupSignupCaptcha({ server, container, status, buttons }) {
   let verifiedUntil = 0, timer, generation = 0;
