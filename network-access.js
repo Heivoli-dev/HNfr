@@ -1,3 +1,4 @@
+import { challenge } from './turnstile.js';
 import { doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js';
 const SERVER='https://heivoli-discord-auth.heivoli-discord-auth.workers.dev';
 export async function networkRequest(auth,route,data) {
@@ -8,7 +9,7 @@ export async function networkRequest(auth,route,data) {
   return result;
 }
 export async function authorizeWrite(auth,db,batch,action,target) {
-  const {id}=await networkRequest(auth,'permit',{action,target});
+  const {id}=await networkRequest(auth,'permit',{action,target,turnstileToken:await challenge(SERVER,action)});
   batch.update(doc(db,'writePermits',id),{usedAt:serverTimestamp()});
   return id;
 }

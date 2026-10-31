@@ -27,3 +27,28 @@ Déploiement : serveur Cloudflare d'abord, vérifier /api/health depuis l'origin
 officielle, puis les fichiers du site et les règles Firestore testées. Le compte
 de service du Worker doit avoir accès à Firestore. Ne jamais placer ses secrets
 dans le dépôt ou les pages. La CSP autorise l'API du Worker pour les écritures.
+
+## Cloudflare Turnstile
+
+L’intégration protège la délivrance des permis d’écriture (commentaires, profils,
+tickets et messages). Aucun permis n’est délivré si Turnstile est activé et que
+le jeton est absent, refusé, réutilisé, d’un autre domaine ou d’une autre action.
+Les règles Firestore existantes restent nécessaires pour empêcher les écritures directes.
+
+Activation coordonnée :
+1. Créer un widget Turnstile « Managed » dans Cloudflare pour le domaine exact
+   `heivoli-network.fr`.
+2. Définir `TURNSTILE_SITE_KEY` dans les variables du Worker Discord et ajouter
+   `TURNSTILE_SECRET_KEY` comme secret (`npx wrangler secret put TURNSTILE_SECRET_KEY`
+   depuis `discord-worker`). Ne jamais mettre la clé secrète dans Git ou le navigateur.
+3. Publier d’abord les fichiers statiques incluant `turnstile.js`, `network-access.js`
+   et les CSP mises à jour. Publier ensuite le Worker avec `TURNSTILE_ENABLED=true`
+   et la clé publique dans ses variables persistantes (wrangler.jsonc ou configuration
+   de déploiement). Les clés ne sont pas fournies dans ce dépôt.
+4. Vérifier un commentaire, un ticket, un message et un profil, puis une requête sans
+   jeton : elle doit être refusée. Tester aussi annulation et nouvelle tentative.
+
+Sans `TURNSTILE_ENABLED=true`, les contrôles de modération précédents continuent
+à fonctionner mais Turnstile n’est pas actif. Une configuration activée sans clés
+refuse les écritures. Chaque envoi utilise un nouveau jeton validé côté serveur.
+Documentation : https://developers.cloudflare.com/turnstile/get-started/server-side-validation/

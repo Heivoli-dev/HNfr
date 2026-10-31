@@ -11,10 +11,11 @@ const request=(body,path='permit',extra={})=>{
   const r=new Request(`https://worker.test/api/${path}`,{method:'POST',headers:{Origin:'https://heivoli-network.fr',Authorization:'Bearer fake-test-token','Content-Type':'application/json','CF-Connecting-IP':'192.0.2.1'},body:JSON.stringify(body),...extra});
   Object.defineProperty(r,'cf',{value:{}}); return r;
 };
-async function run(body,{uid='alice',founder=false,ipBanned=false,accountBanned=false,history=true,path='permit'}={}) {
+async function run(body,{uid='alice',founder=false,ipBanned=false,accountBanned=false,history=true,path='permit',turnstile=false,verification={success:true,hostname:'heivoli-network.fr',action:'comment'}}={}) {
   const original=global.fetch,commits=[];
   global.fetch=async(url,options={})=>{
     url=String(url);
+    if(url.includes('/turnstile/v0/siteverify')) return Response.json(verification);
     if(url.includes('accounts:lookup')) return Response.json({users:[{localId:uid,email:founder?'heivolipro@gmail.com':'alice@example.com',emailVerified:true}]});
     if(url==='https://oauth2.googleapis.com/token') return Response.json({access_token:'test-oauth'});
     if(url.endsWith(':commit')) {commits.push(JSON.parse(options.body).writes); return Response.json({writeResults:[]});}
@@ -22,7 +23,7 @@ async function run(body,{uid='alice',founder=false,ipBanned=false,accountBanned=
     if(url.includes('/networkUsers/') && history) return Response.json({fields:{ipHash:{stringValue:'a'.repeat(64)},expiresAt:{timestampValue:new Date(Date.now()+60000).toISOString()}}});
     return new Response('',{status:404});
   };
-  try {const response=await networkAPI(request(body,path),{FIREBASE_SERVICE_ACCOUNT:JSON.stringify(account)}); return {status:response.status,data:await response.json(),commits};}
+  try {const response=await networkAPI(request(body,path),{FIREBASE_SERVICE_ACCOUNT:JSON.stringify(account),...(turnstile ? {TURNSTILE_ENABLED:'true',TURNSTILE_SITE_KEY:'public-test-key',TURNSTILE_SECRET_KEY:'secret-test-key'} : {})}); return {status:response.status,data:await response.json(),commits};}
   finally {global.fetch=original;}
 }
 test('IP control rejects wrong origin and missing authentication',async()=>{
@@ -46,4 +47,21 @@ test('only moderators can ban connections; absent history never fabricates an IP
   const ok=await run(body,{path:'network-ban',founder:true}); assert.equal(ok.status,200);
   assert.equal(ok.commits[0].length,2); assert.ok(ok.commits[0][0].update.name.endsWith('/bans/bob'));
   assert.equal((await run({...body,hours:-1},{path:'network-ban',founder:true})).status,400);
+});
+
+test('Turnstile gates permits and checks hostname and action on the server',async()=>{
+  const body={action:'comment',target:'a/c',turnstileToken:'test-token'};
+  for (const verification of [{success:false},{success:true,hostname:'evil.example',action:'comment'},{success:true,hostname:'heivoli-network.fr',action:'ticket'}]) {
+    const denied=await run(body,{turnstile:true,verification});
+    assert.equal(denied.status,403); assert.equal(denied.commits.length,0);
+  }
+  const missing=await run({...body,turnstileToken:undefined},{turnstile:true});
+  assert.equal(missing.status,403); assert.equal(missing.commits.length,0);
+  assert.equal((await run(body,{turnstile:true})).status,200);
+});
+test('Turnstile configuration never exposes the secret and fails closed when incomplete',async()=>{
+  const req=()=>new Request('https://worker.test/api/turnstile',{headers:{Origin:'https://heivoli-network.fr'}});
+  assert.equal((await networkAPI(req(),{TURNSTILE_ENABLED:'true'})).status,503);
+  const result=await networkAPI(req(),{TURNSTILE_ENABLED:'true',TURNSTILE_SITE_KEY:'public-key',TURNSTILE_SECRET_KEY:'private-key'});
+  assert.deepEqual(await result.json(),{enabled:true,siteKey:'public-key'});
 });

@@ -26,6 +26,11 @@ export async function networkAPI(request,env) {
   const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers});
   if(request.headers.get('Origin')!==SITE) return reply({error:'Origine refusée.'},403);
   if(request.method==='OPTIONS') return new Response(null,{status:204,headers:{...headers,'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type'}});
+  if(request.method==='GET' && new URL(request.url).pathname==='/api/turnstile') {
+    if(env.TURNSTILE_ENABLED!=='true') return reply({enabled:false});
+    if(!env.TURNSTILE_SITE_KEY || !env.TURNSTILE_SECRET_KEY) return reply({error:'Protection anti-spam indisponible.'},503);
+    return reply({enabled:true,siteKey:env.TURNSTILE_SITE_KEY});
+  }
   if(request.method==='GET' && new URL(request.url).pathname==='/api/health') {
     try {
       const token=await serviceToken(JSON.parse(env.FIREBASE_SERVICE_ACCOUNT));
@@ -77,6 +82,18 @@ export async function networkAPI(request,env) {
     if(!patterns[body.action]?.test(body.target||'')) return reply({error:'Demande invalide.'},400);
     const ip=request.headers.get('CF-Connecting-IPv6')||request.headers.get('CF-Connecting-IP');
     if(!ip || !request.cf) return reply({error:'Connexion non vérifiable.'},403);
+    if(env.TURNSTILE_ENABLED==='true') {
+      if(!env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_SITE_KEY) return reply({error:'Protection anti-spam indisponible.'},503);
+      if(typeof body.turnstileToken!=='string' || !body.turnstileToken || body.turnstileToken.length>2048) return reply({error:'Valide la vérification anti-spam.'},403);
+      const verification=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({secret:env.TURNSTILE_SECRET_KEY,response:body.turnstileToken,remoteip:ip}),
+        signal:AbortSignal.timeout(10000)
+      });
+      if(!verification.ok) return reply({error:'Protection anti-spam indisponible.'},503);
+      const result=await verification.json();
+      if(result.success!==true || result.hostname!=='heivoli-network.fr' || result.action!==body.action) return reply({error:'Vérification anti-spam refusée. Réessaie.'},403);
+    }
     const hashKey=await crypto.subtle.importKey('raw',new TextEncoder().encode(account.private_key),{name:'HMAC',hash:'SHA-256'},false,['sign']);
     const ipHash=Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',hashKey,new TextEncoder().encode(ip.toLowerCase()))),v=>v.toString(16).padStart(2,'0')).join('');
     const networkBan=await read(`networkBans/${ipHash}`);
