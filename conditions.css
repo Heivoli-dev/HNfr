@@ -1,0 +1,4 @@
+.legal-page { max-width: 800px; padding-block: 40px 64px; line-height: 1.7; }
+.legal-page h1 { font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.15; }
+.legal-page h2 { font-size: 1.35rem; margin-top: 2rem; }
+.legal-page a { text-decoration: underline; text-underline-offset: .2em; }
