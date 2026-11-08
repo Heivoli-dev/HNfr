@@ -138,12 +138,13 @@ function renderTickets(snapshot) {
     return;
   }
   let matchingSelected = null;
-  snapshot.forEach((item) => {
-    const data = { ...item.data(), id: item.id };
-    if (selectedTicket?.id === item.id) matchingSelected = data;
+  const tickets = snapshot.docs.map(item => ({ ...item.data(), id: item.id }));
+  tickets.sort((a, b) => (b.updatedAt?.toMillis?.() ?? 0) - (a.updatedAt?.toMillis?.() ?? 0) || a.id.localeCompare(b.id));
+  tickets.forEach((data) => {
+    if (selectedTicket?.id === data.id) matchingSelected = data;
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `ticket-item ${selectedTicket?.id === item.id ? "is-selected" : ""}`;
+    button.className = `ticket-item ${selectedTicket?.id === data.id ? "is-selected" : ""}`;
     const top = document.createElement("strong");
     top.textContent = data.subject;
     const bottom = document.createElement("span");
@@ -163,9 +164,14 @@ function listenToTickets() {
   if (stopTickets) stopTickets();
   const ticketsQuery = isModerator
     ? query(collection(db, "tickets"), orderBy("updatedAt", "desc"))
-    : query(collection(db, "tickets"), where("creatorId", "==", currentUser.uid), orderBy("updatedAt", "desc"));
-  stopTickets = onSnapshot(ticketsQuery, renderTickets, () => {
-    ticketList.textContent = "Impossible de charger les tickets. Vérifie les règles Firebase.";
+    : query(collection(db, "tickets"), where("creatorId", "==", currentUser.uid));
+  stopTickets = onSnapshot(ticketsQuery, renderTickets, (error) => {
+    const messages = {
+      'permission-denied': 'Ton compte n’a pas accès à ces tickets. Reconnecte-toi puis réessaie.',
+      'unavailable': 'Connexion au service des tickets indisponible. Vérifie ta connexion Internet.',
+      'failed-precondition': 'Le service des tickets est en cours de configuration. Réessaie dans un instant.'
+    };
+    ticketList.textContent = messages[error.code] || 'Impossible de charger les tickets. Recharge la page pour réessayer.';
   });
 }
 
