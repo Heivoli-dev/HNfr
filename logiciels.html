@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="fr">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self' data: https://i.ibb.co; base-uri 'none'; object-src 'none'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; connect-src https://api.github.com; style-src 'self'; img-src 'self' data: https://i.ibb.co; base-uri 'none'; object-src 'none'; form-action 'self'; upgrade-insecure-requests" />
     <meta name="referrer" content="no-referrer" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -47,7 +47,7 @@
         <p>Des outils pensés pour relier le PC, la Nintendo 3DS et la communauté.</p>
       </section>
 
-      <article class="software-card">
+      <article class="software-card" data-release-repo="Heivoli-dev/3ds-screen-link">
         <div class="software-copy">
           <p class="software-label">PREMIER LOGICIEL</p>
           <h2>ScreenLink <em>3DS</em></h2>
@@ -59,14 +59,14 @@
           </ul>
         </div>
         <div class="software-downloads">
-          <p class="release-note">Dernière version publiée<br><strong>v1.4.3</strong></p>
-          <a class="download-button download-pc" href="https://github.com/Heivoli-dev/3ds-screen-link/releases/latest/download/ScreenLinkPC.exe" target="_blank" rel="noopener noreferrer"><span>Windows</span><strong>Télécharger le .exe</strong><small>ScreenLinkPC.exe · 19,2 Mo</small></a>
-          <a class="download-button download-3ds" href="https://github.com/Heivoli-dev/3ds-screen-link/releases/latest/download/ScreenLink3DS.3dsx" target="_blank" rel="noopener noreferrer"><span>Nintendo 3DS</span><strong>Télécharger le .3dsx</strong><small>ScreenLink3DS.3dsx · 1,3 Mo</small></a>
+          <p class="release-note">Dernière version publiée<br><strong data-release-version>v1.4.3</strong></p>
+          <a class="download-button download-pc" data-release-asset="ScreenLinkPC.exe" href="https://github.com/Heivoli-dev/3ds-screen-link/releases/latest/download/ScreenLinkPC.exe" target="_blank" rel="noopener noreferrer"><span>Windows</span><strong>Télécharger le .exe</strong><small data-release-size data-prefix="ScreenLinkPC.exe · ">ScreenLinkPC.exe · 19,2 Mo</small></a>
+          <a class="download-button download-3ds" data-release-asset="ScreenLink3DS.3dsx" href="https://github.com/Heivoli-dev/3ds-screen-link/releases/latest/download/ScreenLink3DS.3dsx" target="_blank" rel="noopener noreferrer"><span>Nintendo 3DS</span><strong>Télécharger le .3dsx</strong><small data-release-size data-prefix="ScreenLink3DS.3dsx · ">ScreenLink3DS.3dsx · 1,3 Mo</small></a>
           <a class="github-link" href="https://github.com/Heivoli-dev/3ds-screen-link" target="_blank" rel="noopener noreferrer">Voir le projet et le guide d’installation sur GitHub <span aria-hidden="true">↗</span></a>
         </div>
       </article>
 
-      <article class="software-card">
+      <article class="software-card" data-release-repo="Heivoli-dev/3ds-theme-studio">
         <div class="software-copy">
           <p class="software-label">NOUVEAU LOGICIEL</p>
           <h2>3DS Theme <em>Studio</em></h2>
@@ -80,9 +80,9 @@
           </ul>
         </div>
         <div class="software-downloads">
-          <p class="release-note">Dernière version publiée<br><strong>v1.1.0</strong></p>
-          <a class="download-button download-pc" href="https://github.com/Heivoli-dev/3ds-theme-studio/releases/latest/download/3DS-Theme-Studio-Windows-Setup.exe" target="_blank" rel="noopener noreferrer"><span>Windows</span><strong>Télécharger le .exe</strong><small>3DS-Theme-Studio-Windows-Setup.exe · 79 Mo</small></a>
-          <a class="download-button download-3ds" href="https://github.com/Heivoli-dev/3ds-theme-studio/releases/latest/download/3DS-Theme-Studio-Mac-Apple-Silicon.dmg" target="_blank" rel="noopener noreferrer"><span>macOS</span><strong>Télécharger le .dmg</strong><small>Mac Apple Silicon (M1 et plus) · 94 Mo</small></a>
+          <p class="release-note">Dernière version publiée<br><strong data-release-version>v1.1.0</strong></p>
+          <a class="download-button download-pc" data-release-asset="3DS-Theme-Studio-Windows-Setup.exe" href="https://github.com/Heivoli-dev/3ds-theme-studio/releases/latest/download/3DS-Theme-Studio-Windows-Setup.exe" target="_blank" rel="noopener noreferrer"><span>Windows</span><strong>Télécharger le .exe</strong><small data-release-size data-prefix="3DS-Theme-Studio-Windows-Setup.exe · ">3DS-Theme-Studio-Windows-Setup.exe · 79 Mo</small></a>
+          <a class="download-button download-3ds" data-release-asset="3DS-Theme-Studio-Mac-Apple-Silicon.dmg" href="https://github.com/Heivoli-dev/3ds-theme-studio/releases/latest/download/3DS-Theme-Studio-Mac-Apple-Silicon.dmg" target="_blank" rel="noopener noreferrer"><span>macOS</span><strong>Télécharger le .dmg</strong><small data-release-size data-prefix="Mac Apple Silicon (M1 et plus) · ">Mac Apple Silicon (M1 et plus) · 94 Mo</small></a>
           <a class="github-link" href="https://github.com/Heivoli-dev/3ds-theme-studio/releases/latest" target="_blank" rel="noopener noreferrer">Mac Intel, version portable et guide sur GitHub <span aria-hidden="true">↗</span></a>
         </div>
       </article>
@@ -90,6 +90,7 @@
       <aside class="software-help"><span aria-hidden="true">i</span><p>Pour utiliser ScreenLink 3DS ou le QR code de 3DS Theme Studio, l’ordinateur et la console doivent être connectés au même réseau Wi-Fi. Le guide complet, les prérequis et le code source sont disponibles sur GitHub.</p></aside>
       <aside class="software-help"><span aria-hidden="true">i</span><p>Sur Mac, au premier lancement de 3DS Theme Studio, macOS bloque l’application car elle ne vient pas de l’App Store. Ouvre <strong>Réglages Système → Confidentialité et sécurité</strong>, puis clique sur <strong>Ouvrir quand même</strong>.</p></aside>
     </main>
+    <script src="logiciels-releases.js" defer></script>
     <footer class="section-shell"><p><a href="conditions.html">Conditions d’utilisation</a></p></footer>
   </body>
 </html>
