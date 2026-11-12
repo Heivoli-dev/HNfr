@@ -83,12 +83,29 @@
           <p class="release-note">Dernière version publiée<br><strong data-release-version>v1.1.0</strong></p>
           <a class="download-button download-pc" data-release-asset="3DS-Theme-Studio-Windows-Setup.exe" href="https://github.com/Heivoli-dev/3ds-theme-studio/releases/latest/download/3DS-Theme-Studio-Windows-Setup.exe" target="_blank" rel="noopener noreferrer"><span>Windows</span><strong>Télécharger le .exe</strong><small data-release-size data-prefix="3DS-Theme-Studio-Windows-Setup.exe · ">3DS-Theme-Studio-Windows-Setup.exe · 79 Mo</small></a>
           <a class="download-button download-3ds" data-release-asset="3DS-Theme-Studio-Mac-Apple-Silicon.dmg" href="https://github.com/Heivoli-dev/3ds-theme-studio/releases/latest/download/3DS-Theme-Studio-Mac-Apple-Silicon.dmg" target="_blank" rel="noopener noreferrer"><span>macOS</span><strong>Télécharger le .dmg</strong><small data-release-size data-prefix="Mac Apple Silicon (M1 et plus) · ">Mac Apple Silicon (M1 et plus) · 94 Mo</small></a>
+          <a class="mac-guide-link" href="#installer-sur-mac">🍎 Première ouverture sur Mac : lis ceci</a>
           <a class="github-link" href="https://github.com/Heivoli-dev/3ds-theme-studio/releases/latest" target="_blank" rel="noopener noreferrer">Mac Intel, version portable et guide sur GitHub <span aria-hidden="true">↗</span></a>
         </div>
       </article>
 
       <aside class="software-help"><span aria-hidden="true">i</span><p>Pour utiliser ScreenLink 3DS ou le QR code de 3DS Theme Studio, l’ordinateur et la console doivent être connectés au même réseau Wi-Fi. Le guide complet, les prérequis et le code source sont disponibles sur GitHub.</p></aside>
-      <aside class="software-help"><span aria-hidden="true">i</span><p>Sur Mac, au premier lancement de 3DS Theme Studio, macOS bloque l’application car elle ne vient pas de l’App Store. Ouvre <strong>Réglages Système → Confidentialité et sécurité</strong>, puis clique sur <strong>Ouvrir quand même</strong>.</p></aside>
+      <details class="mac-guide" id="installer-sur-mac">
+        <summary><span aria-hidden="true">🍎</span> Installer 3DS Theme Studio sur Mac</summary>
+        <div class="mac-guide-body">
+          <p>Au premier lancement, ton Mac peut afficher : <em>« Apple n’a pas pu confirmer que 3DS Theme Studio ne contenait pas de logiciel malveillant… »</em></p>
+          <p><strong>Pas de panique, c’est normal !</strong> macOS affiche ce message pour toutes les applis qui ne viennent pas de l’App Store. 3DS Theme Studio est gratuit et open source : tout son code est visible sur GitHub.</p>
+          <p class="mac-guide-title">Pour l’ouvrir (une seule fois) :</p>
+          <ol>
+            <li>Clique sur <strong>Terminé</strong> — <strong>pas</strong> sur « Placer dans la corbeille ».</li>
+            <li>Ouvre <strong>Réglages Système → Confidentialité et sécurité</strong>.</li>
+            <li>Tout en bas, clique sur <strong>Ouvrir quand même</strong> à côté de 3DS Theme Studio.</li>
+            <li>Confirme avec ton mot de passe ou Touch ID, puis clique sur <strong>Ouvrir</strong>.</li>
+          </ol>
+          <p>C’est tout ! Le Mac ne te reposera plus la question.</p>
+          <p class="mac-guide-alt"><strong>Le bouton n’apparaît pas ?</strong> Ouvre le Terminal, colle cette ligne puis appuie sur Entrée :<br><code>xattr -cr "/Applications/3DS Theme Studio.app"</code></p>
+          <p class="mac-guide-alt">Un souci ? <a href="tickets.html">Ouvre un ticket</a> 💬</p>
+        </div>
+      </details>
     </main>
     <script src="logiciels-releases.js" defer></script>
     <footer class="section-shell"><p><a href="conditions.html">Conditions d’utilisation</a></p></footer>

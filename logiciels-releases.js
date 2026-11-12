@@ -37,4 +37,13 @@
       });
     } catch { /* GitHub injoignable : on garde les valeurs écrites dans la page */ }
   });
+
+  // Ouvre le guide Mac quand on clique sur son lien (ou si l'adresse pointe dessus)
+  const openGuide = () => {
+    const g = document.getElementById(location.hash.slice(1));
+    if (g && g.tagName === 'DETAILS') { g.open = true; g.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  };
+  window.addEventListener('hashchange', openGuide);
+  document.querySelectorAll('a[href="#installer-sur-mac"]').forEach((a) => a.addEventListener('click', () => setTimeout(openGuide, 0)));
+  if (location.hash) openGuide();
 })();

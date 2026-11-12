@@ -7,5 +7,18 @@
 .software-downloads { display: grid; gap: 11px; }.release-note { margin: 0 0 2px; color: #d3cdea; font-size: 12px; line-height: 1.45; }.release-note strong { color: #fff; font-size: 17px; }.download-button { min-height: 91px; display: grid; align-content: center; gap: 1px; padding: 15px 18px; border: 1px solid rgba(255,255,255,.28); border-radius: 15px; transition: transform .2s, border-color .2s, background .2s; }.download-button:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.64); }.download-button span { color: #dad6ec; font-size: 11px; font-weight: 760; letter-spacing: .11em; text-transform: uppercase; }.download-button strong { color: white; font-size: 16px; }.download-button small { color: #ddd9eb; font-size: 11px; }.download-pc { background: #6255e4; }.download-3ds { background: rgba(255,255,255,.1); }.github-link { margin-top: 6px; color: #d9d2ff; font-size: 12px; line-height: 1.45; text-decoration: underline; text-decoration-color: rgba(217,210,255,.45); text-underline-offset: 4px; }.github-link span { margin-left: 4px; color: #fff; }
 .software-card + .software-card { margin-top: 25px; }
 .software-help { display: flex; gap: 12px; max-width: 800px; margin: 25px auto 0; padding: 17px 20px; border: 1px solid rgba(255,255,255,.4); border-radius: 17px; color: #514d63; background: rgba(255,255,255,.76); font-size: 13px; line-height: 1.55; }.software-help span { flex: 0 0 20px; height: 20px; display: grid; place-items: center; border: 1px solid #786be2; border-radius: 50%; color: #6658d8; font-weight: 700; }.software-help p { margin: 0; }
+.mac-guide-link { color: #fff; font-size: 13px; font-weight: 700; text-decoration: underline; text-decoration-color: rgba(255,255,255,.45); text-underline-offset: 4px; }
+.mac-guide { max-width: 800px; margin: 25px auto 0; border: 1px solid rgba(255,255,255,.4); border-radius: 17px; color: #514d63; background: rgba(255,255,255,.86); font-size: 14px; line-height: 1.6; scroll-margin-top: 90px; }
+.mac-guide summary { cursor: pointer; padding: 17px 20px; color: #282639; font-weight: 760; list-style: none; display: flex; gap: 10px; align-items: center; }
+.mac-guide summary::-webkit-details-marker { display: none; }
+.mac-guide summary::after { content: "+"; margin-left: auto; width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid #786be2; border-radius: 50%; color: #6658d8; font-weight: 700; }
+.mac-guide[open] summary::after { content: "−"; }
+.mac-guide-body { padding: 0 22px 20px; }
+.mac-guide-body p { margin: 0 0 10px; }
+.mac-guide-body ol { margin: 0 0 12px; padding-left: 22px; display: grid; gap: 6px; }
+.mac-guide-title { color: #282639; font-weight: 760; }
+.mac-guide-alt { font-size: 13px; }
+.mac-guide code { display: inline-block; margin-top: 6px; padding: 6px 10px; border-radius: 8px; background: #282639; color: #fff; font-size: 12px; user-select: all; }
+.mac-guide a { color: #6658d8; font-weight: 700; }
 @media (max-width: 760px) { .software-card { grid-template-columns: 1fr; gap: 30px; }.software-downloads { grid-template-columns: 1fr 1fr; }.release-note, .github-link { grid-column: 1 / -1; } }
 @media (max-width: 560px) { .software-main { padding-top: 27px; }.software-card { gap: 24px; border-radius: 24px; }.software-downloads { grid-template-columns: 1fr; }.release-note, .github-link { grid-column: auto; }.software-heading { margin-bottom: 28px; }.software-help { padding: 15px; } }
