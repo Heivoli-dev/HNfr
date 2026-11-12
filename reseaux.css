@@ -1,0 +1,161 @@
+/* Page Réseaux — Heivoli Network */
+
+body.page-reseaux {
+  background: #fff;
+}
+
+.reseaux-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: 48px;
+  align-items: center;
+  padding-block: 40px 72px;
+}
+
+.reseaux-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.reseaux-kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #5a4bd8;
+}
+
+.reseaux-title {
+  margin: 0 0 40px;
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 850;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: #24232b;
+}
+
+.reseaux-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.reseaux-list li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Les rectangles cliquables */
+.reseau-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 90px;
+  border-radius: 45px;
+  background: #c8d0d9;
+  text-decoration: none;
+  transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.reseau-button svg {
+  height: 60px;
+  width: auto;
+  transition: transform 0.18s ease;
+}
+
+.reseau-x svg {
+  height: 52px;
+}
+
+.reseau-youtube svg {
+  height: 48px;
+}
+
+.reseau-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(36, 24, 79, 0.14);
+}
+
+.reseau-button:hover svg {
+  transform: scale(1.08);
+}
+
+.reseau-discord:hover { background: #dfe1fd; }
+.reseau-x:hover { background: #e3e6ea; }
+.reseau-youtube:hover { background: #ffe1e1; }
+
+.reseau-button:focus-visible {
+  outline: 3px solid #5a4bd8;
+  outline-offset: 4px;
+}
+
+.reseau-button:active {
+  transform: translateY(0);
+}
+
+.reseau-desc {
+  margin: 0;
+  max-width: 520px;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #3d3a4a;
+}
+
+/* La mascotte */
+.reseaux-mascotte {
+  display: flex;
+  justify-content: center;
+}
+
+.reseaux-mascotte img {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+}
+
+/* Tablette et mobile : la mascotte passe au-dessus, plus petite */
+@media (max-width: 900px) {
+  .reseaux-page {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .reseaux-mascotte {
+    order: -1;
+  }
+
+  .reseaux-mascotte img {
+    max-width: 220px;
+  }
+
+  .reseau-button {
+    height: 76px;
+  }
+
+  .reseau-button svg {
+    height: 48px;
+  }
+
+  .reseau-x svg,
+  .reseau-youtube svg {
+    height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reseau-button,
+  .reseau-button svg {
+    transition: none;
+  }
+}

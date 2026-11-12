@@ -1,0 +1,43 @@
+/* Thème fond blanc — chargé en dernier sur toutes les pages */
+
+body {
+  background: #fff;
+}
+
+/* Logo "new heivoli network" : "heivoli network" en violet, "new" garde ses couleurs */
+.official-wordmark .wm-name {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(60%) saturate(4000%) hue-rotate(245deg);
+  clip-path: inset(45% 0 0 0);
+}
+
+.official-wordmark .wm-new {
+  clip-path: inset(0 0 55% 0);
+}
+
+/* Textes clairs qui étaient posés directement sur le dégradé */
+.header-note {
+  color: #4a4760;
+}
+
+.section-heading h2 em,
+.software-heading h1 em,
+.projects-heading h1 em {
+  color: #5a4bd8;
+}
+
+.section-heading > p,
+.software-heading > p:last-child {
+  color: #5d5a70;
+}
+
+.discovery-line {
+  border-top-color: #e3e1ee;
+}
+
+.discovery-line a {
+  color: #5040b7;
+}
+
+.site-footer {
+  color: #343047;
+}
