@@ -1,0 +1,169 @@
+/* Inscription / connexion — style « Frutiger Aero » : bulle de verre, ciel aqua, boutons brillants */
+
+#profile-locked.aero-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: min(980px, 100%);
+  margin: 10px auto;
+  padding: clamp(40px, 7vw, 86px) clamp(14px, 4vw, 40px);
+  border: 1px solid rgba(255, 255, 255, .9);
+  border-radius: 40px;
+  background: none;
+  box-shadow: 0 30px 80px rgba(20, 90, 160, .25);
+  color: #0d3557;
+  text-align: center;
+}
+
+/* Ciel, collines et bulles */
+.aero-sky {
+  position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(ellipse 60% 45% at 20% 8%, rgba(255,255,255,.95), transparent 70%),
+    radial-gradient(ellipse 120% 55% at 50% 118%, #7ed957 0 45%, transparent 46%),
+    radial-gradient(ellipse 90% 40% at 92% 112%, #4fbf3a 0 50%, transparent 51%),
+    linear-gradient(180deg, #2fa4ff 0%, #6cc8ff 38%, #bfeaff 72%, #e8fbff 100%);
+}
+.aero-swoosh {
+  position: absolute; left: -10%; width: 120%; height: 160px;
+  border-radius: 50%;
+  border-top: 3px solid rgba(255,255,255,.75);
+  filter: blur(.4px);
+}
+.swoosh-one { top: 46%; transform: rotate(-7deg); }
+.swoosh-two { top: 54%; transform: rotate(-4deg); border-top-color: rgba(255,255,255,.45); border-top-width: 2px; }
+.aero-orb {
+  position: absolute; border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255,255,255,.95) 0 8%, rgba(255,255,255,.35) 18%, transparent 42%),
+    radial-gradient(circle at 50% 50%, transparent 55%, rgba(255,255,255,.55) 70%, rgba(170,230,255,.35) 100%);
+  border: 1px solid rgba(255,255,255,.7);
+  box-shadow: inset 0 -8px 18px rgba(0,120,220,.18), 0 6px 18px rgba(0,80,160,.12);
+  animation: aero-float 9s ease-in-out infinite;
+}
+.orb-1 { width: 110px; height: 110px; left: 6%;  top: 12%; }
+.orb-2 { width: 54px;  height: 54px;  left: 15%; top: 62%; animation-delay: -3s; }
+.orb-3 { width: 160px; height: 160px; right: 4%; top: 6%;  animation-delay: -5s; animation-duration: 12s; }
+.orb-4 { width: 38px;  height: 38px;  right: 18%; top: 58%; animation-delay: -1s; }
+.orb-5 { width: 72px;  height: 72px;  left: 30%; bottom: 4%; animation-delay: -7s; }
+.orb-6 { width: 26px;  height: 26px;  right: 30%; top: 14%; animation-delay: -2s; }
+@keyframes aero-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
+
+/* La bulle de verre */
+.aero-window {
+  position: relative;
+  width: min(560px, 100%);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.95);
+  border-radius: 30px;
+  background: linear-gradient(180deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.34) 50%, rgba(220,245,255,.42) 100%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 0 0 1px rgba(255,255,255,.35),
+    inset 0 -20px 40px rgba(120,210,255,.25),
+    0 22px 50px rgba(0,70,140,.28);
+}
+/* Reflet brillant sur la moitié haute */
+.aero-window::before {
+  content: ""; position: absolute; left: -10%; right: -10%; top: -55%; height: 95%;
+  border-radius: 0 0 50% 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.08));
+  pointer-events: none;
+}
+.aero-titlebar {
+  position: relative;
+  display: flex; align-items: center; gap: 9px;
+  padding: 11px 14px 11px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.7);
+  background: linear-gradient(180deg, rgba(150,215,255,.55), rgba(70,160,230,.35));
+  color: #0b3a63; font-size: 12px; font-weight: 700; text-align: left;
+  text-shadow: 0 1px 0 rgba(255,255,255,.8);
+}
+.aero-title-icon {
+  width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px;
+  background: linear-gradient(180deg, #7fd0ff, #1679d4); color: #fff; font-size: 11px; text-shadow: none;
+  box-shadow: inset 0 1px rgba(255,255,255,.7);
+}
+.aero-controls { margin-left: auto; display: flex; gap: 4px; }
+.aero-controls i {
+  width: 26px; height: 18px; display: grid; place-items: center; border-radius: 5px;
+  border: 1px solid rgba(255,255,255,.85);
+  background: linear-gradient(180deg, rgba(255,255,255,.7) 0 45%, rgba(170,215,245,.6) 55%);
+  font-style: normal; font-size: 13px; line-height: 1;
+}
+.aero-controls .aero-close { width: 40px; color: #fff; background: linear-gradient(180deg, #f2a08a 0 45%, #d2381c 55%, #e5603a); text-shadow: 0 1px 1px rgba(120,0,0,.6); }
+
+.aero-body { position: relative; padding: clamp(28px, 5vw, 44px) clamp(22px, 5vw, 46px) 34px; }
+
+/* Contenu */
+#profile-locked .account-orb {
+  width: 84px; height: 84px; margin: 0 auto 22px; border-radius: 50%;
+  display: grid; place-items: center; color: #fff; font-size: 34px; font-weight: 800;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255,255,255,.95) 0 10%, rgba(255,255,255,0) 38%),
+    radial-gradient(circle at 50% 120%, #8ff0ff 0 30%, transparent 60%),
+    linear-gradient(180deg, #4cc3ff, #0a62c9);
+  border: 2px solid rgba(255,255,255,.9);
+  box-shadow: 0 10px 24px rgba(0,90,190,.35), inset 0 -6px 12px rgba(0,40,120,.25);
+  text-shadow: 0 2px 3px rgba(0,50,120,.5);
+}
+#profile-locked .eyebrow { justify-content: center; color: #0f5d99; }
+#profile-locked .eyebrow span { background: #2a9cf0; }
+#profile-locked h1 { color: #0b2f52; font-size: clamp(40px, 6vw, 60px); text-shadow: 0 1px 0 rgba(255,255,255,.9), 0 6px 20px rgba(255,255,255,.6); }
+#profile-locked h1 em { color: #0a84e0; font-style: normal; }
+#profile-locked .aero-body > p:not(.eyebrow):not(.auth-status) { max-width: 420px; margin: 18px auto 24px; color: #234a6b; font-size: 14px; line-height: 1.7; }
+#profile-locked #signup-captcha { display: flex; justify-content: center; min-height: 0; }
+#profile-locked .auth-status { color: #1c5585; font-size: 12px; }
+
+/* Boutons « aqua » brillants */
+#profile-locked .button {
+  position: relative; overflow: hidden;
+  display: flex; width: 100%; min-height: 50px; margin-top: 12px;
+  border: 1px solid rgba(0,60,140,.45); border-radius: 999px;
+  color: #fff; font-size: 15px; font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,40,100,.55);
+  transition: transform .15s, filter .15s, box-shadow .15s;
+}
+#profile-locked .button::before {
+  content: ""; position: absolute; left: 4%; right: 4%; top: 2px; height: 48%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.15));
+  pointer-events: none;
+}
+#profile-locked .button-primary {
+  background: linear-gradient(180deg, #6fd2ff 0%, #1d8fe8 50%, #0762c4 51%, #2aa7ff 100%);
+  box-shadow: 0 8px 20px rgba(0,100,210,.35), inset 0 0 0 1px rgba(255,255,255,.25);
+}
+#profile-locked .button-discord {
+  border-color: rgba(40,30,140,.45);
+  background: linear-gradient(180deg, #a4abff 0%, #6170f0 50%, #4553d8 51%, #7480ff 100%);
+  box-shadow: 0 8px 20px rgba(70,70,200,.32), inset 0 0 0 1px rgba(255,255,255,.25);
+}
+#profile-locked .button:not(:disabled):hover { transform: translateY(-2px); filter: brightness(1.07) saturate(1.1); }
+#profile-locked .button:not(:disabled):active { transform: translateY(1px); filter: brightness(.95); }
+#profile-locked .button:disabled {
+  cursor: not-allowed; color: #4d6a85; text-shadow: 0 1px 0 rgba(255,255,255,.7);
+  border-color: rgba(120,150,180,.5);
+  background: linear-gradient(180deg, #f4f8fb 0%, #dde6ee 50%, #cfd9e3 51%, #e6eef5 100%);
+  box-shadow: none;
+}
+#profile-locked .google-icon {
+  width: 26px; height: 26px; margin-right: 4px; border-radius: 50%;
+  background: #fff; color: #1a73e8; font-size: 15px; font-weight: 800; text-shadow: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+#profile-locked .button:disabled .google-icon { color: #9fb3c6; }
+#profile-locked .remember-device { margin-top: 16px; color: #1f4c74; }
+#profile-locked .remember-device input { accent-color: #1d8fe8; }
+
+@media (max-width: 560px) {
+  #profile-locked.aero-stage { border-radius: 26px; padding-block: 28px; }
+  .aero-window { border-radius: 22px; }
+  .aero-titlebar span:nth-child(2) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .orb-3 { width: 90px; height: 90px; }
+}
+@media (prefers-reduced-motion: reduce) { .aero-orb { animation: none; } }
+@media (max-width: 560px) { .aero-controls i:not(.aero-close) { display: none; } }

@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="redesign.css?v=projects-1" />
   <link rel="stylesheet" href="navigation.css?v=reseaux" /><link rel="stylesheet" href="profiles.css" />
     <link rel="stylesheet" href="theme-blanc.css" />
+    <link rel="stylesheet" href="aero.css" />
   </head>
   <body class="profile-page">
     <div class="page-glow glow-one" aria-hidden="true"></div>
@@ -44,7 +45,14 @@
     <a class="skip-link" href="#main-content">Aller au contenu</a>
     <main id="main-content" class="profile-shell section-shell">
       <a class="back-link" href="index.html">← Retour à l’accueil</a>
-      <section id="profile-locked" class="profile-gate">
+      <section id="profile-locked" class="profile-gate aero-stage">
+        <div class="aero-sky" aria-hidden="true">
+          <span class="aero-swoosh swoosh-one"></span><span class="aero-swoosh swoosh-two"></span>
+          <span class="aero-orb orb-1"></span><span class="aero-orb orb-2"></span><span class="aero-orb orb-3"></span><span class="aero-orb orb-4"></span><span class="aero-orb orb-5"></span><span class="aero-orb orb-6"></span>
+        </div>
+        <div class="aero-window">
+        <div class="aero-titlebar" aria-hidden="true"><span class="aero-title-icon">H</span><span>Heivoli Network — Espace membre</span><span class="aero-controls"><i></i><i></i><i class="aero-close">×</i></span></div>
+        <div class="aero-body">
         <div class="account-orb" aria-hidden="true">H</div>
         <p class="eyebrow"><span></span> Espace membre</p>
         <h1>Ton profil<br /><em>Network.</em></h1>
@@ -55,6 +63,8 @@
         <button disabled id="discord-login" class="button button-discord" type="button">Continuer avec Discord</button>
         <label class="remember-device"><input id="remember-device" type="checkbox" /> <span>Se souvenir de moi sur cet appareil</span></label>
         <p id="auth-status" class="auth-status" aria-live="polite"></p>
+        </div>
+        </div>
       </section>
 
       <section id="profile-content" class="profile-panel" hidden>
