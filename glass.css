@@ -1,0 +1,131 @@
+/* Bulles de verre façon Aero — chargé en dernier sur les pages concernées */
+
+.intro-card,
+.social-bar,
+.announcement,
+.community-card,
+.software-card,
+.project-list,
+.software-help,
+.mac-guide,
+.video-frame {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .95) !important;
+  color: #282639;
+  background:
+    radial-gradient(ellipse 120% 140% at 50% 50%, rgba(255,255,255,0) 55%, rgba(152,148,225,.16) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.7) 0%, rgba(246,245,255,.35) 55%, rgba(228,225,250,.45) 100%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 0 0 1px rgba(255,255,255,.6),
+    inset 0 -16px 32px rgba(152,148,225,.18),
+    inset 0 0 0 2px rgba(152,148,225,.12),
+    0 1px 2px rgba(50,39,101,.08),
+    0 20px 50px rgba(50,39,101,.13) !important;
+}
+/* Reflet brillant sur le haut de chaque bulle */
+.intro-card::before,
+.social-bar::before,
+.announcement::before,
+.community-card::before,
+.software-card::before,
+.project-list::before,
+.software-help::before,
+.mac-guide::before,
+.video-frame::before {
+  content: ""; position: absolute; z-index: -1;
+  left: 3%; right: 3%; top: 5px; height: 46%;
+  border-radius: 999px 999px 50% 50% / 60px 60px 30% 30%;
+  background: linear-gradient(180deg, rgba(255,255,255,.95) 0%, rgba(255,255,255,.3) 60%, rgba(255,255,255,0) 100%);
+  pointer-events: none;
+}
+.social-bar::before { height: 50%; border-radius: 999px; }
+
+/* Bouton brillant réutilisable */
+.glossy-purple {
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(40,30,140,.4) !important;
+  background: linear-gradient(180deg, #aba7ff 0%, #6255e4 50%, #4a3dd0 51%, #7a6ff0 100%) !important;
+  box-shadow: 0 8px 18px rgba(81,73,217,.3) !important;
+  text-shadow: 0 1px 2px rgba(30,20,100,.45);
+}
+
+/* ---------- Accueil : bulle sous « new heivoli network » ---------- */
+.intro-card .card-label { color: #7a7690; }
+.intro-card p { color: #282639; }
+.intro-card p + p { color: #5d5a70; }
+.join-link { color: #282639; border-top-color: rgba(81,73,217,.18); }
+.join-link span { color: #5a4bd8; }
+
+.social-bar a, .social-bar button { color: #282639; }
+.social-bar a:hover, .social-bar button:hover { background: rgba(81,73,217,.08); }
+.social-status { color: #4a4760; }
+
+/* ---------- Annonces ---------- */
+.announcement, .announcement.featured { color: #282639; }
+.announcement h3 { color: #282639; }
+.announcement-type, .announcement.featured .announcement-type { color: #5a4bd8; }
+.announcement p:not(.announcement-type), .announcement.featured p:not(.announcement-type) { color: #5d5a70; }
+.announcement-date, .announcement.featured .announcement-date { color: #6b62a8 !important; }
+.announcement.featured {
+  background:
+    radial-gradient(ellipse 120% 140% at 50% 50%, rgba(255,255,255,0) 50%, rgba(98,85,228,.22) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.7) 0%, rgba(236,233,255,.45) 55%, rgba(210,205,250,.55) 100%) !important;
+}
+.announcement:hover { border-color: #fff !important; }
+.announcement.featured .comment-item { background: rgba(255,255,255,.45); border-color: rgba(152,148,225,.3); }
+.comment-login { color: #5040b7; border-color: rgba(152,148,225,.45); background: rgba(255,255,255,.4); }
+
+/* ---------- Communauté ---------- */
+.community-card h2 em { color: #5a4bd8; }
+
+/* ---------- Logiciels ---------- */
+.software-label { color: #5a4bd8; }
+.software-copy h2 { color: #282639; }
+.software-copy h2 em { color: #5a4bd8; }
+.software-copy > p { color: #5d5a70; }
+.software-features { color: #3a3750; }
+.software-features li::before { background: #6255e4; box-shadow: 0 0 10px rgba(98,85,228,.5); }
+.release-note { color: #5d5a70; }
+.release-note strong { color: #282639; }
+.download-button { position: relative; overflow: hidden; }
+.download-button::before {
+  content: ""; position: absolute; left: 3%; right: 3%; top: 2px; height: 45%;
+  border-radius: 14px 14px 40% 40% / 14px 14px 20% 20%;
+  background: linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,.04));
+  pointer-events: none;
+}
+.download-pc {
+  border-color: rgba(40,30,140,.4) !important;
+  background: linear-gradient(180deg, #aba7ff 0%, #6255e4 50%, #4a3dd0 51%, #7a6ff0 100%);
+  box-shadow: 0 8px 18px rgba(81,73,217,.3);
+}
+.download-pc span, .download-pc small { color: #f1efff; }
+.download-pc strong { text-shadow: 0 1px 2px rgba(30,20,100,.45); }
+.download-3ds {
+  border-color: rgba(255,255,255,.95) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(240,238,252,.6));
+  box-shadow: inset 0 -8px 18px rgba(152,148,225,.15), 0 6px 16px rgba(50,39,101,.08);
+}
+.download-3ds span { color: #5a4bd8; }
+.download-3ds strong { color: #282639; }
+.download-3ds small { color: #5d5a70; }
+.github-link, .mac-guide-link { color: #5040b7; text-decoration-color: rgba(80,64,183,.35); }
+.github-link span { color: #5040b7; }
+
+/* ---------- Projets 3DS ---------- */
+.project-link {
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.95);
+  background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(240,238,252,.65));
+  box-shadow: inset 0 -10px 20px rgba(152,148,225,.16), 0 6px 16px rgba(50,39,101,.08);
+}
+.project-link:hover { background: linear-gradient(180deg, #fff, rgba(232,229,255,.85)); }
+
+/* ---------- Vidéo de présentation : cadre en verre ---------- */
+.video-frame { padding: 12px; }
+.video-frame iframe { inset: 12px; width: calc(100% - 24px); height: calc(100% - 24px); border-radius: 20px; background: #2a2833; }
