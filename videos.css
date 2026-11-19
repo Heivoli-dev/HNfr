@@ -1,0 +1,18 @@
+/* Section vidéo de présentation — page d'accueil */
+.video-section { padding-block: 85px 0; }
+.video-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid #ffffff40;
+  border-radius: 30px;
+  background: #49494f;
+  box-shadow: 0 24px 70px #32276520;
+}
+.video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video-channel-link { display: inline-block; margin-top: 20px; color: #5040b7; }
+.video-channel-link span { color: #6958d9; }
+@media (max-width: 700px) {
+  .video-section { padding-top: 45px; }
+  .video-frame { border-radius: 20px; }
+}
