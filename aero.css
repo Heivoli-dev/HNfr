@@ -1,4 +1,4 @@
-/* Inscription / connexion — style « Frutiger Aero » : bulle de verre, ciel aqua, boutons brillants */
+/* Inscription / connexion — bulle de verre façon Aero, aux couleurs du site */
 
 #profile-locked.aero-stage {
   position: relative;
@@ -10,19 +10,18 @@
   border: 1px solid rgba(255, 255, 255, .9);
   border-radius: 40px;
   background: none;
-  box-shadow: 0 30px 80px rgba(20, 90, 160, .25);
-  color: #0d3557;
+  box-shadow: 0 30px 80px #3227652e;
+  color: #282639;
   text-align: center;
 }
 
-/* Ciel, collines et bulles */
+/* Fond dégradé du site, bulles et billes de couleur */
 .aero-sky {
   position: absolute; inset: 0; z-index: -1;
   background:
-    radial-gradient(ellipse 60% 45% at 20% 8%, rgba(255,255,255,.95), transparent 70%),
-    radial-gradient(ellipse 120% 55% at 50% 118%, #7ed957 0 45%, transparent 46%),
-    radial-gradient(ellipse 90% 40% at 92% 112%, #4fbf3a 0 50%, transparent 51%),
-    linear-gradient(180deg, #2fa4ff 0%, #6cc8ff 38%, #bfeaff 72%, #e8fbff 100%);
+    radial-gradient(ellipse 55% 45% at 12% 6%, rgba(255,255,255,.9), transparent 70%),
+    radial-gradient(ellipse 45% 40% at 95% 100%, rgba(51,43,192,.55), transparent 70%),
+    linear-gradient(115deg, #fafafb 0%, #d9d8ee 22%, #9894e1 50%, #5149d9 78%, #332bc0 100%);
 }
 .aero-swoosh {
   position: absolute; left: -10%; width: 120%; height: 160px;
@@ -36,9 +35,9 @@
   position: absolute; border-radius: 50%;
   background:
     radial-gradient(circle at 32% 28%, rgba(255,255,255,.95) 0 8%, rgba(255,255,255,.35) 18%, transparent 42%),
-    radial-gradient(circle at 50% 50%, transparent 55%, rgba(255,255,255,.55) 70%, rgba(170,230,255,.35) 100%);
+    radial-gradient(circle at 50% 50%, transparent 55%, rgba(255,255,255,.55) 70%, rgba(200,194,255,.4) 100%);
   border: 1px solid rgba(255,255,255,.7);
-  box-shadow: inset 0 -8px 18px rgba(0,120,220,.18), 0 6px 18px rgba(0,80,160,.12);
+  box-shadow: inset 0 -8px 18px rgba(81,73,217,.2), 0 6px 18px rgba(50,39,101,.14);
   animation: aero-float 9s ease-in-out infinite;
 }
 .orb-1 { width: 110px; height: 110px; left: 6%;  top: 12%; }
@@ -57,14 +56,14 @@
   overflow: hidden;
   border: 1px solid rgba(255,255,255,.95);
   border-radius: 30px;
-  background: linear-gradient(180deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.34) 50%, rgba(220,245,255,.42) 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.34) 50%, rgba(235,232,255,.45) 100%);
   -webkit-backdrop-filter: blur(16px) saturate(170%);
   backdrop-filter: blur(16px) saturate(170%);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,1),
     inset 0 0 0 1px rgba(255,255,255,.35),
-    inset 0 -20px 40px rgba(120,210,255,.25),
-    0 22px 50px rgba(0,70,140,.28);
+    inset 0 -20px 40px rgba(152,148,225,.28),
+    0 22px 50px rgba(50,39,101,.3);
 }
 /* Reflet brillant sur la moitié haute */
 .aero-window::before {
@@ -78,23 +77,23 @@
   display: flex; align-items: center; gap: 9px;
   padding: 11px 14px 11px 16px;
   border-bottom: 1px solid rgba(255,255,255,.7);
-  background: linear-gradient(180deg, rgba(150,215,255,.55), rgba(70,160,230,.35));
-  color: #0b3a63; font-size: 12px; font-weight: 700; text-align: left;
-  text-shadow: 0 1px 0 rgba(255,255,255,.8);
+  background: linear-gradient(180deg, rgba(73,73,79,.92), rgba(55,55,62,.92));
+  color: #fff; font-size: 12px; font-weight: 700; text-align: left;
+  text-shadow: 0 1px 1px rgba(0,0,0,.4);
 }
 .aero-title-icon {
   width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px;
-  background: linear-gradient(180deg, #7fd0ff, #1679d4); color: #fff; font-size: 11px; text-shadow: none;
+  background: linear-gradient(180deg, #aba7ff, #5145da); color: #fff; font-size: 11px; text-shadow: none;
   box-shadow: inset 0 1px rgba(255,255,255,.7);
 }
 .aero-controls { margin-left: auto; display: flex; gap: 4px; }
 .aero-controls i {
   width: 26px; height: 18px; display: grid; place-items: center; border-radius: 5px;
-  border: 1px solid rgba(255,255,255,.85);
-  background: linear-gradient(180deg, rgba(255,255,255,.7) 0 45%, rgba(170,215,245,.6) 55%);
+  border: 1px solid rgba(255,255,255,.35);
+  background: linear-gradient(180deg, rgba(255,255,255,.35) 0 45%, rgba(255,255,255,.12) 55%);
   font-style: normal; font-size: 13px; line-height: 1;
 }
-.aero-controls .aero-close { width: 40px; color: #fff; background: linear-gradient(180deg, #f2a08a 0 45%, #d2381c 55%, #e5603a); text-shadow: 0 1px 1px rgba(120,0,0,.6); }
+.aero-controls .aero-close { width: 40px; color: #fff; background: linear-gradient(180deg, #ffa97a 0 45%, #ff5709 55%, #ff7a3a); text-shadow: 0 1px 1px rgba(120,0,0,.6); }
 
 .aero-body { position: relative; padding: clamp(28px, 5vw, 44px) clamp(22px, 5vw, 46px) 34px; }
 
@@ -104,27 +103,27 @@
   display: grid; place-items: center; color: #fff; font-size: 34px; font-weight: 800;
   background:
     radial-gradient(circle at 35% 25%, rgba(255,255,255,.95) 0 10%, rgba(255,255,255,0) 38%),
-    radial-gradient(circle at 50% 120%, #8ff0ff 0 30%, transparent 60%),
-    linear-gradient(180deg, #4cc3ff, #0a62c9);
+    radial-gradient(circle at 50% 120%, #c9c2ff 0 30%, transparent 60%),
+    linear-gradient(180deg, #8a80ff, #4034c4);
   border: 2px solid rgba(255,255,255,.9);
-  box-shadow: 0 10px 24px rgba(0,90,190,.35), inset 0 -6px 12px rgba(0,40,120,.25);
-  text-shadow: 0 2px 3px rgba(0,50,120,.5);
+  box-shadow: 0 10px 24px rgba(81,73,217,.4), inset 0 -6px 12px rgba(30,20,110,.3);
+  text-shadow: 0 2px 3px rgba(30,20,110,.5);
 }
-#profile-locked .eyebrow { justify-content: center; color: #0f5d99; }
-#profile-locked .eyebrow span { background: #2a9cf0; }
-#profile-locked h1 { color: #0b2f52; font-size: clamp(40px, 6vw, 60px); text-shadow: 0 1px 0 rgba(255,255,255,.9), 0 6px 20px rgba(255,255,255,.6); }
-#profile-locked h1 em { color: #0a84e0; font-style: normal; }
-#profile-locked .aero-body > p:not(.eyebrow):not(.auth-status) { max-width: 420px; margin: 18px auto 24px; color: #234a6b; font-size: 14px; line-height: 1.7; }
+#profile-locked .eyebrow { justify-content: center; color: #312c72; }
+#profile-locked .eyebrow span { background: #5448d8; }
+#profile-locked h1 { color: #282639; font-size: clamp(40px, 6vw, 60px); text-shadow: 0 1px 0 rgba(255,255,255,.9), 0 6px 20px rgba(255,255,255,.6); }
+#profile-locked h1 em { color: #5a4bd8; font-style: normal; }
+#profile-locked .aero-body > p:not(.eyebrow):not(.auth-status) { max-width: 420px; margin: 18px auto 24px; color: #4a4760; font-size: 14px; line-height: 1.7; }
 #profile-locked #signup-captcha { display: flex; justify-content: center; min-height: 0; }
-#profile-locked .auth-status { color: #1c5585; font-size: 12px; }
+#profile-locked .auth-status { color: #4a4760; font-size: 12px; }
 
 /* Boutons « aqua » brillants */
 #profile-locked .button {
   position: relative; overflow: hidden;
   display: flex; width: 100%; min-height: 50px; margin-top: 12px;
-  border: 1px solid rgba(0,60,140,.45); border-radius: 999px;
+  border: 1px solid rgba(40,30,140,.45); border-radius: 999px;
   color: #fff; font-size: 15px; font-weight: 700;
-  text-shadow: 0 1px 2px rgba(0,40,100,.55);
+  text-shadow: 0 1px 2px rgba(30,20,100,.55);
   transition: transform .15s, filter .15s, box-shadow .15s;
 }
 #profile-locked .button::before {
@@ -134,30 +133,30 @@
   pointer-events: none;
 }
 #profile-locked .button-primary {
-  background: linear-gradient(180deg, #6fd2ff 0%, #1d8fe8 50%, #0762c4 51%, #2aa7ff 100%);
-  box-shadow: 0 8px 20px rgba(0,100,210,.35), inset 0 0 0 1px rgba(255,255,255,.25);
+  background: linear-gradient(180deg, #aba7ff 0%, #6255e4 50%, #4a3dd0 51%, #7a6ff0 100%);
+  box-shadow: 0 8px 20px rgba(81,73,217,.38), inset 0 0 0 1px rgba(255,255,255,.25);
 }
 #profile-locked .button-discord {
   border-color: rgba(40,30,140,.45);
-  background: linear-gradient(180deg, #a4abff 0%, #6170f0 50%, #4553d8 51%, #7480ff 100%);
+  background: linear-gradient(180deg, #a9b1ff 0%, #5865f2 50%, #4250d8 51%, #6f7bff 100%);
   box-shadow: 0 8px 20px rgba(70,70,200,.32), inset 0 0 0 1px rgba(255,255,255,.25);
 }
 #profile-locked .button:not(:disabled):hover { transform: translateY(-2px); filter: brightness(1.07) saturate(1.1); }
 #profile-locked .button:not(:disabled):active { transform: translateY(1px); filter: brightness(.95); }
 #profile-locked .button:disabled {
-  cursor: not-allowed; color: #4d6a85; text-shadow: 0 1px 0 rgba(255,255,255,.7);
-  border-color: rgba(120,150,180,.5);
-  background: linear-gradient(180deg, #f4f8fb 0%, #dde6ee 50%, #cfd9e3 51%, #e6eef5 100%);
+  cursor: not-allowed; color: #6b6880; text-shadow: 0 1px 0 rgba(255,255,255,.7);
+  border-color: rgba(150,145,180,.5);
+  background: linear-gradient(180deg, #f7f6fc 0%, #e4e2f0 50%, #d8d5e8 51%, #ebe9f5 100%);
   box-shadow: none;
 }
 #profile-locked .google-icon {
   width: 26px; height: 26px; margin-right: 4px; border-radius: 50%;
-  background: #fff; color: #1a73e8; font-size: 15px; font-weight: 800; text-shadow: none;
+  background: #fff; color: #5145da; font-size: 15px; font-weight: 800; text-shadow: none;
   box-shadow: 0 1px 3px rgba(0,0,0,.25);
 }
-#profile-locked .button:disabled .google-icon { color: #9fb3c6; }
-#profile-locked .remember-device { margin-top: 16px; color: #1f4c74; }
-#profile-locked .remember-device input { accent-color: #1d8fe8; }
+#profile-locked .button:disabled .google-icon { color: #aaa6c4; }
+#profile-locked .remember-device { margin-top: 16px; color: #4a4760; }
+#profile-locked .remember-device input { accent-color: #6255e4; }
 
 @media (max-width: 560px) {
   #profile-locked.aero-stage { border-radius: 26px; padding-block: 28px; }
@@ -167,3 +166,12 @@
 }
 @media (prefers-reduced-motion: reduce) { .aero-orb { animation: none; } }
 @media (max-width: 560px) { .aero-controls i:not(.aero-close) { display: none; } }
+
+/* Billes brillantes aux couleurs de l'accueil */
+.aero-marble { position: absolute; border-radius: 50%; animation: aero-float 10s ease-in-out infinite; box-shadow: 0 8px 18px rgba(50,39,101,.25), inset 0 -5px 10px rgba(0,0,0,.18); }
+.aero-marble::after { content: ""; position: absolute; left: 20%; top: 12%; width: 38%; height: 30%; border-radius: 50%; background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,0)); }
+.marble-orange { width: 40px; height: 40px; left: 9%;  bottom: 18%; background: #ff5709; animation-delay: -4s; }
+.marble-yellow { width: 30px; height: 30px; right: 11%; bottom: 28%; background: #ffb10a; animation-delay: -6s; }
+.marble-green  { width: 24px; height: 24px; left: 22%; top: 8%;    background: #9dd209; animation-delay: -2s; }
+.marble-blue   { width: 46px; height: 46px; right: 7%;  bottom: 6%;  background: #605cff; animation-delay: -8s; }
+@media (prefers-reduced-motion: reduce) { .aero-marble { animation: none; } }
