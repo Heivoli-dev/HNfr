@@ -1,6 +1,6 @@
 /* Inscription / connexion — bulle de verre transparente façon Aero, sur fond blanc */
 
-#profile-locked.aero-bubble {
+.aero-bubble {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -30,7 +30,7 @@
     0 24px 60px rgba(50,39,101,.14);
 }
 /* Reflet brillant en haut de la bulle */
-#profile-locked.aero-bubble::before {
+.aero-bubble::before {
   content: ""; position: absolute; z-index: -1;
   left: 3%; right: 3%; top: 6px; height: 46%;
   border-radius: 40px 40px 50% 50% / 40px 40px 26% 26%;
@@ -39,7 +39,7 @@
 }
 
 /* Colonne gauche : présentation */
-#profile-locked .account-orb {
+.aero-bubble .account-orb {
   width: 72px; height: 72px; margin: 0 0 22px; border-radius: 50%;
   display: grid; place-items: center; color: #fff; font-size: 30px; font-weight: 800;
   background:
@@ -50,14 +50,14 @@
   box-shadow: 0 10px 22px rgba(81,73,217,.35), inset 0 -6px 12px rgba(30,20,110,.3);
   text-shadow: 0 2px 3px rgba(30,20,110,.5);
 }
-#profile-locked .eyebrow { justify-content: flex-start; color: #312c72; }
-#profile-locked .eyebrow span { background: #5448d8; }
-#profile-locked h1 { color: #282639; font-size: clamp(40px, 5vw, 62px); }
-#profile-locked h1 em { color: #5a4bd8; font-style: normal; }
-#profile-locked .aero-intro > p:not(.eyebrow) { max-width: 440px; margin: 18px 0 0; color: #5d5a70; font-size: 14px; line-height: 1.7; }
+.aero-bubble .eyebrow { justify-content: flex-start; color: #312c72; }
+.aero-bubble .eyebrow span { background: #5448d8; }
+.aero-bubble h1 { color: #282639; font-size: clamp(40px, 5vw, 62px); }
+.aero-bubble h1 em { color: #5a4bd8; font-style: normal; }
+.aero-bubble .aero-intro > p:not(.eyebrow) { max-width: 440px; margin: 18px 0 0; color: #5d5a70; font-size: 14px; line-height: 1.7; }
 
 /* Colonne droite : vérification et boutons, dans une petite bulle intérieure */
-#profile-locked .aero-actions {
+.aero-bubble .aero-actions {
   position: relative;
   display: grid; gap: 12px;
   padding: 24px;
@@ -67,13 +67,13 @@
   box-shadow: inset 0 1px 0 #fff, inset 0 -10px 24px rgba(152,148,225,.14), 0 10px 30px rgba(50,39,101,.08);
   text-align: center;
 }
-#profile-locked #signup-captcha { display: flex; justify-content: center; }
-#profile-locked #signup-captcha:empty { display: none; }
-#profile-locked .auth-status { margin: 0; color: #5d5a70; font-size: 12px; }
-#profile-locked .auth-status:empty { display: none; }
+.aero-bubble #signup-captcha { display: flex; justify-content: center; }
+.aero-bubble #signup-captcha:empty { display: none; }
+.aero-bubble .auth-status { margin: 0; color: #5d5a70; font-size: 12px; }
+.aero-bubble .auth-status:empty { display: none; }
 
 /* Boutons brillants */
-#profile-locked .button {
+.aero-bubble .button {
   position: relative; overflow: hidden;
   display: flex; width: 100%; min-height: 50px; margin: 0;
   border: 1px solid rgba(40,30,140,.4); border-radius: 999px;
@@ -81,44 +81,44 @@
   text-shadow: 0 1px 2px rgba(30,20,100,.5);
   transition: transform .15s, filter .15s;
 }
-#profile-locked .button::before {
+.aero-bubble .button::before {
   content: ""; position: absolute; left: 4%; right: 4%; top: 2px; height: 48%;
   border-radius: 999px;
   background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.12));
   pointer-events: none;
 }
-#profile-locked .button-primary {
+.aero-bubble .button-primary {
   background: linear-gradient(180deg, #aba7ff 0%, #6255e4 50%, #4a3dd0 51%, #7a6ff0 100%);
   box-shadow: 0 8px 18px rgba(81,73,217,.32);
 }
-#profile-locked .button-discord {
+.aero-bubble .button-discord {
   background: linear-gradient(180deg, #a9b1ff 0%, #5865f2 50%, #4250d8 51%, #6f7bff 100%);
   box-shadow: 0 8px 18px rgba(70,80,220,.28);
 }
-#profile-locked .button:not(:disabled):hover { transform: translateY(-2px); filter: brightness(1.07); }
-#profile-locked .button:not(:disabled):active { transform: translateY(1px); filter: brightness(.95); }
-#profile-locked .button:disabled {
+.aero-bubble .button:not(:disabled):hover { transform: translateY(-2px); filter: brightness(1.07); }
+.aero-bubble .button:not(:disabled):active { transform: translateY(1px); filter: brightness(.95); }
+.aero-bubble .button:disabled {
   cursor: not-allowed; color: #6b6880; text-shadow: 0 1px 0 rgba(255,255,255,.7);
   border-color: rgba(150,145,180,.45);
   background: linear-gradient(180deg, #fbfbfe 0%, #e9e7f3 50%, #dedbec 51%, #efeef7 100%);
   box-shadow: none;
 }
-#profile-locked .google-icon {
+.aero-bubble .google-icon {
   width: 26px; height: 26px; margin-right: 4px; border-radius: 50%;
   background: #fff; color: #5145da; font-size: 15px; font-weight: 800; text-shadow: none;
   box-shadow: 0 1px 3px rgba(0,0,0,.2);
 }
-#profile-locked .button:disabled .google-icon { color: #aaa6c4; }
-#profile-locked .remember-device { margin: 4px 0 0; justify-content: center; color: #4a4760; }
-#profile-locked .remember-device input { accent-color: #6255e4; }
+.aero-bubble .button:disabled .google-icon { color: #aaa6c4; }
+.aero-bubble .remember-device { margin: 4px 0 0; justify-content: center; color: #4a4760; }
+.aero-bubble .remember-device input { accent-color: #6255e4; }
 
 @media (max-width: 820px) {
-  #profile-locked.aero-bubble { grid-template-columns: 1fr; border-radius: 32px; text-align: center; }
-  #profile-locked .account-orb { margin-inline: auto; }
-  #profile-locked .eyebrow { justify-content: center; }
-  #profile-locked .aero-intro > p:not(.eyebrow) { margin-inline: auto; }
+  .aero-bubble { grid-template-columns: 1fr; border-radius: 32px; text-align: center; }
+  .aero-bubble .account-orb { margin-inline: auto; }
+  .aero-bubble .eyebrow { justify-content: center; }
+  .aero-bubble .aero-intro > p:not(.eyebrow) { margin-inline: auto; }
 }
 @media (max-width: 480px) {
-  #profile-locked.aero-bubble { padding: 28px 16px 16px; }
-  #profile-locked .aero-actions { padding: 18px 14px; border-radius: 24px; }
+  .aero-bubble { padding: 28px 16px 16px; }
+  .aero-bubble .aero-actions { padding: 18px 14px; border-radius: 24px; }
 }
