@@ -22,3 +22,5 @@
 .mac-guide a { color: #6658d8; font-weight: 700; }
 @media (max-width: 760px) { .software-card { grid-template-columns: 1fr; gap: 30px; }.software-downloads { grid-template-columns: 1fr 1fr; }.release-note, .github-link { grid-column: 1 / -1; } }
 @media (max-width: 560px) { .software-main { padding-top: 27px; }.software-card { gap: 24px; border-radius: 24px; }.software-downloads { grid-template-columns: 1fr; }.release-note, .github-link { grid-column: auto; }.software-heading { margin-bottom: 28px; }.software-help { padding: 15px; } }
+.software-icon { display: block; width: 96px; height: 96px; margin: -6px 0 18px -6px; }
+@media (max-width: 560px) { .software-icon { width: 80px; height: 80px; } }
