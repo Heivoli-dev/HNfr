@@ -6,7 +6,7 @@ export const GAMES = [
 ];
 export const MAX_GAMES = 5;
 const sound = name => document.dispatchEvent(new CustomEvent("hn-sound", { detail: name }));
-export const DEFAULT_AVATAR = 'assets/avatar-defaut.svg';
+export const DEFAULT_AVATAR = 'assets/avatar-defaut.svg?v=2';
 const PHOTO = /^https:\/\/(i\.ibb\.co|lh[3-6]\.googleusercontent\.com|cdn\.discordapp\.com)\/[^\s]+$/;
 
 export function formatFriendCode(value) {
