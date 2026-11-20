@@ -6,6 +6,7 @@ export const GAMES = [
 ];
 export const MAX_GAMES = 5;
 const sound = name => document.dispatchEvent(new CustomEvent("hn-sound", { detail: name }));
+export const DEFAULT_AVATAR = 'assets/avatar-defaut.svg';
 const PHOTO = /^https:\/\/(i\.ibb\.co|lh[3-6]\.googleusercontent\.com|cdn\.discordapp\.com)\/[^\s]+$/;
 
 export function formatFriendCode(value) {
@@ -61,19 +62,14 @@ export function renderPlayerCard(player, { mine = false, onRemove, badges } = {}
   const head = element('header');
   const orb = element('span', `player-orb orb-${orbColor(player.uid)}`);
   const name = player.displayName || 'Membre';
-  const initial = element('span', 'player-initial', name.charAt(0).toUpperCase());
-  orb.append(initial);
-  const photo = safePhoto(player.photoURL);
-  if (photo) {
-    const image = element('img');
-    image.alt = '';
-    image.loading = 'lazy';
-    image.referrerPolicy = 'no-referrer';
-    image.src = photo;
-    image.addEventListener('error', () => { image.remove(); initial.hidden = false; });
-    initial.hidden = true;
-    orb.append(image);
-  }
+  // Photo du compte, sinon avatar Heivoli par défaut.
+  const image = element('img');
+  image.alt = '';
+  image.loading = 'lazy';
+  image.referrerPolicy = 'no-referrer';
+  image.src = safePhoto(player.photoURL) || DEFAULT_AVATAR;
+  image.addEventListener('error', () => { if (!image.src.endsWith(DEFAULT_AVATAR)) image.src = DEFAULT_AVATAR; });
+  orb.append(image);
   const titles = element('div');
   const title = element('h3');
   if (player.uid) {

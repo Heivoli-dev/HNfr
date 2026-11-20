@@ -2,8 +2,8 @@ import { signupCaptcha } from './signup-gate.js';
 import { authorizeWrite } from './network-access.js';
 import { safeProfilePhoto } from './profiles.js';
 import { commentModerationError } from './comment-moderation.js';
-import { setupPlayerCard } from './player-card.js?v=badges-4';
-import { badgesFor, renderBadges } from './players-ui.js?v=badges-4';
+import { setupPlayerCard } from './player-card.js?v=avatar-1';
+import { badgesFor, renderBadges } from './players-ui.js?v=avatar-1';
 import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, indexedDBLocalPersistence, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
@@ -115,19 +115,21 @@ const photoInput = document.querySelector('#profile-photo-url');
 const publicDescription = document.querySelector('#public-description');
 const publicStatus = document.querySelector('#public-profile-status');
 const profileForm = document.querySelector('#profile-form');
+const DEFAULT_AVATAR = 'assets/avatar-defaut.svg';
 let loadedUid = null;
 function showProfile(data) {
   const name = data.displayName || 'Membre';
   profileName.textContent = name;
   profileInitial.textContent = name.charAt(0).toUpperCase();
   const photo = safeProfilePhoto(data.photoURL);
-  profileInitial.hidden = !!photo; profilePhoto.hidden = !photo;
-  if (photo) profilePhoto.src = photo; else profilePhoto.removeAttribute('src');
+  // Sans photo : avatar Heivoli par défaut.
+  profileInitial.hidden = true; profilePhoto.hidden = false;
+  profilePhoto.src = photo || DEFAULT_AVATAR;
   displayNameInput.value = name; photoInput.value = photo;
   profileDescription.value = data.bio || ''; publicDescription.textContent = data.bio || 'Ce membre ne s’est pas encore présenté.';
   updateDescriptionCount();
 }
-profilePhoto.addEventListener('error', () => { profilePhoto.hidden = true; profileInitial.hidden = false; });
+profilePhoto.addEventListener('error', () => { if (!profilePhoto.src.endsWith(DEFAULT_AVATAR)) profilePhoto.src = DEFAULT_AVATAR; });
 profileForm.addEventListener('submit', async event => {
   event.preventDefault();
   const user = auth.currentUser;
