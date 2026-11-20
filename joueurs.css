@@ -136,3 +136,4 @@
 .b-indigo i { background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.85) 0 12%, transparent 42%), linear-gradient(180deg, #8f8cff, #605cff); }
 .b-orange i { background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.85) 0 12%, transparent 42%), linear-gradient(180deg, #ff9a5c, #ff5709); }
 .profile-heading .badge-row { margin-top: 12px; }
+.badge i svg { width: 13px; height: 13px; }

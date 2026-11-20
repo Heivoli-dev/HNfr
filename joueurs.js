@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
-import { GAMES, badgesFor, renderPlayerCard } from "./players-ui.js?v=badges-2";
-import { setupPlayerCard } from "./player-card.js?v=badges-2";
+import { GAMES, badgesFor, renderPlayerCard } from "./players-ui.js?v=badges-3";
+import { setupPlayerCard } from "./player-card.js?v=badges-3";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk",

@@ -116,7 +116,7 @@ const BADGES = {
   moderator: { icon: '🛡', label: 'Modération', tone: 'b-purple' },
   card: { icon: '🎴', label: 'Carte joueur', tone: 'b-green' },
   pretendo: { icon: '◎', label: 'Joueur Pretendo', tone: 'b-indigo' },
-  friendCode: { icon: '▣', label: 'Joueur 3DS', tone: 'b-orange' },
+  friendCode: { svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3.5" width="12" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="6" y="13.5" width="12" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>', label: 'Joueur 3DS', tone: 'b-orange' },
 };
 // member : document /members/{uid} (rôle, date d'arrivée) ; player : carte joueur éventuelle.
 export function badgesFor(member, player) {
@@ -134,7 +134,8 @@ export function renderBadges(list, target = element('ul', 'badge-row')) {
   target.replaceChildren();
   for (const badge of list) {
     const item = element('li', `badge ${badge.tone}`);
-    const icon = element('i', '', badge.icon);
+    const icon = element('i', '', badge.svg ? undefined : badge.icon);
+    if (badge.svg) icon.innerHTML = badge.svg; // icône fixe définie ci-dessus, jamais de données utilisateur
     icon.setAttribute('aria-hidden', 'true');
     item.append(icon, document.createTextNode(badge.label));
     target.append(item);

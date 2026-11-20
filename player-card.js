@@ -1,7 +1,7 @@
 // Formulaire « Ma carte joueur » sur la page Profil.
 import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { commentModerationError } from "./comment-moderation.js";
-import { GAMES, MAX_GAMES, formatFriendCode, renderPlayerCard, safePhoto, validFriendCode, validPnid } from "./players-ui.js?v=badges-2";
+import { GAMES, MAX_GAMES, formatFriendCode, renderPlayerCard, safePhoto, validFriendCode, validPnid } from "./players-ui.js?v=badges-3";
 
 // Même logique que la règle /players : le pseudo et la photo viennent du profil, sinon du compte Google/Discord.
 const sound = name => document.dispatchEvent(new CustomEvent("hn-sound", { detail: name }));
