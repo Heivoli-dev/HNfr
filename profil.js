@@ -2,6 +2,7 @@ import { signupCaptcha } from './signup-gate.js';
 import { authorizeWrite } from './network-access.js';
 import { safeProfilePhoto } from './profiles.js';
 import { commentModerationError } from './comment-moderation.js';
+import { setupPlayerCard } from './player-card.js';
 import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, browserLocalPersistence, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
@@ -39,6 +40,7 @@ const profileSaveStatus = document.querySelector("#profile-save-status");
 const profileBadge = document.querySelector("#profile-badge");
 const adminLink = document.querySelector("#admin-link");
 let currentUser = null;
+const playerCard = setupPlayerCard({ db });
 
 async function applySelectedPersistence() {
   await setPersistence(auth, rememberDevice.checked ? browserLocalPersistence : browserSessionPersistence);
@@ -130,7 +132,9 @@ profileForm.addEventListener('submit', async event => {
     const batch = writeBatch(db);
     const networkPermit = await authorizeWrite(auth, db, batch, 'profile', user.uid);
     batch.set(doc(db, 'profiles', user.uid), { displayName, bio, photoURL, updatedAt: serverTimestamp(), networkPermit });
+    playerCard.profileBatch(batch, displayName, photoURL);
     await batch.commit();
+    playerCard.refresh();
     showProfile({displayName,bio,photoURL});
     profileSaveStatus.textContent = 'Profil enregistré en ligne.';
   } catch { profileSaveStatus.textContent = 'Enregistrement impossible. Vérifie ta connexion ; un compte banni ne peut pas modifier son profil.'; }
@@ -140,7 +144,7 @@ onAuthStateChanged(auth, async user => {
   currentUser = user;
   const uid = targetUid || user?.uid;
   const own = !!user && uid === user.uid;
-  loadedUid = null; profileForm.hidden = true;
+  loadedUid = null; profileForm.hidden = true; playerCard.hide();
   profileContent.hidden = !uid; lockedProfile.hidden = !!uid;
   publicDescription.hidden = !publicView;
   profileEmail.hidden = !own; profileEmail.textContent = '';
@@ -157,6 +161,7 @@ onAuthStateChanged(auth, async user => {
     const fallback = { displayName: user?.displayName || 'Membre', photoURL: user?.photoURL || '', bio: localStorage.getItem(`heivoli-profile-${uid}`) || '' };
     showProfile(snapshot.exists() ? snapshot.data() : fallback);
     loadedUid = uid; profileForm.hidden = !own; publicStatus.textContent = '';
+    if (own) playerCard.show(user);
     if (own) {
       const claims = (await user.getIdTokenResult()).claims;
       const email = user.emailVerified && !claims.discordId ? user.email : '';

@@ -4,7 +4,7 @@
 
 /* Barre d'onglets — bulle de verre Aero */
 .site-header .site-nav {
-  position: relative; isolation: isolate; overflow: hidden;
+  position: relative; top: auto; right: auto; isolation: isolate; overflow: hidden;
   color: #282639;
   border: 1px solid rgba(255,255,255,.95);
   background:

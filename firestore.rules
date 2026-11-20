@@ -156,6 +156,38 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
       allow delete: if isFounder();
     }
+    // Cartes joueur : codes ami 3DS et identifiants Pretendo, visibles par les membres connectés.
+    // Le pseudo et la photo doivent être ceux du profil (ou, sans profil, ceux du compte Google/Discord).
+    match /players/{uid} {
+      function accountProfile() { return /databases/$(database)/documents/profiles/$(uid); }
+      function accountName() {
+        return existsAfter(accountProfile()) ? getAfter(accountProfile()).data.displayName
+          : request.auth.token.get('discordName', request.auth.token.get('name', 'Membre'));
+      }
+      function accountPhoto() {
+        return existsAfter(accountProfile()) ? getAfter(accountProfile()).data.photoURL
+          : request.auth.token.get('discordAvatar', request.auth.token.get('picture', ''));
+      }
+      allow get, list: if signedIn();
+      allow create, update: if signedIn() && !isBanned() && request.auth.uid == uid
+        && request.resource.data.keys().hasAll(['displayName', 'photoURL', 'friendCode', 'pnid', 'lookingFor', 'games', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['displayName', 'photoURL', 'friendCode', 'pnid', 'lookingFor', 'games', 'updatedAt'])
+        && request.resource.data.displayName == accountName()
+        && request.resource.data.photoURL is string
+        && (request.resource.data.photoURL == '' || request.resource.data.photoURL == accountPhoto())
+        && request.resource.data.friendCode is string
+        && (request.resource.data.friendCode == '' || request.resource.data.friendCode.matches('[0-9]{4}-[0-9]{4}-[0-9]{4}'))
+        && request.resource.data.pnid is string
+        && (request.resource.data.pnid == '' || request.resource.data.pnid.matches('[A-Za-z0-9_.-]{6,16}'))
+        && (request.resource.data.friendCode != '' || request.resource.data.pnid != '')
+        && text(request.resource.data.lookingFor, 0, 80) && acceptableComment(request.resource.data.lookingFor)
+        && request.resource.data.games is list && request.resource.data.games.size() <= 5
+        && request.resource.data.games.toSet().size() == request.resource.data.games.size()
+        && request.resource.data.games.hasOnly(['Mario Kart 7', 'Mario Kart 8', 'Splatoon', 'Smash Bros. 3DS', 'Smash Bros. Wii U',
+          'Animal Crossing New Leaf', 'Pokémon X / Y', 'Pokémon ROSA', 'Monster Hunter 4U', 'Minecraft'])
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if signedIn() && (request.auth.uid == uid || isAdmin());
+    }
     match /tickets/{ticketId} {
       allow create: if signedIn() && !isBanned()
         && request.resource.data.keys().hasAll(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt'])

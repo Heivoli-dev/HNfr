@@ -210,3 +210,31 @@ test('public profiles protect ownership, private fields and moderated content', 
   await env.withSecurityRulesDisabled(ctx => rawSetDoc(doc(ctx.firestore(),'bans/alice'),{expiresAt:null}));
   await assertFails(setDoc(doc(user(),'profiles/alice'), {...profile,bio:'Nouveau texte'}));
 });
+
+const player = (extra = {}) => ({ displayName: 'Alice', photoURL: '', friendCode: '1234-5678-9012', pnid: 'Alice_HN', lookingFor: 'Mario Kart le soir', games: ['Mario Kart 7'], updatedAt: serverTimestamp(), ...extra });
+test('player cards are members-only, owned, validated and use the account identity', async () => {
+  const alice = user('alice', { name: 'Alice', picture: 'https://lh3.googleusercontent.com/a/alice' });
+  await assertSucceeds(rawSetDoc(doc(alice, 'players/alice'), player()));
+  await assertSucceeds(rawSetDoc(doc(alice, 'players/alice'), player({ photoURL: 'https://lh3.googleusercontent.com/a/alice' })));
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), 'players/alice')));
+  await assertSucceeds(getDocs(collection(user('bob'), 'players')));
+  await assertFails(rawSetDoc(doc(user('bob', { name: 'Bob' }), 'players/alice'), player({ displayName: 'Bob' })));
+  await assertFails(rawSetDoc(doc(alice, 'players/alice'), player({ displayName: 'Admin' })));
+  await assertFails(rawSetDoc(doc(alice, 'players/alice'), player({ photoURL: 'https://i.ibb.co/fake.png' })));
+  await assertFails(rawSetDoc(doc(alice, 'players/alice'), player({ friendCode: '1234' })));
+  await assertFails(rawSetDoc(doc(alice, 'players/alice'), player({ pnid: 'a b' })));
+  await assertFails(rawSetDoc(doc(alice, 'players/alice'), player({ friendCode: '', pnid: '' })));
+  await assertFails(rawSetDoc(doc(alice, 'players/alice'), player({ games: ['Fortnite'] })));
+  await assertFails(rawSetDoc(doc(alice, 'players/alice'), player({ games: ['Mario Kart 7', 'Mario Kart 7'] })));
+  await assertFails(rawSetDoc(doc(alice, 'players/alice'), player({ lookingFor: 'discord.gg/spam' })));
+  await assertFails(rawSetDoc(doc(alice, 'players/alice'), player({ role: 'admin' })));
+  await assertFails(deleteDoc(doc(user('bob'), 'players/alice')));
+  await assertSucceeds(deleteDoc(doc(founder(), 'players/alice')));
+});
+test('player cards follow the public profile name and photo once it exists', async () => {
+  const profile = { displayName: 'Alice HN', bio: '', photoURL: 'https://i.ibb.co/alice.png', updatedAt: serverTimestamp() };
+  await setDoc(doc(user(), 'profiles/alice'), profile);
+  const alice = user('alice', { name: 'Alice' });
+  await assertFails(rawSetDoc(doc(alice, 'players/alice'), player()));
+  await assertSucceeds(rawSetDoc(doc(alice, 'players/alice'), player({ displayName: 'Alice HN', photoURL: 'https://i.ibb.co/alice.png' })));
+});

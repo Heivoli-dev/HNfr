@@ -27,9 +27,10 @@
     <title>Mon profil — Heivoli Network</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="redesign.css?v=projects-1" />
-  <link rel="stylesheet" href="navigation.css?v=glass" /><link rel="stylesheet" href="profiles.css" />
+  <link rel="stylesheet" href="navigation.css?v=glass-2" /><link rel="stylesheet" href="profiles.css" />
     <link rel="stylesheet" href="theme-blanc.css" />
     <link rel="stylesheet" href="aero.css?v=4" />
+    <link rel="stylesheet" href="joueurs.css?v=1" />
   </head>
   <body class="profile-page">
     <div class="page-glow glow-one" aria-hidden="true"></div>
@@ -78,9 +79,25 @@
           </form>
         </div>
       </section>
+      <section id="carte-joueur" class="player-form-card" hidden>
+        <div class="player-form-head">
+          <div><p class="eyebrow"><span></span> Mon profil</p><h2>Ma carte <em>joueur.</em></h2><p>Elle apparaît sur la page <a href="joueurs.html">Joueurs</a>, visible uniquement par les membres connectés. Ton pseudo et ta photo viennent de ton compte. Remplis au moins un des deux identifiants.</p></div>
+          <div id="player-preview"></div>
+        </div>
+        <form id="player-form" class="player-form">
+          <div class="field-pair">
+            <label for="player-friend-code">Code ami 3DS<input id="player-friend-code" placeholder="0000-0000-0000" inputmode="numeric" autocomplete="off" maxlength="14" /><small>12 chiffres, dans la Liste d’amis de ta console.</small></label>
+            <label for="player-pnid">Identifiant Pretendo (PNID)<input id="player-pnid" placeholder="Ton PNID" autocomplete="off" maxlength="16" /><small>6 à 16 caractères : lettres, chiffres, tiret, point ou tiret bas.</small></label>
+          </div>
+          <label for="player-looking-for">Je cherche<input id="player-looking-for" maxlength="80" placeholder="Ex. Des joueurs pour Mario Kart le soir" /></label>
+          <fieldset><legend>Mes jeux en ligne <small>(5 maximum)</small></legend><div id="player-games" class="game-checks"></div></fieldset>
+          <p id="player-status" class="player-status" aria-live="polite"></p>
+          <div class="player-form-footer"><button id="player-remove" type="button" class="button button-quiet button-danger" hidden>Retirer ma carte</button><button id="player-save" type="submit" class="button button-primary">Enregistrer ma carte</button></div>
+        </form>
+      </section>
     </main>
     <script type="module" src="signup-gate.js"></script>
-    <script type="module" src="profil.js?v=signup-1"></script>
+    <script type="module" src="profil.js?v=joueurs-1"></script>
   <footer class="section-shell"><p><a href="conditions.html">Conditions d’utilisation</a></p></footer>
   </body>
 </html>
