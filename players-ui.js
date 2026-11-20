@@ -5,6 +5,7 @@ export const GAMES = [
   'Animal Crossing New Leaf', 'Pokémon X / Y', 'Pokémon ROSA', 'Monster Hunter 4U', 'Minecraft',
 ];
 export const MAX_GAMES = 5;
+const sound = name => document.dispatchEvent(new CustomEvent("hn-sound", { detail: name }));
 const PHOTO = /^https:\/\/(i\.ibb\.co|lh[3-6]\.googleusercontent\.com|cdn\.discordapp\.com)\/[^\s]+$/;
 
 export function formatFriendCode(value) {
@@ -33,8 +34,10 @@ async function copyText(button, value) {
   try {
     await navigator.clipboard.writeText(value);
     button.textContent = 'Copié !';
+    sound('copy');
   } catch {
     button.textContent = 'Copie impossible';
+    sound('error');
   }
   setTimeout(() => { button.textContent = 'Copier'; }, 1600);
 }

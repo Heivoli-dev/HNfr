@@ -129,3 +129,31 @@
 /* ---------- Vidéo de présentation : cadre en verre ---------- */
 .video-frame { padding: 12px; }
 .video-frame iframe { inset: 12px; width: calc(100% - 24px); height: calc(100% - 24px); border-radius: 20px; background: #2a2833; }
+
+/* ---------- Accueil : Discord en direct ---------- */
+.discord-live { position: relative; isolation: isolate; overflow: hidden; margin-top: 14px; padding: 16px 18px; border: 1px solid rgba(255,255,255,.95); border-radius: 26px; color: #282639;
+  background: radial-gradient(ellipse 120% 140% at 50% 50%, rgba(255,255,255,0) 55%, rgba(152,148,225,.16) 100%), linear-gradient(180deg, rgba(255,255,255,.75) 0%, rgba(246,245,255,.4) 55%, rgba(228,225,250,.5) 100%);
+  box-shadow: inset 0 1px 0 #fff, inset 0 -14px 28px rgba(152,148,225,.16), inset 0 0 0 2px rgba(152,148,225,.1), 0 16px 40px rgba(50,39,101,.11); }
+.discord-live::before { content: ""; position: absolute; z-index: -1; left: 3%; right: 3%; top: 4px; height: 46%; border-radius: 999px 999px 50% 50% / 40px 40px 30% 30%; background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,0)); pointer-events: none; }
+.discord-live-head { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+.discord-live-logo { position: relative; overflow: hidden; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px; color: #fff; border: 2px solid #fff;
+  background: radial-gradient(circle at 35% 25%, rgba(255,255,255,.6) 0 10%, transparent 40%), linear-gradient(180deg, #8c96ff, #5865f2); box-shadow: 0 6px 14px rgba(88,101,242,.35), inset 0 -3px 8px rgba(20,30,120,.25); }
+.discord-live-logo svg { width: 24px; height: 24px; }
+.discord-live-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.discord-live-name { display: block; font-size: 15px; }
+.discord-live-count { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #4a4760; font-weight: 600; }
+.live-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #23a55a; animation: live-pulse 2s infinite; }
+@keyframes live-pulse { 0% { box-shadow: 0 0 0 0 rgba(35,165,90,.55); } 70% { box-shadow: 0 0 0 8px rgba(35,165,90,0); } 100% { box-shadow: 0 0 0 0 rgba(35,165,90,0); } }
+.discord-live-join { position: relative; overflow: hidden; padding: 9px 16px; border-radius: 999px; color: #fff !important; font-size: 13px; font-weight: 700; text-shadow: 0 1px 2px rgba(20,30,120,.45); border: 1px solid rgba(30,40,150,.4); background: linear-gradient(180deg, #a9b1ff 0%, #5865f2 50%, #4250d8 51%, #6f7bff 100%); box-shadow: 0 6px 14px rgba(88,101,242,.3); }
+.discord-live-join:hover { filter: brightness(1.07); }
+.discord-live-members { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(152,148,225,.2); }
+.avatar-stack { display: flex; }
+.av { position: relative; overflow: hidden; width: 30px; height: 30px; margin-left: -8px; display: grid; place-items: center; border-radius: 50%; border: 2px solid #fff; color: #fff; font-style: normal; font-size: 12px; font-weight: 800; box-shadow: 0 2px 6px rgba(50,39,101,.2); }
+.av:first-child { margin-left: 0; }
+.av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.a1 { background: linear-gradient(180deg,#8a80ff,#4034c4); } .a2 { background: linear-gradient(180deg,#ffc65a,#ff8a00); } .a3 { background: linear-gradient(180deg,#c3ea4a,#79b000); }
+.a4 { background: linear-gradient(180deg,#8f8cff,#605cff); } .a5 { background: linear-gradient(180deg,#ff9a5c,#ff5709); } .a6 { background: linear-gradient(180deg,#b6b3c9,#6d6a85); }
+.discord-live-names { font-size: 12px; color: #4a4760; font-weight: 600; }
+.discord-live-names em { font-style: normal; color: #6b6880; font-weight: 500; }
+.discord-live-activity { margin: 10px 0 0; padding: 8px 12px; border-radius: 14px; background: rgba(35,165,90,.1); color: #1d6a33; font-size: 12px; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }

@@ -61,6 +61,7 @@ const modStats = document.querySelector("#mod-stats");
 const ticketSearch = document.querySelector("#ticket-search");
 const categoryFilter = document.querySelector("#ticket-category-filter");
 const filterChips = [...document.querySelectorAll(".filter-chip")];
+const sound = name => document.dispatchEvent(new CustomEvent("hn-sound", { detail: name }));
 const CATEGORY_HINTS = {
   Question: "Une question sur le serveur, le site ou un logiciel.",
   Signalement: "Signale un membre, un message ou un contenu. Donne le pseudo, le salon, la date et une capture si possible.",
@@ -371,7 +372,9 @@ ticketForm.addEventListener("submit", async (event) => {
     firstMessageCount.textContent = "0 / 800";
     categoryHint.textContent = CATEGORY_HINTS.Question;
     ticketCreateStatus.textContent = "Ticket envoyé ! La modération te répondra dans la discussion.";
+    sound("success");
   } catch (error) {
+    sound("error");
     if (ticketId) {
       messageText.value = text;
       messageText.dispatchEvent(new Event("input"));
@@ -398,6 +401,7 @@ messageForm.addEventListener("submit", async (event) => {
     messageStatus.textContent = "";
   } catch (error) {
     messageStatus.textContent = error.message || "Envoi bloqué : réessaie dans un instant.";
+    sound("error");
   } finally {
     messageSubmit.disabled = blocked || selectedTicket?.status === "closed";
   }

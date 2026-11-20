@@ -41,6 +41,8 @@ const profileBadge = document.querySelector("#profile-badge");
 const adminLink = document.querySelector("#admin-link");
 let currentUser = null;
 const playerCard = setupPlayerCard({ db });
+const sound = name => document.dispatchEvent(new CustomEvent("hn-sound", { detail: name }));
+
 
 async function applySelectedPersistence() {
   await setPersistence(auth, rememberDevice.checked ? browserLocalPersistence : browserSessionPersistence);
@@ -137,7 +139,8 @@ profileForm.addEventListener('submit', async event => {
     playerCard.refresh();
     showProfile({displayName,bio,photoURL});
     profileSaveStatus.textContent = 'Profil enregistré en ligne.';
-  } catch { profileSaveStatus.textContent = 'Enregistrement impossible. Vérifie ta connexion ; un compte banni ne peut pas modifier son profil.'; }
+    sound('success');
+  } catch { sound('error'); profileSaveStatus.textContent = 'Enregistrement impossible. Vérifie ta connexion ; un compte banni ne peut pas modifier son profil.'; }
   finally { button.disabled = false; }
 });
 onAuthStateChanged(auth, async user => {

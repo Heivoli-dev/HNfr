@@ -4,6 +4,8 @@ import { commentModerationError } from "./comment-moderation.js";
 import { GAMES, MAX_GAMES, formatFriendCode, renderPlayerCard, safePhoto, validFriendCode, validPnid } from "./players-ui.js";
 
 // Même logique que la règle /players : le pseudo et la photo viennent du profil, sinon du compte Google/Discord.
+const sound = name => document.dispatchEvent(new CustomEvent("hn-sound", { detail: name }));
+
 export async function accountIdentity(db, user) {
   const claims = (await user.getIdTokenResult()).claims;
   const profile = await getDoc(doc(db, "profiles", user.uid)).catch(() => null);
@@ -82,10 +84,10 @@ export function setupPlayerCard({ db, onChange } = {}) {
     event.preventDefault();
     if (!user) return;
     const data = current();
-    if (!data.friendCode && !data.pnid) { status.textContent = "Remplis au moins ton code ami 3DS ou ton identifiant Pretendo."; return; }
-    if (data.friendCode && !validFriendCode(data.friendCode)) { status.textContent = "Le code ami doit contenir 12 chiffres (0000-0000-0000)."; return; }
-    if (data.pnid && !validPnid(data.pnid)) { status.textContent = "L’identifiant Pretendo doit faire 6 à 16 caractères : lettres, chiffres, tiret, point ou tiret bas."; return; }
-    if (data.lookingFor && commentModerationError(data.lookingFor)) { status.textContent = "« Je cherche » doit rester sans insultes ni liens."; return; }
+    if (!data.friendCode && !data.pnid) { status.textContent = "Remplis au moins ton code ami 3DS ou ton identifiant Pretendo."; sound("error"); return; }
+    if (data.friendCode && !validFriendCode(data.friendCode)) { status.textContent = "Le code ami doit contenir 12 chiffres (0000-0000-0000)."; sound("error"); return; }
+    if (data.pnid && !validPnid(data.pnid)) { status.textContent = "L’identifiant Pretendo doit faire 6 à 16 caractères : lettres, chiffres, tiret, point ou tiret bas."; sound("error"); return; }
+    if (data.lookingFor && commentModerationError(data.lookingFor)) { status.textContent = "« Je cherche » doit rester sans insultes ni liens."; sound("error"); return; }
     saveButton.disabled = true;
     status.textContent = "Enregistrement…";
     try {
@@ -102,10 +104,12 @@ export function setupPlayerCard({ db, onChange } = {}) {
       exists = true;
       removeButton.hidden = false;
       status.textContent = "Carte enregistrée ! Elle est visible sur la page Joueurs.";
+      sound("success");
       refreshPreview();
       onChange?.();
     } catch {
       status.textContent = "Enregistrement impossible. Vérifie ta connexion ; un compte banni ne peut pas créer de carte.";
+      sound("error");
     } finally {
       saveButton.disabled = false;
     }
