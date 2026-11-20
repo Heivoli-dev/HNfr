@@ -5,7 +5,7 @@ import { commentModerationError } from './comment-moderation.js';
 import { setupPlayerCard } from './player-card.js';
 import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
-import { GoogleAuthProvider, browserLocalPersistence, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+import { GoogleAuthProvider, indexedDBLocalPersistence, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { setupGoogleLogin } from "./google-login.js?v=signup-1";
 import { doc, getDoc, getFirestore, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
@@ -44,18 +44,23 @@ const playerCard = setupPlayerCard({ db });
 const sound = name => document.dispatchEvent(new CustomEvent("hn-sound", { detail: name }));
 
 
+// Par défaut, la connexion reste enregistrée sur l'appareil (même après fermeture du navigateur).
+const REMEMBER_KEY = "hn-remember-device";
+try { rememberDevice.checked = localStorage.getItem(REMEMBER_KEY) !== "off"; } catch { rememberDevice.checked = true; }
+
 async function applySelectedPersistence() {
-  await setPersistence(auth, rememberDevice.checked ? browserLocalPersistence : browserSessionPersistence);
+  await setPersistence(auth, rememberDevice.checked ? indexedDBLocalPersistence : browserSessionPersistence);
 }
 
 rememberDevice.addEventListener("change", async () => {
+  try { localStorage.setItem(REMEMBER_KEY, rememberDevice.checked ? "on" : "off"); } catch { /* stockage indisponible */ }
   try {
     await applySelectedPersistence();
     authStatus.textContent = rememberDevice.checked
-      ? "Compte mémorisé sur cet appareil."
-      : "Compte conservé seulement pour cette session.";
+      ? "Tu resteras connecté sur cet appareil."
+      : "Tu seras déconnecté en fermant le navigateur.";
   } catch {
-    authStatus.textContent = "Le réglage de mémorisation n’a pas pu être appliqué.";
+    authStatus.textContent = "Le réglage de connexion n’a pas pu être appliqué.";
   }
 });
 
