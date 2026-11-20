@@ -2,8 +2,8 @@ import { signupCaptcha } from './signup-gate.js';
 import { authorizeWrite } from './network-access.js';
 import { safeProfilePhoto } from './profiles.js';
 import { commentModerationError } from './comment-moderation.js';
-import { setupPlayerCard } from './player-card.js';
-import { badgesFor, renderBadges } from './players-ui.js';
+import { setupPlayerCard } from './player-card.js?v=badges-2';
+import { badgesFor, renderBadges } from './players-ui.js?v=badges-2';
 import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, indexedDBLocalPersistence, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
@@ -88,7 +88,8 @@ async function finishDiscordLogin() {
   }
 }
 
-setupGoogleLogin({ isLoginAllowed: signupCaptcha.isVerified, auth, provider, button: googleButton, status: authStatus, signInWithPopup, beforeLogin: applySelectedPersistence });
+applySelectedPersistence().catch(() => {});
+setupGoogleLogin({ isLoginAllowed: signupCaptcha.isVerified, auth, provider, button: googleButton, status: authStatus, signInWithPopup });
 
 discordButton.addEventListener("click", async () => {
   if (!signupCaptcha.isVerified()) return;
