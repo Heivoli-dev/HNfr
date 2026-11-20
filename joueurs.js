@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
-import { GAMES, renderPlayerCard } from "./players-ui.js";
+import { GAMES, badgesFor, renderPlayerCard } from "./players-ui.js";
 import { setupPlayerCard } from "./player-card.js";
 
 const firebaseConfig = {
@@ -33,6 +33,7 @@ const playerCard = setupPlayerCard({ db, onChange: () => currentUser && load(cur
 calloutButton.addEventListener("click", () => playerCard.focus());
 
 let players = [];
+let members = new Map();
 let currentUser = null;
 let isModerator = false;
 let filter = "all";
@@ -53,7 +54,7 @@ function draw() {
   else if (!visible.length) status.textContent = "Aucun joueur ne correspond à ta recherche.";
   for (const player of visible) {
     const mine = player.uid === currentUser?.uid;
-    grid.append(renderPlayerCard(player, { mine, onRemove: isModerator && !mine ? removeCard : undefined }));
+    grid.append(renderPlayerCard(player, { mine, badges: badgesFor(members.get(player.uid), player), onRemove: isModerator && !mine ? removeCard : undefined }));
   }
 }
 
@@ -82,7 +83,11 @@ async function load(user) {
   status.hidden = false;
   status.textContent = "Chargement des joueurs…";
   try {
-    const snapshot = await getDocs(collection(db, "players"));
+    const [snapshot, memberSnapshot] = await Promise.all([
+      getDocs(collection(db, "players")),
+      getDocs(collection(db, "members")).catch(() => null),
+    ]);
+    members = new Map((memberSnapshot?.docs || []).map(item => [item.id, item.data()]));
     if (auth.currentUser !== user) return;
     players = snapshot.docs.map(item => ({ ...item.data(), uid: item.id }));
     players.sort((a, b) => (a.uid === user.uid ? -1 : b.uid === user.uid ? 1 : 0)

@@ -188,7 +188,28 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
       allow delete: if signedIn() && (request.auth.uid == uid || isAdmin());
     }
+    // Badges : rôle et date d'arrivée de chaque membre, écrits par le membre lui-même à la connexion.
+    match /members/{uid} {
+      function expectedRole() { return isFounder() ? 'founder' : (isAdmin() ? 'moderator' : 'member'); }
+      allow get: if true;
+      allow list: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasAll(['role', 'since', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['role', 'since', 'updatedAt'])
+        && request.resource.data.role == expectedRole()
+        && request.resource.data.since is timestamp
+        && request.resource.data.since <= request.time
+        && request.resource.data.since >= timestamp.date(2026, 1, 1)
+        && (resource == null || request.resource.data.since == resource.data.since)
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if signedIn() && (request.auth.uid == uid || isFounder());
+    }
     match /tickets/{ticketId} {
+      // Le marqueur de dernière réponse (lastReplyBy / lastReplyAt) permet d'afficher les notifications.
+      function replyMarker(who) {
+        return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastReplyBy', 'lastReplyAt'])
+          || (request.resource.data.lastReplyBy == who && request.resource.data.lastReplyAt == request.time);
+      }
       allow create: if signedIn() && !isBanned()
         && request.resource.data.keys().hasAll(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt'])
         && request.resource.data.keys().hasOnly(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt', 'networkPermit'])
@@ -202,12 +223,17 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
       allow get, list: if isAdmin() || (signedIn() && resource.data.creatorId == request.auth.uid);
-      allow update: if request.resource.data.updatedAt == request.time
+      allow update: if (request.resource.data.updatedAt == request.time
         && ((isAdmin()
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
-          && request.resource.data.status in ['open', 'closed'])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'lastReplyBy', 'lastReplyAt'])
+          && request.resource.data.status in ['open', 'closed']
+          && replyMarker('moderation'))
         || (signedIn() && !isBanned() && resource.data.creatorId == request.auth.uid && resource.data.status == 'open'
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['updatedAt'])));
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['updatedAt', 'lastReplyBy', 'lastReplyAt'])
+          && replyMarker('member'))))
+        || (signedIn() && resource.data.creatorId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberSeenAt'])
+          && request.resource.data.memberSeenAt == request.time);
       allow delete: if isAdmin();
       match /messages/{messageId} {
         allow get, list: if isAdmin() || ownsTicket(ticketId);

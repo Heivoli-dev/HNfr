@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { before, after, beforeEach, test } from 'node:test';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, setDoc as rawSetDoc, getDoc, getDocs, collection, query, where, updateDoc, deleteDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc as rawSetDoc, getDoc, getDocs, collection, query, where, updateDoc, deleteDoc, writeBatch, serverTimestamp, Timestamp } from 'firebase/firestore';
 async function grant(uid, action, target, ipHash = 'test-ip') {
   const id = crypto.randomUUID();
   await env.withSecurityRulesDisabled(ctx => rawSetDoc(doc(ctx.firestore(), 'writePermits', id), {uid,action,target,ipHash,expiresAt:new Date(Date.now()+60000),usedAt:null}));
@@ -237,4 +237,28 @@ test('player cards follow the public profile name and photo once it exists', asy
   const alice = user('alice', { name: 'Alice' });
   await assertFails(rawSetDoc(doc(alice, 'players/alice'), player()));
   await assertSucceeds(rawSetDoc(doc(alice, 'players/alice'), player({ displayName: 'Alice HN', photoURL: 'https://i.ibb.co/alice.png' })));
+});
+
+test('member badges are written by their owner with the right role and a fixed arrival date', async () => {
+  const since = Timestamp.fromDate(new Date('2026-09-01T00:00:00Z'));
+  const alice = user('alice');
+  await assertSucceeds(rawSetDoc(doc(alice, 'members/alice'), { role: 'member', since, updatedAt: serverTimestamp() }));
+  await assertFails(rawSetDoc(doc(alice, 'members/alice'), { role: 'moderator', since, updatedAt: serverTimestamp() }));
+  await assertFails(rawSetDoc(doc(alice, 'members/alice'), { role: 'member', since: Timestamp.fromDate(new Date('2025-01-01T00:00:00Z')), updatedAt: serverTimestamp() }));
+  await assertFails(rawSetDoc(doc(user('bob'), 'members/alice'), { role: 'member', since, updatedAt: serverTimestamp() }));
+  await assertSucceeds(rawSetDoc(doc(founder(), 'members/founder'), { role: 'founder', since, updatedAt: serverTimestamp() }));
+  await assertSucceeds(getDoc(doc(env.unauthenticatedContext().firestore(), 'members/alice')));
+});
+
+test('ticket reply markers and member read receipts', async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await rawSetDoc(doc(context.firestore(), 'tickets/t1'), { creatorId: 'alice', creatorName: 'Alice', creatorEmail: '', subject: 'Aide', category: 'Question', status: 'open', createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+  });
+  const alice = user('alice');
+  await assertSucceeds(updateDoc(doc(alice, 'tickets/t1'), { updatedAt: serverTimestamp(), lastReplyBy: 'member', lastReplyAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(alice, 'tickets/t1'), { updatedAt: serverTimestamp(), lastReplyBy: 'moderation', lastReplyAt: serverTimestamp() }));
+  await assertSucceeds(updateDoc(doc(founder(), 'tickets/t1'), { updatedAt: serverTimestamp(), lastReplyBy: 'moderation', lastReplyAt: serverTimestamp() }));
+  await assertSucceeds(updateDoc(doc(alice, 'tickets/t1'), { memberSeenAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(user('bob'), 'tickets/t1'), { memberSeenAt: serverTimestamp() }));
+  await assertSucceeds(updateDoc(doc(founder(), 'tickets/t1'), { status: 'closed', updatedAt: serverTimestamp() }));
 });

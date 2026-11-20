@@ -134,11 +134,22 @@ function updateConversationHeader(ticket, lastFromModeration) {
   messageText.placeholder = isOpen ? (isModerator ? "Réponds au membre…" : "Écris ton message…") : "Ce ticket est fermé.";
 }
 
+const seenRequests = new Map();
+function markSeen(ticket) {
+  if (!ticket || isModerator || ticket.creatorId !== currentUser?.uid) return;
+  const lastReply = ticket.lastReplyAt?.toMillis?.() ?? 0;
+  const seen = ticket.memberSeenAt?.toMillis?.() ?? 0;
+  if (ticket.lastReplyBy !== "moderation" || lastReply <= seen || seenRequests.get(ticket.id) === lastReply) return;
+  seenRequests.set(ticket.id, lastReply);
+  updateDoc(doc(db, "tickets", ticket.id), { memberSeenAt: serverTimestamp() }).catch(() => seenRequests.delete(ticket.id));
+}
+
 function setSelectedTicket(ticket) {
   const sameTicket = Boolean(ticket && selectedTicket?.id === ticket.id && stopMessages);
   selectedTicket = ticket;
   emptyConversation.hidden = Boolean(ticket);
   conversationContent.hidden = !ticket;
+  markSeen(ticket);
   if (sameTicket) { updateConversationHeader(ticket, selectedTicket.lastFromModeration); return; }
   if (stopMessages) stopMessages();
   stopMessages = null;
@@ -198,7 +209,7 @@ function renderTickets(snapshot) {
     setSelectedTicket(null);
     return;
   }
-  allTickets = snapshot.docs.map(item => ({ ...item.data(), id: item.id }));
+  allTickets = snapshot.docs.map(item => ({ ...item.data({ serverTimestamps: "estimate" }), id: item.id }));
   allTickets.sort((a, b) => (b.updatedAt?.toMillis?.() ?? 0) - (a.updatedAt?.toMillis?.() ?? 0) || a.id.localeCompare(b.id));
   drawTicketList();
   const matchingSelected = allTickets.find(ticket => ticket.id === selectedTicket?.id);
@@ -215,12 +226,22 @@ function ticketDate(timestamp) {
   return timestamp.toDate().toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
+const millis = value => value?.toMillis?.() ?? 0;
+function ticketUnread(ticket) {
+  return !isModerator && ticket.lastReplyBy === "moderation" && millis(ticket.lastReplyAt) > millis(ticket.memberSeenAt);
+}
+function ticketWaiting(ticket) {
+  return isModerator && ticket.status !== "closed" && ticket.lastReplyBy === "member";
+}
+
 function drawTicketList() {
   ticketList.replaceChildren();
-  const counts = { open: 0, closed: 0, all: allTickets.length, reports: 0 };
+  const counts = { open: 0, closed: 0, all: allTickets.length, reports: 0, waiting: 0, unread: 0 };
   for (const ticket of allTickets) {
     if (ticket.status === "closed") counts.closed++; else counts.open++;
     if (ticket.status !== "closed" && ticket.category === "Signalement") counts.reports++;
+    if (ticketWaiting(ticket)) counts.waiting++;
+    if (ticketUnread(ticket)) counts.unread++;
   }
   if (typeof updateTicketCounts === "function") updateTicketCounts(counts);
   const search = ticketSearchText.trim().toLowerCase();
@@ -241,7 +262,9 @@ function drawTicketList() {
     const closed = data.status === "closed";
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `ticket-item ${selectedTicket?.id === data.id ? "is-selected" : ""}`;
+    const unread = ticketUnread(data);
+    const waiting = ticketWaiting(data);
+    button.className = `ticket-item${selectedTicket?.id === data.id ? " is-selected" : ""}${unread || waiting ? " is-unread" : ""}`;
     const top = document.createElement("strong");
     top.textContent = data.subject;
     const bottom = document.createElement("span");
@@ -249,8 +272,8 @@ function drawTicketList() {
     const date = ticketDate(data.updatedAt);
     bottom.textContent = `${data.category || "Ticket"}${isModerator ? ` · ${data.creatorName || data.creatorEmail || "Membre"}` : ""}${date ? ` · ${date}` : ""}`;
     const pill = document.createElement("em");
-    pill.className = `ticket-pill ${closed ? "is-closed" : "is-open"}`;
-    pill.textContent = closed ? "Fermé" : "Ouvert";
+    pill.className = `ticket-pill ${unread || waiting ? "is-new" : closed ? "is-closed" : "is-open"}`;
+    pill.textContent = unread ? "Nouvelle réponse" : waiting ? "À répondre" : closed ? "Fermé" : "Ouvert";
     button.append(top, bottom, pill);
     button.addEventListener("click", () => { setSelectedTicket(data); if (typeof revealConversation === "function") revealConversation(); });
     ticketList.append(button);
@@ -289,7 +312,7 @@ function updateTicketCounts(counts) {
   document.querySelector("#count-open").textContent = counts.open;
   document.querySelector("#count-closed").textContent = counts.closed;
   document.querySelector("#count-all").textContent = counts.all;
-  document.querySelector("#stat-waiting").textContent = counts.open;
+  document.querySelector("#stat-waiting").textContent = counts.waiting;
   document.querySelector("#stat-reports").textContent = counts.reports;
   document.querySelector("#stat-closed").textContent = counts.closed;
 }
@@ -318,7 +341,17 @@ messageText.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); messageForm.requestSubmit(); }
 });
 
-async function sendMessage(ticketId, text) {
+// replyMarker : false tant que les nouvelles règles Firestore ne sont pas publiées (repli automatique).
+async function sendMessage(ticketId, text, replyMarker = true) {
+  try {
+    await writeMessage(ticketId, text, replyMarker);
+  } catch (error) {
+    if (!replyMarker || error?.code !== 'permission-denied') throw error;
+    await writeMessage(ticketId, text, false);
+  }
+}
+
+async function writeMessage(ticketId, text, replyMarker) {
   const message = doc(collection(db, 'tickets', ticketId, 'messages'));
   const batch = writeBatch(db);
   const networkPermit = await authorizeWrite(auth, db, batch, 'message', `${ticketId}/${message.id}`);
@@ -330,7 +363,9 @@ async function sendMessage(ticketId, text) {
     createdAt: serverTimestamp(),
     networkPermit,
   });
-  batch.update(doc(db, 'tickets', ticketId), { updatedAt: serverTimestamp() });
+  batch.update(doc(db, 'tickets', ticketId), replyMarker
+    ? { updatedAt: serverTimestamp(), lastReplyBy: isModerator ? 'moderation' : 'member', lastReplyAt: serverTimestamp() }
+    : { updatedAt: serverTimestamp() });
   await batch.commit();
 }
 

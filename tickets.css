@@ -120,3 +120,6 @@ dialog[aria-label="Vérification anti-spam"] button { margin-top: 12px; padding:
 @media (max-width: 900px) { .ticket-steps-inline { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .mod-stats { grid-template-columns: 1fr; } .mod-stats div { grid-template-columns: auto 1fr; align-items: center; gap: 12px; } .mod-stats strong { font-size: 24px; } }
 .tickets-panel .ticket-form .auth-status:empty { display: none; }
+.tickets-panel .ticket-item.is-unread { padding-right: 130px; border-color: rgba(224,40,27,.35) !important; box-shadow: 0 0 0 2px rgba(224,40,27,.12), 0 3px 10px rgba(50,39,101,.05); }
+.tickets-panel .ticket-item.is-unread strong::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: #e0281b; vertical-align: middle; }
+.ticket-pill.is-new { color: #fff !important; background: linear-gradient(180deg, #ff7a6a, #e0281b) !important; }

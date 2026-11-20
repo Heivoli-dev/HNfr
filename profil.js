@@ -3,6 +3,7 @@ import { authorizeWrite } from './network-access.js';
 import { safeProfilePhoto } from './profiles.js';
 import { commentModerationError } from './comment-moderation.js';
 import { setupPlayerCard } from './player-card.js';
+import { badgesFor, renderBadges } from './players-ui.js';
 import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, indexedDBLocalPersistence, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
@@ -38,6 +39,7 @@ const profileDescription = document.querySelector("#profile-description");
 const descriptionCount = document.querySelector("#description-count");
 const profileSaveStatus = document.querySelector("#profile-save-status");
 const profileBadge = document.querySelector("#profile-badge");
+const profileBadges = document.querySelector("#profile-badges");
 const adminLink = document.querySelector("#admin-link");
 let currentUser = null;
 const playerCard = setupPlayerCard({ db });
@@ -148,6 +150,16 @@ profileForm.addEventListener('submit', async event => {
   } catch { sound('error'); profileSaveStatus.textContent = 'Enregistrement impossible. Vérifie ta connexion ; un compte banni ne peut pas modifier son profil.'; }
   finally { button.disabled = false; }
 });
+async function loadBadges(uid, user) {
+  try {
+    const [member, player] = await Promise.all([
+      getDoc(doc(db, 'members', uid)).catch(() => null),
+      user ? getDoc(doc(db, 'players', uid)).catch(() => null) : null,
+    ]);
+    if (loadedUid !== uid) return;
+    renderBadges(badgesFor(member?.exists() ? member.data() : null, player?.exists() ? player.data() : null), profileBadges);
+  } catch { /* les badges sont facultatifs */ }
+}
 onAuthStateChanged(auth, async user => {
   currentUser = user;
   const uid = targetUid || user?.uid;
@@ -157,7 +169,7 @@ onAuthStateChanged(auth, async user => {
   publicDescription.hidden = !publicView;
   profileEmail.hidden = !own; profileEmail.textContent = '';
   document.querySelector('#sign-out').hidden = !own;
-  profileBadge.hidden = true; adminLink.hidden = true;
+  profileBadge.hidden = true; adminLink.hidden = true; profileBadges.hidden = true;
   document.querySelector('#profile-title').textContent = own ? 'Mon profil' : 'Profil du membre';
   if (!uid) return;
   if (!/^[A-Za-z0-9:_-]{1,128}$/.test(uid)) { publicStatus.textContent = 'Profil introuvable.'; return; }
@@ -169,6 +181,7 @@ onAuthStateChanged(auth, async user => {
     const fallback = { displayName: user?.displayName || 'Membre', photoURL: user?.photoURL || '', bio: localStorage.getItem(`heivoli-profile-${uid}`) || '' };
     showProfile(snapshot.exists() ? snapshot.data() : fallback);
     loadedUid = uid; profileForm.hidden = !own; publicStatus.textContent = '';
+    loadBadges(uid, user);
     if (own) playerCard.show(user);
     if (own) {
       const claims = (await user.getIdTokenResult()).claims;
@@ -177,8 +190,7 @@ onAuthStateChanged(auth, async user => {
       let admin = email === CREATOR_EMAIL;
       if (!admin && email) { try { admin = (await getDoc(doc(db, 'admins', email))).exists(); } catch { admin = false; } }
       if (auth.currentUser !== user) return;
-      adminLink.hidden = !admin; profileBadge.hidden = !admin;
-      profileBadge.textContent = email === CREATOR_EMAIL ? '✦ Fondateur' : '✦ Administrateur';
+      adminLink.hidden = !admin;
     }
   } catch { publicStatus.textContent = 'Impossible de charger ce profil. Réessaie dans un instant.'; }
 });

@@ -56,7 +56,7 @@ function idRow(kind, label, value) {
 }
 
 // player : { uid, displayName, photoURL, friendCode, pnid, lookingFor, games }
-export function renderPlayerCard(player, { mine = false, onRemove } = {}) {
+export function renderPlayerCard(player, { mine = false, onRemove, badges } = {}) {
   const card = element('article', `player-card${mine ? ' is-mine' : ''}`);
   const head = element('header');
   const orb = element('span', `player-orb orb-${orbColor(player.uid)}`);
@@ -88,11 +88,14 @@ export function renderPlayerCard(player, { mine = false, onRemove } = {}) {
   if (player.lookingFor) titles.append(element('p', '', `Cherche : ${player.lookingFor}`));
   head.append(orb, titles);
 
+  const badgeRow = badges?.length ? renderBadges(badges) : null;
   const ids = element('div', 'player-ids');
   if (player.friendCode) ids.append(idRow('is-3ds', 'Code ami 3DS', player.friendCode));
   if (player.pnid) ids.append(idRow('is-pretendo', 'Pretendo (PNID)', player.pnid));
 
-  card.append(head, ids);
+  card.append(head);
+  if (badgeRow) card.append(badgeRow);
+  card.append(ids);
   if (player.games?.length) {
     const tags = element('ul', 'game-tags');
     player.games.forEach(game => tags.append(element('li', '', game)));
@@ -105,4 +108,37 @@ export function renderPlayerCard(player, { mine = false, onRemove } = {}) {
     card.append(remove);
   }
   return card;
+}
+
+// ---------- Badges ----------
+const BADGES = {
+  founder: { icon: '✦', label: 'Fondateur', tone: 'b-gold' },
+  moderator: { icon: '🛡', label: 'Modération', tone: 'b-purple' },
+  card: { icon: '🎴', label: 'Carte joueur', tone: 'b-green' },
+  pretendo: { icon: '◎', label: 'Joueur Pretendo', tone: 'b-indigo' },
+  friendCode: { icon: '▣', label: 'Joueur 3DS', tone: 'b-orange' },
+};
+// member : document /members/{uid} (rôle, date d'arrivée) ; player : carte joueur éventuelle.
+export function badgesFor(member, player) {
+  const list = [];
+  if (member?.role === 'founder') list.push(BADGES.founder);
+  if (member?.role === 'moderator') list.push(BADGES.moderator);
+  const since = member?.since?.toDate?.();
+  if (since) list.push({ icon: '★', label: `Membre depuis ${since.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}`, tone: 'b-blue' });
+  if (player) list.push(BADGES.card);
+  if (player?.pnid) list.push(BADGES.pretendo);
+  if (player?.friendCode) list.push(BADGES.friendCode);
+  return list;
+}
+export function renderBadges(list, target = element('ul', 'badge-row')) {
+  target.replaceChildren();
+  for (const badge of list) {
+    const item = element('li', `badge ${badge.tone}`);
+    const icon = element('i', '', badge.icon);
+    icon.setAttribute('aria-hidden', 'true');
+    item.append(icon, document.createTextNode(badge.label));
+    target.append(item);
+  }
+  target.hidden = !list.length;
+  return target;
 }
