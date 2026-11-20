@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { GAMES, renderPlayerCard } from "./players-ui.js";
+import { setupPlayerCard } from "./player-card.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk",
@@ -28,6 +29,8 @@ const calloutText = document.querySelector("#callout-text");
 const calloutButton = document.querySelector("#callout-button");
 
 GAMES.forEach(game => gameSelect.append(new Option(game, game)));
+const playerCard = setupPlayerCard({ db, onChange: () => currentUser && load(currentUser) });
+calloutButton.addEventListener("click", () => playerCard.focus());
 
 let players = [];
 let currentUser = null;
@@ -86,7 +89,7 @@ async function load(user) {
       || (b.updatedAt?.toMillis?.() ?? 0) - (a.updatedAt?.toMillis?.() ?? 0));
     const mine = players.some(player => player.uid === user.uid);
     calloutTitle.textContent = mine ? "Ta carte est en ligne" : "Ta carte joueur";
-    calloutText.textContent = mine ? "Change tes codes, tes jeux ou ce que tu cherches depuis ton profil." : "Ajoute ton code ami et ton identifiant Pretendo depuis ton profil.";
+    calloutText.textContent = mine ? "Change tes codes, tes jeux ou ce que tu cherches." : "Ajoute ton code ami et ton identifiant Pretendo en quelques secondes.";
     calloutButton.textContent = mine ? "Modifier ma carte" : "Créer ma carte";
     draw();
   } catch (error) {
@@ -111,7 +114,8 @@ onAuthStateChanged(auth, async user => {
   locked.hidden = Boolean(user);
   content.hidden = !user;
   document.querySelector("#account-trigger")?.setAttribute("aria-label", user ? `Mon compte : ${user.displayName || "Membre"}` : "Mon compte — Connexion");
-  if (!user) return;
+  if (!user) { playerCard.hide(); return; }
+  playerCard.show(user).then(() => { if (document.activeElement?.closest?.("#carte-joueur") === null && !location.hash.includes("carte")) document.querySelector("#carte-joueur").hidden = true; });
   isModerator = await checkModerator(user);
   if (auth.currentUser !== user) return;
   load(user);

@@ -122,3 +122,4 @@
 .game-check input:disabled + span { opacity: .45; cursor: not-allowed; }
 .profile-shell .player-form-card { margin-top: 26px; }
 .players-page #players-locked { margin-top: 10px; }
+.players-form-inline { margin-bottom: 26px; }

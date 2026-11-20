@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="navigation.css?v=glass-2" />
     <link rel="stylesheet" href="theme-blanc.css" />
     <link rel="stylesheet" href="aero.css?v=4" />
-    <link rel="stylesheet" href="joueurs.css" />
+    <link rel="stylesheet" href="joueurs.css?v=2" />
   </head>
   <body class="profile-page">
     <div class="page-glow glow-one" aria-hidden="true"></div>
@@ -67,9 +67,26 @@
           </div>
           <aside class="my-card-callout">
             <span class="callout-orb" aria-hidden="true">＋</span>
-            <div><strong id="callout-title">Ta carte joueur</strong><p id="callout-text">Ajoute ton code ami et ton identifiant Pretendo depuis ton profil.</p></div>
-            <a id="callout-button" class="button button-primary" href="profil.html#carte-joueur">Créer ma carte</a>
+            <div><strong id="callout-title">Ta carte joueur</strong><p id="callout-text">Ajoute ton code ami et ton identifiant Pretendo en quelques secondes.</p></div>
+            <button id="callout-button" class="button button-primary" type="button">Créer ma carte</button>
           </aside>
+        </section>
+
+        <section id="carte-joueur" class="player-form-card players-form-inline" hidden>
+          <div class="player-form-head">
+            <div><p class="eyebrow"><span></span> Ma carte</p><h2>Ma carte <em>joueur.</em></h2><p>Elle apparaît ci-dessous, visible uniquement par les membres connectés. Ton pseudo et ta photo viennent de ton compte. Remplis au moins un des deux identifiants.</p></div>
+            <div id="player-preview"></div>
+          </div>
+          <form id="player-form" class="player-form">
+            <div class="field-pair">
+              <label for="player-friend-code">Code ami 3DS<input id="player-friend-code" placeholder="0000-0000-0000" inputmode="numeric" autocomplete="off" maxlength="14" /><small>12 chiffres, dans la Liste d’amis de ta console.</small></label>
+              <label for="player-pnid">Identifiant Pretendo (PNID)<input id="player-pnid" placeholder="Ton PNID" autocomplete="off" maxlength="16" /><small>6 à 16 caractères : lettres, chiffres, tiret, point ou tiret bas.</small></label>
+            </div>
+            <label for="player-looking-for">Je cherche<input id="player-looking-for" maxlength="80" placeholder="Ex. Des joueurs pour Mario Kart le soir" /></label>
+            <fieldset><legend>Mes jeux en ligne <small>(5 maximum)</small></legend><div id="player-games" class="game-checks"></div></fieldset>
+            <p id="player-status" class="player-status" aria-live="polite"></p>
+            <div class="player-form-footer"><button id="player-remove" type="button" class="button button-quiet button-danger" hidden>Retirer ma carte</button><button id="player-save" type="submit" class="button button-primary">Enregistrer ma carte</button></div>
+          </form>
         </section>
 
         <div class="players-toolbar">
@@ -89,7 +106,7 @@
         <p class="players-note">🔒 Les cartes joueur ne sont visibles que par les membres connectés. Tu peux retirer la tienne à tout moment depuis ton profil.</p>
       </div>
     </main>
-    <script type="module" src="joueurs.js?v=1"></script>
+    <script type="module" src="joueurs.js?v=2"></script>
   <footer class="section-shell"><p><a href="conditions.html">Conditions d’utilisation</a></p></footer>
   </body>
 </html>

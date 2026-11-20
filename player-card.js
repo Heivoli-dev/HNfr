@@ -17,7 +17,7 @@ export async function accountIdentity(db, user) {
   };
 }
 
-export function setupPlayerCard({ db }) {
+export function setupPlayerCard({ db, onChange } = {}) {
   const section = document.querySelector("#carte-joueur");
   const form = document.querySelector("#player-form");
   const friendCode = document.querySelector("#player-friend-code");
@@ -103,6 +103,7 @@ export function setupPlayerCard({ db }) {
       removeButton.hidden = false;
       status.textContent = "Carte enregistrée ! Elle est visible sur la page Joueurs.";
       refreshPreview();
+      onChange?.();
     } catch {
       status.textContent = "Enregistrement impossible. Vérifie ta connexion ; un compte banni ne peut pas créer de carte.";
     } finally {
@@ -120,6 +121,7 @@ export function setupPlayerCard({ db }) {
       form.reset();
       status.textContent = "Ta carte a été retirée.";
       refreshPreview();
+      onChange?.();
     } catch {
       status.textContent = "Impossible de retirer ta carte pour l’instant.";
     } finally {
@@ -148,6 +150,8 @@ export function setupPlayerCard({ db }) {
       refreshPreview();
       if (location.hash === "#carte-joueur") section.scrollIntoView({ behavior: "smooth" });
     },
+    get exists() { return exists; },
+    focus() { section.hidden = false; section.scrollIntoView({ behavior: "smooth", block: "start" }); friendCode.focus({ preventScroll: true }); },
     hide() { user = null; section.hidden = true; },
     // Appelé après l’enregistrement du profil : garde le pseudo et la photo de la carte à jour.
     profileBatch(batch, displayName, photoURL) {
