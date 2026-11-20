@@ -2,7 +2,8 @@ import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { setupGoogleLogin } from "./google-login.js";
-import { watchBan } from './ban-status.js';
+import { watchBan } from './ban-status.js?v=2';
+import { openModeration } from './moderation.js?v=1';
 import { authorizeWrite } from './network-access.js';
 import { collection, doc, getDoc, getDocs, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
@@ -73,7 +74,7 @@ let isModerator = false;
 let selectedTicket = null;
 let stopTickets = null;
 let stopMessages = null;
-let stopBan = null, blocked = true;
+let stopBan = null, blocked = true, banned = false;
 const banNotice = document.createElement('p'); banNotice.className = 'auth-status'; banNotice.setAttribute('role', 'status');
 ticketForm.before(banNotice);
 
@@ -129,8 +130,9 @@ function updateConversationHeader(ticket, lastFromModeration) {
   banAuthor.hidden = !canBan;
   if (canBan) banAuthor.href = `admin.html?ban=${encodeURIComponent(ticket.creatorId)}`;
   quickReplies.hidden = !isModerator || !isOpen;
-  messageText.disabled = !isOpen || blocked;
-  messageSubmit.disabled = !isOpen || blocked;
+  const canWrite = isOpen && (!blocked || (banned && ticket.category === "Contestation"));
+  messageText.disabled = !canWrite;
+  messageSubmit.disabled = !canWrite;
   messageText.placeholder = isOpen ? (isModerator ? "Réponds au membre…" : "Écris ton message…") : "Ce ticket est fermé.";
 }
 
@@ -304,6 +306,18 @@ discordButton.addEventListener("click", () => {
 finishDiscordLogin();
 document.querySelector("#sign-out").addEventListener("click", () => signOut(auth));
 
+// Compte banni : le formulaire ne permet que la contestation.
+const contestOption = new Option("Contestation", "Contestation");
+function setContestationMode(on) {
+  if (on && !contestOption.parentElement) categorySelect.append(contestOption);
+  if (!on) contestOption.remove();
+  categorySelect.value = on ? "Contestation" : (categorySelect.value === "Contestation" ? "Question" : categorySelect.value);
+  categorySelect.disabled = on;
+  categoryHint.textContent = on ? "Explique pourquoi tu contestes ton bannissement. Tu ne peux ouvrir qu’une seule contestation." : (CATEGORY_HINTS[categorySelect.value] || "");
+  newTicket.querySelector("summary").lastChild.textContent = on ? " Contester mon bannissement" : " Nouveau ticket";
+  if (on) newTicket.open = true;
+}
+
 function revealConversation() {
   if (window.matchMedia("(max-width: 900px)").matches) document.querySelector(".conversation-panel").scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -354,14 +368,14 @@ async function sendMessage(ticketId, text, replyMarker = true) {
 async function writeMessage(ticketId, text, replyMarker) {
   const message = doc(collection(db, 'tickets', ticketId, 'messages'));
   const batch = writeBatch(db);
-  const networkPermit = await authorizeWrite(auth, db, batch, 'message', `${ticketId}/${message.id}`);
+  const networkPermit = banned ? null : await authorizeWrite(auth, db, batch, 'message', `${ticketId}/${message.id}`);
   batch.set(message, {
     authorId: currentUser.uid,
     authorName: (currentUser.displayName || currentUser.email || "Membre Heivoli").slice(0, 120),
     authorIsModerator: isModerator,
     text,
     createdAt: serverTimestamp(),
-    networkPermit,
+    ...(networkPermit ? { networkPermit } : {}),
   });
   batch.update(doc(db, 'tickets', ticketId), replyMarker
     ? { updatedAt: serverTimestamp(), lastReplyBy: isModerator ? 'moderation' : 'member', lastReplyAt: serverTimestamp() }
@@ -371,9 +385,9 @@ async function writeMessage(ticketId, text, replyMarker) {
 
 ticketForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!currentUser || blocked) return;
+  if (!currentUser || (blocked && !banned)) return;
   const subject = document.querySelector("#ticket-subject").value.trim();
-  const category = categorySelect.value;
+  const category = banned ? "Contestation" : categorySelect.value;
   const text = firstMessage.value.trim();
   if (!subject || !text) return;
   const submit = ticketForm.querySelector('button[type="submit"]');
@@ -381,9 +395,10 @@ ticketForm.addEventListener("submit", async (event) => {
   ticketCreateStatus.textContent = "Création du ticket (vérification 1/2)…";
   let ticketId = null;
   try {
-    const ticket = doc(collection(db, 'tickets'));
+    // Un compte banni ne peut ouvrir qu'une contestation, sans vérification réseau.
+    const ticket = banned ? doc(db, 'tickets', `contestation-${currentUser.uid}`) : doc(collection(db, 'tickets'));
     const batch = writeBatch(db);
-    const networkPermit = await authorizeWrite(auth, db, batch, 'ticket', ticket.id);
+    const networkPermit = banned ? null : await authorizeWrite(auth, db, batch, 'ticket', ticket.id);
     batch.set(ticket, {
       creatorId: currentUser.uid,
       creatorName: (currentUser.displayName || "Membre Heivoli").slice(0, 120),
@@ -393,7 +408,7 @@ ticketForm.addEventListener("submit", async (event) => {
       status: "open",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      networkPermit,
+      ...(networkPermit ? { networkPermit } : {}),
     });
     await batch.commit();
     ticketId = ticket.id;
@@ -414,7 +429,9 @@ ticketForm.addEventListener("submit", async (event) => {
       messageText.dispatchEvent(new Event("input"));
       ticketCreateStatus.textContent = "Le ticket est créé mais ton message n’est pas parti. Il a été recopié à droite : clique sur Envoyer.";
     } else {
-      ticketCreateStatus.textContent = error.message || "Création bloquée : réessaie dans un instant.";
+      ticketCreateStatus.textContent = banned && error?.code === "permission-denied"
+        ? "Tu as déjà envoyé une contestation : retrouve-la dans ta liste de tickets."
+        : (error.message || "Création bloquée : réessaie dans un instant.");
     }
   } finally {
     submit.disabled = false;
@@ -423,7 +440,8 @@ ticketForm.addEventListener("submit", async (event) => {
 
 messageForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!currentUser || blocked || !selectedTicket || selectedTicket.status === "closed") return;
+  if (!currentUser || !selectedTicket || selectedTicket.status === "closed") return;
+  if (blocked && !(banned && selectedTicket.category === "Contestation")) return;
   const text = messageText.value.trim();
   if (!text) return;
   messageSubmit.disabled = true;
@@ -437,7 +455,7 @@ messageForm.addEventListener("submit", async (event) => {
     messageStatus.textContent = error.message || "Envoi bloqué : réessaie dans un instant.";
     sound("error");
   } finally {
-    messageSubmit.disabled = blocked || selectedTicket?.status === "closed";
+    messageSubmit.disabled = selectedTicket?.status === "closed" || (blocked && !(banned && selectedTicket?.category === "Contestation"));
   }
 });
 
@@ -453,6 +471,11 @@ closeTicket.addEventListener("click", () => {
   if (selectedTicket && confirm(`Fermer « ${selectedTicket.subject} » ? Le membre ne pourra plus y répondre.`)) setTicketStatus("closed");
 });
 reopenTicket.addEventListener("click", () => setTicketStatus("open"));
+banAuthor.addEventListener("click", event => {
+  event.preventDefault();
+  if (!isModerator || !selectedTicket?.creatorId) return;
+  openModeration({ db, auth, uid: selectedTicket.creatorId, name: selectedTicket.creatorName || "", action: "ban" });
+});
 deleteTicket.addEventListener("click", async () => {
   if (!isModerator || !selectedTicket) return;
   if (!confirm(`Supprimer définitivement « ${selectedTicket.subject} » et tous ses messages ? Cette action est irréversible.`)) return;
@@ -489,8 +512,12 @@ onAuthStateChanged(auth, async (user) => {
   moderatorBadge.hidden = true;
   if (!user) return;
   stopBan = watchBan(db, user, state => {
-    blocked = state.blocked; banNotice.textContent = state.message; ticketForm.hidden = blocked;
-    messageText.disabled = blocked || !selectedTicket || selectedTicket.status === 'closed';
+    blocked = state.blocked; banned = Boolean(state.banned);
+    banNotice.textContent = banned ? '' : state.message;
+    ticketForm.hidden = blocked && !banned;
+    setContestationMode(banned);
+    const contest = banned && selectedTicket?.category === 'Contestation';
+    messageText.disabled = !selectedTicket || selectedTicket.status === 'closed' || (blocked && !contest);
     messageSubmit.disabled = messageText.disabled;
   });
 

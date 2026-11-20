@@ -2,9 +2,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebas
 import { GoogleAuthProvider, getAuth, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { setupGoogleLogin } from "./google-login.js";
 import { formatAnnouncementDate } from "./announcement-date.js";
-import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
-import { watchBan } from './ban-status.js';
+import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, Timestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+import { watchBan } from './ban-status.js?v=2';
 import { networkRequest } from './network-access.js';
+import { listMembers, openModeration } from './moderation.js?v=1';
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
 const firebaseConfig = {
@@ -35,14 +36,62 @@ const adminList = document.querySelector("#admin-list");
 let isAdmin = false;
 let isFounder = false;
 let stopAdminList = null;
-let stopBanList = null, stopOwnBan = null, stopNetworkBans = null;
+let stopBanList = null, stopOwnBan = null, stopNetworkBans = null, stopSanctions = null;
+let members = new Map();
 const banForm = document.querySelector('#ban-form');
 const banStatus = document.querySelector('#ban-status');
 const banList = document.querySelector('#ban-list');
 const banUid = document.querySelector('#ban-uid');
-banUid.value = new URLSearchParams(location.search).get('ban') || '';
+const requestedBan = new URLSearchParams(location.search).get('ban') || '';
+banUid.value = requestedBan;
+
+const memberSearch = document.querySelector('#member-search');
+const memberResults = document.querySelector('#member-results');
+const ROLE_LABELS = { founder: 'Fondateur', moderator: 'Modération', member: 'Membre' };
+function drawMembers() {
+  const text = memberSearch.value.trim().toLowerCase();
+  memberResults.replaceChildren();
+  if (!text) return;
+  const found = [...members.values()].filter(m => (m.name || '').toLowerCase().includes(text) || m.uid.toLowerCase().startsWith(text)).slice(0, 8);
+  if (!found.length) { memberResults.textContent = 'Aucun membre trouvé. Les membres apparaissent ici après leur première visite connectée.'; return; }
+  for (const member of found) {
+    const row = document.createElement('article'); row.className = 'admin-announcement';
+    const copy = document.createElement('div');
+    const title = document.createElement('strong'); title.textContent = member.name || 'Membre sans pseudo';
+    const info = document.createElement('p'); info.textContent = `${ROLE_LABELS[member.role] || 'Membre'} · ${member.uid}`;
+    copy.append(title, info);
+    const moderate = document.createElement('button'); moderate.type = 'button'; moderate.className = 'moderate-button'; moderate.textContent = 'Modérer';
+    moderate.addEventListener('click', () => openModeration({ db, auth, uid: member.uid, name: member.name || '' }));
+    row.append(copy, moderate); memberResults.append(row);
+  }
+}
+memberSearch.addEventListener('input', drawMembers);
+const SANCTION_LABELS = { warning: 'Avertissement', ban: 'Bannissement', unban: 'Débannissement', note: 'Note' };
+function startSanctions() {
+  stopSanctions = onSnapshot(query(collection(db, 'sanctions'), orderBy('createdAt', 'desc'), limit(20)), snapshot => {
+    const list = document.querySelector('#sanction-list'); list.replaceChildren();
+    snapshot.forEach(item => {
+      const data = item.data();
+      const row = document.createElement('article'); row.className = 'admin-announcement';
+      const copy = document.createElement('div');
+      const title = document.createElement('strong'); title.textContent = `${SANCTION_LABELS[data.type] || data.type} · ${data.name || members.get(data.uid)?.name || data.uid}`;
+      const info = document.createElement('p'); info.textContent = `${data.createdAt?.toDate?.().toLocaleString('fr-FR') || ''} · ${data.reason}${data.createdByName ? ' · par ' + data.createdByName : ''}`;
+      copy.append(title, info);
+      const moderate = document.createElement('button'); moderate.type = 'button'; moderate.className = 'moderate-button'; moderate.textContent = 'Ouvrir';
+      moderate.addEventListener('click', () => openModeration({ db, auth, uid: data.uid, name: data.name || members.get(data.uid)?.name || '' }));
+      row.append(copy, moderate); list.append(row);
+    });
+    if (snapshot.empty) list.textContent = 'Aucune sanction pour l’instant.';
+  }, () => { document.querySelector('#sanction-list').textContent = 'Historique indisponible (règles Firebase à publier ?).'; });
+}
 
 function startBans() {
+  listMembers(db).then(list => {
+    members = new Map(list.map(member => [member.uid, member]));
+    drawMembers();
+    if (requestedBan) { openModeration({ db, auth, uid: requestedBan, name: members.get(requestedBan)?.name || '', action: 'ban' }); }
+  }).catch(() => {});
+  startSanctions();
   stopNetworkBans = onSnapshot(query(collection(db, 'networkBans'), orderBy('createdAt', 'desc')), snapshot => {
     const list = document.querySelector('#network-ban-list'); list.replaceChildren();
     snapshot.forEach(item => {
@@ -65,17 +114,16 @@ function startBans() {
       const data = item.data(), expiry = data.expiresAt?.toDate?.();
       const row = document.createElement('article'); row.className = 'admin-announcement';
       const copy = document.createElement('div');
-      const title = document.createElement('strong'); title.textContent = item.id;
+      const title = document.createElement('strong'); title.textContent = members.get(item.id)?.name ? `${members.get(item.id).name} · ${item.id}` : item.id;
       const info = document.createElement('p');
       info.textContent = `${expiry ? (expiry > new Date() ? 'Jusqu’au ' : 'Expiré le ') + expiry.toLocaleString('fr-FR') : 'Permanent'} · ${data.reason}`;
       copy.append(title, info);
       const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'remove-announcement'; remove.textContent = 'Débannir';
-      remove.addEventListener('click', async () => {
-        remove.disabled = true;
-        try { await deleteDoc(item.ref); banStatus.textContent = 'Compte débanni.'; }
-        catch { banStatus.textContent = 'Débannissement impossible.'; remove.disabled = false; }
-      });
-      row.append(copy, remove); banList.append(row);
+      remove.addEventListener('click', () => openModeration({ db, auth, uid: item.id, name: members.get(item.id)?.name || '', action: 'unban' }));
+      const moderate = document.createElement('button'); moderate.type = 'button'; moderate.className = 'moderate-button'; moderate.textContent = 'Historique';
+      moderate.addEventListener('click', () => openModeration({ db, auth, uid: item.id, name: members.get(item.id)?.name || '' }));
+      const actions = document.createElement('div'); actions.className = 'card-mod-actions'; actions.append(moderate, remove);
+      row.append(copy, actions); banList.append(row);
     });
     if (snapshot.empty) banList.textContent = 'Aucun bannissement.';
   }, () => { banStatus.textContent = 'Impossible de charger les bannissements. Vérifie les règles Firebase.'; });
@@ -215,6 +263,7 @@ adminAddForm.addEventListener("submit", async (event) => {
 onAuthStateChanged(auth, async (user) => {
   stopNetworkBans?.(); stopNetworkBans = null; document.querySelector('#network-ban-list').replaceChildren();
   stopBanList?.(); stopBanList = null; stopOwnBan?.(); stopOwnBan = null; banList.replaceChildren();
+  stopSanctions?.(); stopSanctions = null;
   if (stopAdminList) stopAdminList();
   stopAdminList = null;
   adminList.replaceChildren();

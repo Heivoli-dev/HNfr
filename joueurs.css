@@ -139,3 +139,4 @@
 .badge i svg { width: 13px; height: 13px; }
 .badge i img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .b-pretendo i { overflow: hidden; background: #1b1d3b; box-shadow: 0 0 0 1px rgba(255,255,255,.6), 0 1px 3px rgba(0,0,0,.2); }
+.card-mod-actions { display: flex; flex-wrap: wrap; gap: 6px; }

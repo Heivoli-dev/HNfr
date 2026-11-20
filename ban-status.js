@@ -12,7 +12,7 @@ export function watchBan(db, user, onChange) {
       const blocked = user.emailVerified && user.email === 'heivolipro@gmail.com'
         ? false : snapshot.exists() && (data.expiresAt === null || expires > Date.now());
       const message = blocked ? `Ton compte est banni ${expires ? 'jusqu’au ' + new Date(expires).toLocaleString('fr-FR') : 'définitivement'}. Motif : ${data.reason}. Tu peux toujours lire les annonces.` : '';
-      onChange({ blocked, message });
+      onChange({ blocked, banned: blocked, message });
       if (blocked && expires) timer = setTimeout(check, Math.min(expires - Date.now() + 100, 2147483647));
     };
     check();

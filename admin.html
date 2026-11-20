@@ -27,8 +27,9 @@
     <title>Administration — Heivoli Network</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="redesign.css?v=projects-1" />
-  <link rel="stylesheet" href="navigation.css?v=notif-1" />
+  <link rel="stylesheet" href="navigation.css?v=ban-1" />
     <link rel="stylesheet" href="theme-blanc.css" />
+      <link rel="stylesheet" href="moderation.css?v=1" />
   </head>
   <body class="profile-page">
     <div class="page-glow glow-one" aria-hidden="true"></div><div class="page-glow glow-two" aria-hidden="true"></div>
@@ -67,7 +68,14 @@
           <div id="admin-list" class="admin-announcements"></div>
         </section>
         <section class="admin-management">
-          <div class="admin-list-heading"><h2>Bannissements</h2><p>Les comptes bannis peuvent lire les annonces, mais ne peuvent plus commenter ni envoyer de tickets ou de messages.</p></div>
+          <div class="admin-list-heading"><h2>Modération</h2><p>Un compte banni voit un écran de bannissement sur tout le site et ne peut plus commenter, écrire de ticket ni modifier son profil. Il peut seulement envoyer une contestation.</p></div>
+          <div class="member-search">
+            <label for="member-search" class="sr-only">Rechercher un membre</label>
+            <input id="member-search" type="search" autocomplete="off" placeholder="Rechercher un membre : pseudo ou identifiant" />
+            <p class="form-hint">Clique sur « Modérer » pour avertir, bannir, ajouter une note ou voir l’historique du membre. Tu peux aussi modérer directement depuis un profil, une carte joueur, un commentaire ou un ticket.</p>
+            <div id="member-results" class="admin-announcements"></div>
+          </div>
+          <details class="advanced-ban"><summary>Bannir par identifiant (avancé)</summary>
           <form id="ban-form" class="admin-form">
             <label>Identifiant du compte<input id="ban-uid" required maxlength="128" placeholder="Identifiant du membre" /></label>
             <label>Motif<textarea id="ban-reason" required maxlength="300" placeholder="Motif visible par le membre"></textarea></label>
@@ -76,8 +84,11 @@
             <p class="form-hint">Peut bloquer d’autres personnes partageant cette connexion. Disponible après un commentaire ou un ticket envoyé avec le nouveau système.</p>
             <button class="button button-primary" type="submit">Bannir le compte</button>
           </form>
+          </details>
           <p id="ban-status" class="auth-status" role="status"></p>
           <div id="ban-list" class="admin-announcements"></div>
+          <h3>Dernières sanctions</h3>
+          <div id="sanction-list" class="admin-announcements"></div>
           <h3>Connexions bannies</h3>
           <div id="network-ban-list" class="admin-announcements"></div>
         </section>
@@ -85,10 +96,10 @@
         <div id="admin-announcements" class="admin-announcements"></div>
       </section>
     </main>
-    <script type="module" src="admin.js?v=connexion-1"></script>
+    <script type="module" src="admin.js?v=ban-1"></script>
   <footer class="section-shell"><p><a href="conditions.html">Conditions d’utilisation</a></p></footer>
       <script type="module" src="sons.js?v=1"></script>
-      <script type="module" src="site-account.js?v=1"></script>
+      <script type="module" src="site-account.js?v=ban-1"></script>
       <script type="module" src="menu3ds.js?v=1"></script>
   </body>
 </html>

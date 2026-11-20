@@ -4,6 +4,7 @@ import { safeProfilePhoto } from './profiles.js';
 import { commentModerationError } from './comment-moderation.js';
 import { setupPlayerCard } from './player-card.js?v=avatar-2';
 import { badgesFor, renderBadges } from './players-ui.js?v=avatar-2';
+import { moderateButton } from './moderation.js?v=1';
 import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, indexedDBLocalPersistence, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
@@ -186,6 +187,19 @@ onAuthStateChanged(auth, async user => {
     loadedUid = uid; profileForm.hidden = !own; publicStatus.textContent = '';
     loadBadges(uid, user);
     if (own) playerCard.show(user);
+    document.querySelector('#profile-moderate')?.remove();
+    if (!own && user) {
+      const claims = (await user.getIdTokenResult()).claims;
+      const email = user.emailVerified && !claims.discordId ? user.email : '';
+      let admin = email === CREATOR_EMAIL;
+      if (!admin && email) { try { admin = (await getDoc(doc(db, 'admins', email))).exists(); } catch { admin = false; } }
+      if (admin && auth.currentUser === user && loadedUid === uid) {
+        const button = moderateButton('Modérer ce membre', () => ({ db, auth, uid, name: profileName.textContent }));
+        button.id = 'profile-moderate';
+        button.classList.add('button', 'button-quiet');
+        document.querySelector('.profile-actions').append(button);
+      }
+    }
     if (own) {
       const claims = (await user.getIdTokenResult()).claims;
       const email = user.emailVerified && !claims.discordId ? user.email : '';

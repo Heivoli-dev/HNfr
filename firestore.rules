@@ -195,7 +195,8 @@ service cloud.firestore {
       allow list: if signedIn();
       allow create, update: if signedIn() && request.auth.uid == uid
         && request.resource.data.keys().hasAll(['role', 'since', 'updatedAt'])
-        && request.resource.data.keys().hasOnly(['role', 'since', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['role', 'since', 'updatedAt', 'name'])
+        && (!('name' in request.resource.data) || text(request.resource.data.name, 1, 120))
         && request.resource.data.role == expectedRole()
         && request.resource.data.since is timestamp
         && request.resource.data.since <= request.time
@@ -204,21 +205,43 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
       allow delete: if signedIn() && (request.auth.uid == uid || isFounder());
     }
+    // Historique de modération : avertissements, bans, débans et notes privées.
+    // Le membre peut lire ses propres avertissements ; les notes restent réservées à la modération.
+    match /sanctions/{id} {
+      allow get, list: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid && resource.data.type == 'warning');
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasAll(['uid', 'type', 'reason', 'createdAt', 'createdBy'])
+        && request.resource.data.keys().hasOnly(['uid', 'type', 'reason', 'expiresAt', 'name', 'createdAt', 'createdBy', 'createdByName'])
+        && text(request.resource.data.uid, 1, 128)
+        && request.resource.data.type in ['warning', 'ban', 'unban', 'note']
+        && text(request.resource.data.reason, 1, 500)
+        && (!('expiresAt' in request.resource.data) || request.resource.data.expiresAt == null || request.resource.data.expiresAt is timestamp)
+        && (!('name' in request.resource.data) || text(request.resource.data.name, 0, 120))
+        && (!('createdByName' in request.resource.data) || text(request.resource.data.createdByName, 0, 120))
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isFounder();
+    }
     match /tickets/{ticketId} {
       // Le marqueur de dernière réponse (lastReplyBy / lastReplyAt) permet d'afficher les notifications.
       function replyMarker(who) {
         return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastReplyBy', 'lastReplyAt'])
           || (request.resource.data.lastReplyBy == who && request.resource.data.lastReplyAt == request.time);
       }
-      allow create: if signedIn() && !isBanned()
+      // Un compte banni ne peut ouvrir qu'un seul ticket : sa contestation (identifiant fixe, sans vérification réseau).
+      allow create: if signedIn()
+        && ((!isBanned() && permitted('ticket', ticketId))
+          || (isBanned() && request.resource.data.category == 'Contestation'
+            && ticketId == 'contestation-' + request.auth.uid && !('networkPermit' in request.resource.data)))
         && request.resource.data.keys().hasAll(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt'])
         && request.resource.data.keys().hasOnly(['creatorId', 'creatorName', 'creatorEmail', 'subject', 'category', 'status', 'createdAt', 'updatedAt', 'networkPermit'])
-        && permitted('ticket', ticketId)
         && request.resource.data.creatorId == request.auth.uid
         && text(request.resource.data.creatorName, 1, 120)
         && request.resource.data.creatorEmail == request.auth.token.get('email', '')
         && text(request.resource.data.subject, 1, 80)
-        && request.resource.data.category in ['Question', 'Signalement', 'Partenariat', 'Autre']
+        && request.resource.data.category in ['Question', 'Signalement', 'Partenariat', 'Autre', 'Contestation']
         && request.resource.data.status == 'open'
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
@@ -228,7 +251,7 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'lastReplyBy', 'lastReplyAt'])
           && request.resource.data.status in ['open', 'closed']
           && replyMarker('moderation'))
-        || (signedIn() && !isBanned() && resource.data.creatorId == request.auth.uid && resource.data.status == 'open'
+        || (signedIn() && (!isBanned() || resource.data.category == 'Contestation') && resource.data.creatorId == request.auth.uid && resource.data.status == 'open'
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['updatedAt', 'lastReplyBy', 'lastReplyAt'])
           && replyMarker('member'))))
         || (signedIn() && resource.data.creatorId == request.auth.uid
@@ -237,10 +260,12 @@ service cloud.firestore {
       allow delete: if isAdmin();
       match /messages/{messageId} {
         allow get, list: if isAdmin() || ownsTicket(ticketId);
-        allow create: if signedIn() && !isBanned() && (isAdmin() || ownsTicket(ticketId)) && ticketIsOpen(ticketId)
+        allow create: if signedIn() && (isAdmin() || ownsTicket(ticketId)) && ticketIsOpen(ticketId)
+          && ((!isBanned() && permitted('message', ticketId + '/' + messageId))
+            || (isBanned() && get(/databases/$(database)/documents/tickets/$(ticketId)).data.category == 'Contestation'
+              && !('networkPermit' in request.resource.data)))
           && request.resource.data.keys().hasAll(['authorId', 'authorName', 'authorIsModerator', 'text', 'createdAt'])
           && request.resource.data.keys().hasOnly(['authorId', 'authorName', 'authorIsModerator', 'text', 'createdAt', 'networkPermit'])
-          && permitted('message', ticketId + '/' + messageId)
           && request.resource.data.authorId == request.auth.uid
           && text(request.resource.data.authorName, 1, 120)
           && request.resource.data.authorIsModerator == isAdmin()

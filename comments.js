@@ -3,6 +3,7 @@ import { collection, deleteDoc, doc, getDoc, limit, onSnapshot, orderBy, query, 
 import { commentModerationError } from "./comment-moderation.js";
 import { watchBan } from './ban-status.js';
 import { authorizeWrite } from './network-access.js';
+import { openModeration } from './moderation.js?v=1';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 
 const node = (tag, text, className) => {
@@ -67,8 +68,10 @@ export function attachComments(article, announcementId, { db, auth }) {
         row.append(remove);
       }
       if (moderator && record.authorId !== user?.uid) {
-        const ban = node('a', 'Bannir ce compte', 'comment-delete');
-        ban.href = `admin.html?ban=${encodeURIComponent(record.authorId)}`; row.append(ban);
+        const ban = node('button', 'Modérer', 'comment-delete');
+        ban.type = 'button';
+        ban.addEventListener('click', () => openModeration({ db, auth, uid: record.authorId, name: record.authorName || '' }));
+        row.append(ban);
       }
       list.append(row);
     }

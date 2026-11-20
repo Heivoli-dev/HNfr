@@ -3,6 +3,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { GAMES, badgesFor, renderPlayerCard } from "./players-ui.js?v=avatar-2";
 import { setupPlayerCard } from "./player-card.js?v=avatar-2";
+import { moderateButton } from "./moderation.js?v=1";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk",
@@ -54,7 +55,16 @@ function draw() {
   else if (!visible.length) status.textContent = "Aucun joueur ne correspond à ta recherche.";
   for (const player of visible) {
     const mine = player.uid === currentUser?.uid;
-    grid.append(renderPlayerCard(player, { mine, badges: badgesFor(members.get(player.uid), player), onRemove: isModerator && !mine ? removeCard : undefined }));
+    const card = renderPlayerCard(player, { mine, badges: badgesFor(members.get(player.uid), player), onRemove: isModerator && !mine ? removeCard : undefined });
+    if (isModerator && !mine) {
+      const actions = document.createElement("div");
+      actions.className = "card-mod-actions";
+      const remove = card.querySelector(".remove-card");
+      if (remove) actions.append(remove);
+      actions.append(moderateButton("Modérer", () => ({ db, auth, uid: player.uid, name: player.displayName })));
+      card.append(actions);
+    }
+    grid.append(card);
   }
 }
 
