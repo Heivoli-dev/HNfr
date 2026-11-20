@@ -195,8 +195,11 @@ service cloud.firestore {
       allow list: if signedIn();
       allow create, update: if signedIn() && request.auth.uid == uid
         && request.resource.data.keys().hasAll(['role', 'since', 'updatedAt'])
-        && request.resource.data.keys().hasOnly(['role', 'since', 'updatedAt', 'name'])
+        && request.resource.data.keys().hasOnly(['role', 'since', 'updatedAt', 'name', 'rulesVersion', 'rulesAcceptedAt'])
         && (!('name' in request.resource.data) || text(request.resource.data.name, 1, 120))
+        && (!('rulesVersion' in request.resource.data) || text(request.resource.data.rulesVersion, 1, 20))
+        && (!request.resource.data.diff(resource == null ? {} : resource.data).affectedKeys().hasAny(['rulesVersion'])
+          || request.resource.data.rulesAcceptedAt == request.time)
         && request.resource.data.role == expectedRole()
         && request.resource.data.since is timestamp
         && request.resource.data.since <= request.time

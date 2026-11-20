@@ -2,7 +2,8 @@
 // et mise à jour du badge de membre (rôle, date d'arrivée) utilisé par les badges.
 import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
-import { Timestamp, collection, doc, getDoc, getFirestore, onSnapshot, query, serverTimestamp, setDoc, where } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+import { Timestamp, collection, doc, getDoc, getFirestore, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+import { RULES, RULES_VERSION } from "./rules-data.js?v=1";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk",
@@ -51,7 +52,7 @@ async function syncMember(user, role) {
       const launch = new Date("2026-01-01T00:00:00Z").getTime();
       const created = Date.parse(user.metadata?.creationTime || "") || Date.now();
       const since = data?.since ?? Timestamp.fromMillis(Math.min(Date.now() - 60000, Math.max(launch, created)));
-      await setDoc(ref, { role, since, name, updatedAt: serverTimestamp() });
+      await setDoc(ref, { ...(data?.rulesVersion ? { rulesVersion: data.rulesVersion, rulesAcceptedAt: data.rulesAcceptedAt } : {}), role, since, name, updatedAt: serverTimestamp() });
     }
     store.set(cacheKey, `${role}|${day}|2`);
   } catch { /* réessayé à la prochaine visite */ }
@@ -261,6 +262,110 @@ function watchWarnings(user) {
 }
 let stopWarnings = null;
 
+// ---------- Règles de la communauté à accepter (première connexion ou nouvelle version) ----------
+let rulesBox = null;
+const saveRules = user => updateDoc(doc(db, "members", user.uid), { rulesVersion: RULES_VERSION, rulesAcceptedAt: serverTimestamp(), updatedAt: serverTimestamp() });
+async function checkRules(user, synced) {
+  const key = `hn-rules:${user.uid}`;
+  const pendingKey = `hn-rules-pending:${user.uid}`;
+  if (store.get(key) === RULES_VERSION) return;
+  await synced;
+  if (store.get(pendingKey) === RULES_VERSION) {
+    // Déjà acceptées sur cet appareil : on réessaie juste de l'enregistrer.
+    try { await saveRules(user); store.set(key, RULES_VERSION); } catch { /* réessayé plus tard */ }
+    return;
+  }
+  let data = null;
+  try { data = (await getDoc(doc(db, "members", user.uid))).data() || null; } catch { return; }
+  if (auth.currentUser !== user) return;
+  if (data?.rulesVersion === RULES_VERSION) { store.set(key, RULES_VERSION); return; }
+  if (!data || rulesBox) return; // la fiche membre est créée juste avant ; on réessaiera à la prochaine page
+  rulesBox = document.createElement("div");
+  rulesBox.className = "ban-screen rules-screen";
+  rulesBox.setAttribute("role", "dialog");
+  rulesBox.setAttribute("aria-modal", "true");
+  rulesBox.setAttribute("aria-label", "Règles de la communauté");
+  const box = document.createElement("div");
+  box.className = "ban-box rules-box";
+  const orb = document.createElement("span");
+  orb.className = "ban-orb";
+  orb.setAttribute("aria-hidden", "true");
+  orb.textContent = "✦";
+  const title = document.createElement("h2");
+  title.textContent = data.rulesVersion ? "Les règles ont changé" : "Bienvenue dans la communauté !";
+  const intro = document.createElement("p");
+  intro.className = "ban-help";
+  intro.textContent = data.rulesVersion
+    ? "Prends une minute pour relire les règles de Heivoli Network, puis accepte-les pour continuer."
+    : "Avant de commencer, voici les règles de Heivoli Network. Elles sont simples et permettent à tout le monde de se sentir bien.";
+  const list = document.createElement("ol");
+  list.className = "rules-mini";
+  RULES.forEach(rule => {
+    const item = document.createElement("li");
+    const name = document.createElement("strong");
+    name.textContent = rule.title;
+    const text = document.createElement("span");
+    text.textContent = rule.text;
+    item.append(name, text);
+    list.append(item);
+  });
+  const agree = document.createElement("label");
+  agree.className = "rules-agree";
+  const check = document.createElement("input");
+  check.type = "checkbox";
+  const agreeText = document.createElement("span");
+  agreeText.append("J’ai lu et j’accepte les règles de la communauté et les ");
+  const terms = document.createElement("a");
+  terms.href = "conditions.html#conditions";
+  terms.target = "_blank";
+  terms.rel = "noopener";
+  terms.textContent = "conditions d’utilisation";
+  agreeText.append(terms, ".");
+  agree.append(check, agreeText);
+  const status = document.createElement("p");
+  status.className = "rules-status";
+  status.setAttribute("role", "status");
+  const actions = document.createElement("div");
+  actions.className = "ban-actions";
+  const accept = document.createElement("button");
+  accept.type = "button";
+  accept.className = "ban-primary";
+  accept.textContent = "Rejoindre la communauté";
+  accept.disabled = true;
+  check.addEventListener("change", () => { accept.disabled = !check.checked; });
+  const logout = document.createElement("button");
+  logout.type = "button";
+  logout.className = "ban-secondary";
+  logout.textContent = "Refuser et me déconnecter";
+  logout.addEventListener("click", () => signOut(auth));
+  accept.addEventListener("click", async () => {
+    accept.disabled = true;
+    status.textContent = "Enregistrement…";
+    try {
+      try {
+        await saveRules(user);
+        store.set(key, RULES_VERSION);
+      } catch (error) {
+        if (error?.code !== "permission-denied") throw error;
+        store.set(pendingKey, RULES_VERSION); // enregistré à la prochaine visite
+      }
+      rulesBox.remove();
+      rulesBox = null;
+      if (!document.querySelector(".ban-screen:not(.rules-screen)")) document.documentElement.classList.remove("ban-lock");
+      sound("success");
+    } catch {
+      status.textContent = "Impossible d’enregistrer pour l’instant. Réessaie dans un instant.";
+      accept.disabled = false;
+    }
+  });
+  actions.append(accept, logout);
+  box.append(orb, title, intro, list, agree, status, actions);
+  rulesBox.append(box);
+  document.body.append(rulesBox);
+  document.documentElement.classList.add("ban-lock");
+}
+function hideRules() { rulesBox?.remove(); rulesBox = null; }
+
 onAuthStateChanged(auth, async user => {
   stopTickets?.();
   stopTickets = null;
@@ -269,11 +374,13 @@ onAuthStateChanged(auth, async user => {
   stopWarnings?.();
   stopWarnings = null;
   hideBan();
+  hideRules();
   setBadge(0);
   if (!user) return;
   const role = await accountRole(user);
   if (auth.currentUser !== user) return;
-  syncMember(user, role);
+  const synced = syncMember(user, role);
+  checkRules(user, synced);
   watchTickets(user, role);
   watchOwnBan(user, role);
   stopWarnings = watchWarnings(user);
