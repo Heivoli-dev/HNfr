@@ -1,0 +1,14 @@
+{
+  "name": "hn-screen",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "bash deploy.sh"
+  },
+  "devDependencies": {
+    "wrangler": "4.130.0"
+  },
+  "overrides": {
+    "sharp": "0.35.4"
+  }
+}

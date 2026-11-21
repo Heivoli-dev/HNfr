@@ -51,3 +51,16 @@ modérateurs pour publier des liens ou contourner le délai.
 ## Profils membres
 
 `profil.html` permet de sauvegarder un pseudo (60 caractères), une description (280 caractères) et une photo via un lien HTTPS imgbb/Google/Discord. Les profils sont publics dans `profiles/{uid}` ; ils ne contiennent ni e-mail ni rôle d’administration. `profil.html?uid=…` affiche un membre et réserve le formulaire au propriétaire. Les commentaires utilisent le profil actuel, avec le nom et la photo d’origine en secours. Les nouvelles annonces enregistrent l’auteur pour rendre son profil accessible. Les modifications nécessitent un permis serveur à usage unique et respectent les bans par compte et connexion.
+
+## Hn screen ! (partage des captures 3DS)
+
+`s/` est la page ouverte par le QR code de l'appli 3DS Hn screen ! :
+`https://heivoli-network.fr/s/?<id>`. Elle charge la capture depuis le Worker
+`hn-screen-worker/` et propose l'écran du haut, celui du bas ou les deux en PNG.
+
+Le Worker reçoit les captures de la console (PNG 400 × 480 uniquement, 1 Mo max,
+30 envois par heure et par connexion) et les garde 24 h dans KV, puis elles
+s'effacent toutes seules. Aucune adresse IP n'est enregistrée en clair.
+
+Mise en ligne (une fois, puis à chaque modification du Worker) :
+`cd hn-screen-worker && bash deploy.sh`.

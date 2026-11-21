@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src https://hn-screen.heivoli-discord-auth.workers.dev; base-uri 'none'; object-src 'none'; form-action 'none'; upgrade-insecure-requests" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="robots" content="noindex" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f4f4" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png?v=2" />
+    <title>Hn screen ! — Capture 3DS</title>
+    <link rel="stylesheet" href="screen.css?v=1" />
+  </head>
+  <body>
+    <header class="bar">
+      <img class="logo" src="logo.png" alt="Hn screen !" width="150" height="101" />
+      <a class="home" href="/">heivoli-network.fr</a>
+    </header>
+
+    <main>
+      <p id="status" class="status" role="status">Chargement de la capture…</p>
+
+      <section id="shots" class="shots" hidden>
+        <div class="tabs" role="tablist" aria-label="Écran à télécharger">
+          <button type="button" role="tab" data-view="deux" aria-selected="true">Les deux</button>
+          <button type="button" role="tab" data-view="haut" aria-selected="false">Écran du haut</button>
+          <button type="button" role="tab" data-view="bas" aria-selected="false">Écran du bas</button>
+        </div>
+
+        <figure class="frame">
+          <canvas id="view" width="400" height="480" aria-label="Capture d'écran de la 3DS"></canvas>
+        </figure>
+
+        <div class="actions">
+          <a id="download" class="btn primary" href="#" download="hn-screen.png">Télécharger</a>
+          <button id="share" class="btn" type="button" hidden>Enregistrer / partager</button>
+          <label class="zoom"><input id="x2" type="checkbox" checked /> Taille ×2 (plus nette sur téléphone)</label>
+        </div>
+        <p class="note">Ce lien expire 24 h après la capture.</p>
+      </section>
+    </main>
+
+    <footer class="foot">Capture envoyée depuis une Nintendo 3DS avec l'appli Hn screen ! · Heivoli Network</footer>
+    <script src="screen.js?v=1"></script>
+  </body>
+</html>

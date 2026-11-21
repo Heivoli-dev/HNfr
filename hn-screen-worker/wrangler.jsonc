@@ -1,0 +1,11 @@
+{
+  // Hn screen ! : reçoit les captures envoyées par la 3DS et les sert à la page
+  // https://heivoli-network.fr/s/ pendant 24 h.
+  "name": "hn-screen",
+  "main": "src/index.js",
+  "compatibility_date": "2025-04-01",
+  "kv_namespaces": [
+    // L'identifiant est rempli par deploy.sh au premier déploiement.
+    { "binding": "SHOTS", "id": "A_REMPLIR_PAR_DEPLOY_SH" }
+  ]
+}
