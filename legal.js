@@ -1,7 +1,8 @@
 // Onglets « Règles de la communauté » / « Conditions d'utilisation »
 const tabs = [...document.querySelectorAll(".legal-tab")];
 const panels = [...document.querySelectorAll(".legal-panel")];
-const CONDITION_ANCHORS = new Set([...document.querySelectorAll("#conditions .legal-block")].map(block => block.id));
+const anchorsOf = name => new Set([...document.querySelectorAll(`#${name} [id]`)].map(el => el.id));
+const ANCHORS = { conditions: anchorsOf("conditions"), confidentialite: anchorsOf("confidentialite") };
 
 function show(name, scroll) {
   tabs.forEach(tab => {
@@ -14,12 +15,9 @@ function show(name, scroll) {
 }
 function fromHash() {
   const hash = decodeURIComponent(location.hash.slice(1));
-  if (hash === "conditions" || CONDITION_ANCHORS.has(hash)) {
-    show("conditions", false);
-    if (CONDITION_ANCHORS.has(hash)) document.getElementById(hash)?.scrollIntoView({ block: "start" });
-  } else {
-    show("regles", false);
-  }
+  const panel = Object.keys(ANCHORS).find(name => hash === name || ANCHORS[name].has(hash)) || "regles";
+  show(panel, false);
+  if (hash && hash !== panel && ANCHORS[panel]?.has(hash)) document.getElementById(hash)?.scrollIntoView({ block: "start" });
 }
 tabs.forEach(tab => tab.addEventListener("click", event => {
   event.preventDefault();
