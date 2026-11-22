@@ -107,8 +107,10 @@
       if (label) label.textContent = `v${version}`;
       card.querySelectorAll('[data-manifest-file]').forEach((link) => {
         const file = link.dataset.manifestFile;
-        if (/^[\w.-]+$/.test(file)) link.href = `${base}v${version}/${file}`;
+        if (/^[\w.-]+$/.test(file)) link.href = card.hasAttribute('data-manifest-flat') ? `${base}${file}` : `${base}v${version}/${file}`;
       });
+      const build = card.querySelector('[data-manifest-build]');
+      if (build && /^\d+$/.test(fields.build || '')) build.textContent = `· build ${fields.build}`;
       const box = card.querySelector('[data-manifest-notes]');
       if (box && fields.notes) {
         const item = document.createElement('li');
