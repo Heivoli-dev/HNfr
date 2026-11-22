@@ -5,7 +5,7 @@ import { formatAnnouncementDate } from "./announcement-date.js";
 import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, Timestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { watchBan } from './ban-status.js?v=2';
 import { networkRequest } from './network-access.js';
-import { listMembers, openModeration } from './moderation.js?v=1';
+import { listMembers, openModeration } from './moderation.js?v=2';
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
 const firebaseConfig = {

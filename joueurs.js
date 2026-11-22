@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
 import { collection, deleteDoc, doc, getDoc, getDocs, getFirestore } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { GAMES, badgesFor, renderPlayerCard } from "./players-ui.js?v=avatar-2";
 import { setupPlayerCard } from "./player-card.js?v=avatar-2";
-import { moderateButton } from "./moderation.js?v=1";
+import { moderateButton } from "./moderation.js?v=2";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk",

@@ -4,7 +4,7 @@ import { safeProfilePhoto } from './profiles.js';
 import { commentModerationError } from './comment-moderation.js';
 import { setupPlayerCard } from './player-card.js?v=avatar-2';
 import { badgesFor, renderBadges } from './players-ui.js?v=avatar-2';
-import { moderateButton } from './moderation.js?v=1';
+import { moderateButton } from './moderation.js?v=2';
 import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, indexedDBLocalPersistence, browserSessionPersistence, setPersistence, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";

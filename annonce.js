@@ -2,7 +2,7 @@ import { profileIdentity } from './profiles.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
-import { attachComments } from "./comments.js?v=moderation-5";
+import { attachComments } from "./comments.js?v=moderation-6";
 import { formatAnnouncementDate } from "./announcement-date.js";
 const firebaseConfig = {
   apiKey: "AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk",

@@ -130,7 +130,7 @@ export function openModeration({ db, auth, uid, name = "", action = "warning" })
       warning: "Le membre verra cet avertissement à sa prochaine visite. Rien n’est bloqué.",
       ban: "Le membre ne pourra plus commenter, écrire de ticket ni modifier son profil ou sa carte. Il verra le motif et pourra contester.",
       note: "Visible uniquement par la modération. Pratique pour garder une trace.",
-      unban: "Le membre retrouve immédiatement l’accès complet au site.",
+      unban: "Le membre retrouve immédiatement l’accès complet au site. Sa connexion est aussi débloquée s’il avait un ban IP.",
     }[mode];
     reason.placeholder = mode === "note" ? "Ta note…" : mode === "unban" ? "Raison du débannissement (ex. contestation acceptée)" : "Motif visible par le membre";
     submit.textContent = { warning: "Envoyer l’avertissement", ban: "Bannir le membre", note: "Enregistrer la note", unban: "Débannir le membre" }[mode];
@@ -208,7 +208,16 @@ export function openModeration({ db, auth, uid, name = "", action = "warning" })
         batch.delete(doc(db, "bans", uid));
         batch.set(doc(collection(db, "sanctions")), entry);
         await batch.commit();
-        status.textContent = "Membre débanni.";
+        // Lève aussi le blocage de connexion (ban IP) lié à ce compte.
+        let lifted = 0, failed = 0;
+        try {
+          const network = await getDocs(query(collection(db, "networkBans"), where("uid", "==", uid)));
+          for (const item of network.docs) {
+            try { await networkRequest(auth, "network-unban", { id: item.id }); lifted++; } catch { failed++; }
+          }
+        } catch { failed++; }
+        status.textContent = failed ? "Membre débanni, mais le blocage de sa connexion n’a pas pu être levé : retire-le dans Admin › Connexions bannies."
+          : lifted ? "Membre débanni, et sa connexion est débloquée." : "Membre débanni.";
       } else {
         await setDoc(doc(collection(db, "sanctions")), entry);
         status.textContent = mode === "warning" ? "Avertissement envoyé." : "Note enregistrée.";

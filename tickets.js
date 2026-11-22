@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebas
 import { GoogleAuthProvider, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { setupGoogleLogin } from "./google-login.js";
 import { watchBan } from './ban-status.js?v=2';
-import { openModeration } from './moderation.js?v=1';
+import { openModeration } from './moderation.js?v=2';
 import { authorizeWrite } from './network-access.js';
 import { collection, doc, getDoc, getDocs, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
