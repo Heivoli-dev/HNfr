@@ -87,4 +87,39 @@
   window.addEventListener('hashchange', openGuide);
   document.querySelectorAll('a[href="#installer-sur-mac"]').forEach((a) => a.addEventListener('click', () => setTimeout(openGuide, 0)));
   if (location.hash) openGuide();
+
+  // Logiciels publiés dans un dossier « releases/ » du dépôt (fichier latest.txt) au lieu des Releases GitHub.
+  document.querySelectorAll('[data-manifest]').forEach(async (card) => {
+    const url = card.dataset.manifest;
+    const base = card.dataset.manifestBase;
+    if (!/^https:\/\/raw\.githubusercontent\.com\//.test(url) || !/^https:\/\/raw\.githubusercontent\.com\/.+\/$/.test(base || '')) return;
+    try {
+      const res = await fetch(url, { cache: 'no-cache' });
+      if (!res.ok) return;
+      const fields = {};
+      for (const line of (await res.text()).split('\n')) {
+        const at = line.indexOf('=');
+        if (at > 0) fields[line.slice(0, at).trim()] = line.slice(at + 1).trim();
+      }
+      const version = fields.version || '';
+      if (!/^\d+(\.\d+){1,3}$/.test(version)) return;
+      const label = card.querySelector('[data-manifest-version]');
+      if (label) label.textContent = `v${version}`;
+      card.querySelectorAll('[data-manifest-file]').forEach((link) => {
+        const file = link.dataset.manifestFile;
+        if (/^[\w.-]+$/.test(file)) link.href = `${base}v${version}/${file}`;
+      });
+      const box = card.querySelector('[data-manifest-notes]');
+      if (box && fields.notes) {
+        const item = document.createElement('li');
+        const tag = document.createElement('strong');
+        tag.textContent = `v${version}`;
+        const text = document.createElement('span');
+        text.textContent = fields.notes.slice(0, 300);
+        item.append(tag, text);
+        box.querySelector('ol').replaceChildren(item);
+        box.hidden = false;
+      }
+    } catch { /* GitHub injoignable : on garde les liens écrits dans la page */ }
+  });
 })();

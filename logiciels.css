@@ -24,3 +24,9 @@
 @media (max-width: 560px) { .software-main { padding-top: 27px; }.software-card { gap: 24px; border-radius: 24px; }.software-downloads { grid-template-columns: 1fr; }.release-note, .github-link { grid-column: auto; }.software-heading { margin-bottom: 28px; }.software-help { padding: 15px; } }
 .software-icon { display: block; width: 96px; height: 96px; margin: -6px 0 18px -6px; }
 @media (max-width: 560px) { .software-icon { width: 80px; height: 80px; } }
+
+/* Heivoli Home (bêta) */
+.software-card .software-warning { margin: 16px 0 0; padding: 12px 14px; border: 1px solid rgba(255,177,10,.45); border-radius: 16px; background: rgba(255,214,107,.16); color: inherit; font-size: 13px; line-height: 1.55; }
+.software-card .software-warning strong { color: #b86e00; }
+.software-card .install-steps { margin: 4px 0 0; font-size: 12.5px; line-height: 1.55; opacity: .85; }
+.software-card .install-steps code { padding: 1px 6px; border-radius: 6px; background: rgba(98,85,228,.12); font-size: 12px; }
