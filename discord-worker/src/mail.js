@@ -242,7 +242,8 @@ export async function handleEmail(message, env) {
     if (!await claim(db, `auto-${digest}-${day}`, { type: str('autoreply') })) { console.log('autoreply skipped', 'already-replied-today'); return; } // une réponse par expéditeur et par jour
     const subject = String(message.headers.get('subject') || '').replace(/[\r\n]+/g, ' ').slice(0, 120);
     const mail = autoReplyMail({ subject });
-    await brevo(env, { sender: SENDERS.contact, to: [{ email: from }], subject: mail.subject, htmlContent: mail.html, headers: { 'Auto-Submitted': 'auto-replied' } });
+    try { await brevo(env, { sender: SENDERS.contact, to: [{ email: from }], subject: mail.subject, htmlContent: mail.html, headers: { 'Auto-Submitted': 'auto-replied' } }); }
+    catch (error) { await release(db, `auto-${digest}-${day}`); throw error; }
     console.log('autoreply sent');
   } catch (error) {
     console.log('autoreply error', String(error?.message || error));
