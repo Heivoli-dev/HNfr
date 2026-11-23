@@ -1,21 +1,22 @@
-const PROJECT = 'heivoli-network-408f3';
-const API_KEY = 'AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk';
-const ROOT = `projects/${PROJECT}/databases/(default)/documents`;
-const URL_ROOT = `https://firestore.googleapis.com/v1/${ROOT}`;
+export const PROJECT = 'heivoli-network-408f3';
+export const API_KEY = 'AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk';
+export const ROOT = `projects/${PROJECT}/databases/(default)/documents`;
+export const URL_ROOT = `https://firestore.googleapis.com/v1/${ROOT}`;
 const SITE = 'https://heivoli-network.fr';
 const encode = value => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(value)))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
-let cachedToken;
-async function serviceToken(account) {
+const cachedTokens = new Map();
+export async function serviceToken(account, scope='https://www.googleapis.com/auth/datastore') {
+  const cachedToken = cachedTokens.get(scope);
   if (cachedToken?.email === account.client_email && cachedToken.until > Date.now()) return cachedToken.token;
   const now = Math.floor(Date.now()/1000);
-  const unsigned = `${encode({alg:'RS256',typ:'JWT'})}.${encode({iss:account.client_email,scope:'https://www.googleapis.com/auth/datastore',aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+3600})}`;
+  const unsigned = `${encode({alg:'RS256',typ:'JWT'})}.${encode({iss:account.client_email,scope,aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+3600})}`;
   const pem = account.private_key.replace(/-----(BEGIN|END) PRIVATE KEY-----|\s/g,'');
   const key = await crypto.subtle.importKey('pkcs8',Uint8Array.from(atob(pem),c=>c.charCodeAt(0)),{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']);
   const signature = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5',key,new TextEncoder().encode(unsigned)));
   const jwt = unsigned+'.'+btoa(String.fromCharCode(...signature)).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
   const response = await fetch('https://oauth2.googleapis.com/token',{method:'POST',body:new URLSearchParams({grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',assertion:jwt})});
   if (!response.ok) throw new Error('Serveur de modération indisponible.');
-  const data = await response.json(); cachedToken={email:account.client_email,token:data.access_token,until:Date.now()+3000000}; return data.access_token;
+  const data = await response.json(); cachedTokens.set(scope,{email:account.client_email,token:data.access_token,until:Date.now()+3000000}); return data.access_token;
 }
 const field = value => value === null ? {nullValue:null} : typeof value === 'number' ? {integerValue:String(value)} : {stringValue:value};
 const timestamp = value => ({timestampValue:new Date(value).toISOString()});

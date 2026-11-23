@@ -3,7 +3,7 @@ import { collection, deleteDoc, doc, getDoc, limit, onSnapshot, orderBy, query, 
 import { commentModerationError } from "./comment-moderation.js";
 import { watchBan } from './ban-status.js';
 import { authorizeWrite } from './network-access.js';
-import { openModeration } from './moderation.js?v=2';
+import { openModeration } from './moderation.js?v=3';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 
 const node = (tag, text, className) => {

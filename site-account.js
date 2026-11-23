@@ -4,6 +4,7 @@ import { getApp, getApps, initializeApp } from "https://www.gstatic.com/firebase
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { Timestamp, collection, doc, getDoc, getFirestore, onSnapshot, query, serverTimestamp, setDoc, updateDoc, where } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { RULES, RULES_VERSION } from "./rules-data.js?v=1";
+import { sendMail } from "./mail-notify.js?v=1";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDKXFI0a1H1lnWIRI-qXor45RQ5R5qAMJk",
@@ -272,7 +273,7 @@ async function checkRules(user, synced) {
   await synced;
   if (store.get(pendingKey) === RULES_VERSION) {
     // Déjà acceptées sur cet appareil : on réessaie juste de l'enregistrer.
-    try { await saveRules(user); store.set(key, RULES_VERSION); } catch { /* réessayé plus tard */ }
+    try { await saveRules(user); store.set(key, RULES_VERSION); sendMail(auth, "welcome"); } catch { /* réessayé plus tard */ }
     return;
   }
   let data = null;
@@ -345,6 +346,7 @@ async function checkRules(user, synced) {
       try {
         await saveRules(user);
         store.set(key, RULES_VERSION);
+        sendMail(auth, "welcome"); // une seule fois par compte, vérifié par le serveur
       } catch (error) {
         if (error?.code !== "permission-denied") throw error;
         store.set(pendingKey, RULES_VERSION); // enregistré à la prochaine visite
@@ -366,6 +368,47 @@ async function checkRules(user, synced) {
 }
 function hideRules() { rulesBox?.remove(); rulesBox = null; }
 
+// ---------- Profil : recevoir les nouveautés par mail ----------
+let mailCard = null;
+async function showMailPrefs(user) {
+  const anchor = document.querySelector("#carte-joueur");
+  if (!anchor) return;
+  if (!mailCard) {
+    mailCard = document.createElement("section");
+    mailCard.className = "player-form-card mail-prefs";
+    mailCard.innerHTML = `<div class="player-form-head"><div><p class="eyebrow"><span></span> Mon profil</p><h2>Mes <em>mails.</em></h2>
+<p>Les mails importants (bienvenue, réponses à tes tickets, décisions de la modération) arrivent automatiquement. La newsletter, elle, est à toi de choisir.</p></div></div>
+<label class="mail-pref-toggle"><input type="checkbox" id="mail-news" /> <span><strong>Recevoir les nouveautés par mail</strong><small>Annonces, évènements et nouvelles versions des logiciels, envoyés par news@heivoli-network.fr. Désabonnement en un clic dans chaque mail.</small></span></label>
+<p class="player-status mail-pref-status" role="status"></p>`;
+    anchor.after(mailCard);
+  }
+  const box = mailCard.querySelector("#mail-news");
+  const status = mailCard.querySelector(".mail-pref-status");
+  mailCard.hidden = false;
+  const claims = (await user.getIdTokenResult().catch(() => ({ claims: {} }))).claims;
+  if (claims.discordId || !user.email || !user.emailVerified) {
+    box.checked = false;
+    box.disabled = true;
+    status.textContent = "Ton compte Discord ne nous donne pas d’adresse mail : connecte-toi avec Google pour recevoir des mails.";
+    return;
+  }
+  status.textContent = `Adresse utilisée : ${user.email}`;
+  try { box.checked = !!(await getDoc(doc(db, "mailPrefs", user.uid))).data()?.news; } catch { /* règles pas encore publiées */ }
+  box.onchange = async () => {
+    box.disabled = true;
+    try {
+      await setDoc(doc(db, "mailPrefs", user.uid), { news: box.checked, updatedAt: serverTimestamp() });
+      status.textContent = box.checked ? "C’est noté, tu recevras les nouveautés par mail." : "Tu ne recevras plus les nouveautés par mail.";
+      sound(box.checked ? "success" : "tap");
+    } catch {
+      box.checked = !box.checked;
+      status.textContent = "Impossible d’enregistrer pour l’instant. Réessaie dans un instant.";
+    }
+    box.disabled = false;
+  };
+}
+function hideMailPrefs() { if (mailCard) mailCard.hidden = true; }
+
 onAuthStateChanged(auth, async user => {
   stopTickets?.();
   stopTickets = null;
@@ -375,12 +418,14 @@ onAuthStateChanged(auth, async user => {
   stopWarnings = null;
   hideBan();
   hideRules();
+  hideMailPrefs();
   setBadge(0);
   if (!user) return;
   const role = await accountRole(user);
   if (auth.currentUser !== user) return;
   const synced = syncMember(user, role);
   checkRules(user, synced);
+  showMailPrefs(user);
   watchTickets(user, role);
   watchOwnBan(user, role);
   stopWarnings = watchWarnings(user);

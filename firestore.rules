@@ -208,6 +208,17 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
       allow delete: if signedIn() && (request.auth.uid == uid || isFounder());
     }
+    // Préférences mail : chaque membre choisit seul s'il reçoit la newsletter.
+    match /mailPrefs/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['news', 'updatedAt'])
+        && request.resource.data.news is bool
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
+    // Journal des mails envoyés : écrit uniquement par le serveur (Worker).
+    match /mailLog/{id} { allow read, write: if false; }
     // Historique de modération : avertissements, bans, débans et notes privées.
     // Le membre peut lire ses propres avertissements ; les notes restent réservées à la modération.
     match /sanctions/{id} {

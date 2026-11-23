@@ -5,7 +5,8 @@ import { formatAnnouncementDate } from "./announcement-date.js";
 import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, Timestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { watchBan } from './ban-status.js?v=2';
 import { networkRequest } from './network-access.js';
-import { listMembers, openModeration } from './moderation.js?v=2';
+import { sendMail } from './mail-notify.js?v=1';
+import { listMembers, openModeration } from './moderation.js?v=3';
 
 const CREATOR_EMAIL = "heivolipro@gmail.com";
 const firebaseConfig = {
@@ -219,7 +220,8 @@ form.addEventListener("submit", async (event) => {
   adminStatus.textContent = "Publication…";
   try {
     adminStatus.textContent = "Publication…";
-    await addDoc(collection(db, "announcements"), {
+    const sendByMail = document.querySelector("#announcement-email").checked;
+    const created = await addDoc(collection(db, "announcements"), {
       type: document.querySelector("#announcement-type").value,
       title: document.querySelector("#announcement-title").value.trim(),
       text: document.querySelector("#announcement-text").value.trim(),
@@ -230,6 +232,13 @@ form.addEventListener("submit", async (event) => {
     });
     form.reset();
     adminStatus.textContent = "Annonce publiée.";
+    if (sendByMail) {
+      adminStatus.textContent = "Annonce publiée. Envoi aux abonnés…";
+      const result = await sendMail(auth, "news", created.id);
+      adminStatus.textContent = typeof result?.sent === "number"
+        ? `Annonce publiée et envoyée par mail à ${result.sent} abonné${result.sent > 1 ? "s" : ""}.`
+        : `Annonce publiée, mais l’envoi par mail a échoué${result?.error ? ` : ${result.error}` : "."}`;
+    }
   } catch {
     const signedInEmail = auth.currentUser?.email?.toLowerCase() || "";
     if (signedInEmail === CREATOR_EMAIL && !auth.currentUser?.emailVerified) {

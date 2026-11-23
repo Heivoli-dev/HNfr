@@ -1,4 +1,5 @@
 import { networkAPI } from './network.js';
+import { handleEmail, mailAPI, unsubscribe } from './mail.js';
 const SITE_ORIGIN = "https://heivoli-network.fr";
 const COOKIE_NAME = "__Host-heivoli_discord_state";
 const FIREBASE_AUDIENCE = "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit";
@@ -142,11 +143,17 @@ async function callback(request, env) {
 }
 
 export default {
+  // Mails reçus sur contact@heivoli-network.fr (règle Email Routing « Send to a Worker »).
+  async email(message, env) {
+    await handleEmail(message, env);
+  },
   async fetch(request, env) {
     let response;
     try {
       const pathname = new URL(request.url).pathname;
-      if (pathname.startsWith('/api/')) response = await networkAPI(request, env);
+      if (pathname === '/api/mail') response = await mailAPI(request, env);
+      else if (pathname === '/api/unsubscribe' && (request.method === 'GET' || request.method === 'POST')) response = await unsubscribe(request, env);
+      else if (pathname.startsWith('/api/')) response = await networkAPI(request, env);
       else if (request.method !== "GET") response = new Response("Method not allowed", { status: 405, headers: { Allow: "GET" } });
       else if (pathname === "/login") response = await login(request, env);
       else if (pathname === "/callback") response = await callback(request, env);
@@ -160,7 +167,9 @@ export default {
     headers.set("Referrer-Policy", "no-referrer");
     headers.set("X-Content-Type-Options", "nosniff");
     headers.set("X-Frame-Options", "DENY");
-    headers.set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
+    headers.set("Content-Security-Policy", new URL(request.url).pathname === "/api/unsubscribe"
+      ? "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"
+      : "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
     headers.set("Strict-Transport-Security", "max-age=31536000");
     return new Response(response.body, { status: response.status, headers });
   },

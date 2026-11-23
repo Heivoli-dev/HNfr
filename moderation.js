@@ -2,6 +2,7 @@
 // Utilisée depuis les profils, les cartes joueur, les commentaires, les tickets et l'Administration.
 import { collection, doc, getDocs, onSnapshot, query, serverTimestamp, setDoc, Timestamp, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 import { networkRequest } from "./network-access.js";
+import { sendMail } from "./mail-notify.js?v=1";
 
 const PRESETS = ["Insultes ou propos haineux", "Spam ou publicité", "Contenu inapproprié", "Harcèlement", "Arnaque ou triche", "Faux compte"];
 const DURATIONS = [["1", "1 h"], ["24", "24 h"], ["168", "7 jours"], ["720", "30 jours"], ["permanent", "Définitif"]];
@@ -195,12 +196,16 @@ export function openModeration({ db, auth, uid, name = "", action = "warning" })
         const expiresAt = duration === "permanent" ? null : Timestamp.fromMillis(Date.now() + Number(duration) * 3600000);
         if (network.checked) {
           await networkRequest(auth, "network-ban", { uid, reason: text, hours: duration === "permanent" ? "permanent" : Number(duration) });
-          await setDoc(doc(collection(db, "sanctions")), { ...entry, expiresAt });
+          const sanctionRef = doc(collection(db, "sanctions"));
+          await setDoc(sanctionRef, { ...entry, expiresAt });
+          sendMail(auth, "sanction", sanctionRef.id);
         } else {
           const batch = writeBatch(db);
           batch.set(doc(db, "bans", uid), { reason: text, expiresAt, createdAt: serverTimestamp(), createdBy: me.uid });
-          batch.set(doc(collection(db, "sanctions")), { ...entry, expiresAt });
+          const sanctionRef = doc(collection(db, "sanctions"));
+          batch.set(sanctionRef, { ...entry, expiresAt });
           await batch.commit();
+          sendMail(auth, "sanction", sanctionRef.id);
         }
         status.textContent = "Membre banni. Il voit maintenant l’écran de bannissement.";
       } else if (mode === "unban") {
@@ -219,8 +224,10 @@ export function openModeration({ db, auth, uid, name = "", action = "warning" })
         status.textContent = failed ? "Membre débanni, mais le blocage de sa connexion n’a pas pu être levé : retire-le dans Admin › Connexions bannies."
           : lifted ? "Membre débanni, et sa connexion est débloquée." : "Membre débanni.";
       } else {
-        await setDoc(doc(collection(db, "sanctions")), entry);
-        status.textContent = mode === "warning" ? "Avertissement envoyé." : "Note enregistrée.";
+        const sanctionRef = doc(collection(db, "sanctions"));
+        await setDoc(sanctionRef, entry);
+        if (mode === "warning") sendMail(auth, "sanction", sanctionRef.id);
+        status.textContent = mode === "warning" ? "Avertissement envoyé (le membre est aussi prévenu par mail s’il a une adresse)." : "Note enregistrée.";
       }
       reason.value = "";
       sound("success");

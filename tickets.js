@@ -1,9 +1,10 @@
+import { sendMail } from "./mail-notify.js?v=1";
 import { beginDiscordLogin, consumeDiscordToken } from "./security.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 import { GoogleAuthProvider, getAuth, onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
 import { setupGoogleLogin } from "./google-login.js";
 import { watchBan } from './ban-status.js?v=2';
-import { openModeration } from './moderation.js?v=2';
+import { openModeration } from './moderation.js?v=3';
 import { authorizeWrite } from './network-access.js';
 import { collection, doc, getDoc, getDocs, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
 
@@ -381,6 +382,7 @@ async function writeMessage(ticketId, text, replyMarker) {
     ? { updatedAt: serverTimestamp(), lastReplyBy: isModerator ? 'moderation' : 'member', lastReplyAt: serverTimestamp() }
     : { updatedAt: serverTimestamp() });
   await batch.commit();
+  if (isModerator) sendMail(auth, 'ticket', `${ticketId}/${message.id}`);
 }
 
 ticketForm.addEventListener("submit", async (event) => {

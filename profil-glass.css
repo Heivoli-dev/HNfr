@@ -44,3 +44,12 @@
 .profile-panel a:not(.button) { color: #5040b7; }
 .profile-shell .player-form-card { width: min(850px, 100%); margin-inline: auto; }
 .profile-shell .player-form-card .player-form-head { grid-template-columns: 1fr; }
+
+/* Préférences mail */
+.profile-shell .mail-prefs, .mail-prefs { width: min(850px, 100%); margin: 22px auto 0; }
+.mail-pref-toggle { display: flex; gap: 14px; align-items: flex-start; margin-top: 16px; padding: 16px 18px; border: 1px solid #fff; border-radius: 20px; background: rgba(255,255,255,.75); cursor: pointer; }
+.mail-pref-toggle input { width: 20px; height: 20px; margin-top: 2px; flex: none; accent-color: #6255e4; }
+.mail-pref-toggle span { display: grid; gap: 4px; }
+.mail-pref-toggle strong { color: #282639; font-size: 15px; }
+.mail-pref-toggle small { color: #5d5a70; font-size: 13px; line-height: 1.5; }
+.mail-pref-status { margin-top: 10px; }
