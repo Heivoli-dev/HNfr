@@ -1,9 +1,9 @@
 /* Édition Noël — Heivoli Network
-   Active automatiquement du 1er décembre au 6 janvier.
+   Active automatiquement du 23 novembre au 26 décembre (inclus).
    Forcer pour tester : ?noel=1 (ou ?noel=0 pour couper). */
 (() => {
-  const DEBUT = { mois: 12, jour: 1 };  // 1er décembre
-  const FIN = { mois: 1, jour: 6 };     // 6 janvier (inclus)
+  const DEBUT = { mois: 11, jour: 23 }; // 23 novembre
+  const FIN = { mois: 12, jour: 26 };   // 26 décembre (inclus)
 
   const params = new URLSearchParams(location.search);
   const store = {
@@ -15,7 +15,8 @@
 
   const now = new Date();
   const m = now.getMonth() + 1, d = now.getDate();
-  const enPeriode = (m === DEBUT.mois && d >= DEBUT.jour) || (m === FIN.mois && d <= FIN.jour);
+  const jour = m * 100 + d, debut = DEBUT.mois * 100 + DEBUT.jour, fin = FIN.mois * 100 + FIN.jour;
+  const enPeriode = debut <= fin ? (jour >= debut && jour <= fin) : (jour >= debut || jour <= fin);
   if (force === "0" || (!enPeriode && force !== "1")) return;
 
   const root = document.documentElement;
