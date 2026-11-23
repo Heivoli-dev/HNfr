@@ -2,7 +2,7 @@
 
 /* Neige posée sur les bulles : on laisse la neige dépasser du bord */
 .noel :is(.intro-card, .social-bar, .announcement, .community-card, .video-frame, .discord-live,
-  .software-card, .project-list, .software-help, .mac-guide, .site-nav) {
+  .software-card, .project-list, .software-help, .mac-guide, .site-nav, .tickets-panel, .profile-panel, .profile-gate, .player-form-card, .legal-panel, .my-card-callout) {
   overflow: visible !important;
 }
 .noel .announcement-image { border-radius: 24px 24px 0 0; }

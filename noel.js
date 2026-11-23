@@ -29,7 +29,7 @@
   };
 
   /* ---------- Neige posée sur les bulles ---------- */
-  const CIBLES = ".intro-card, .social-bar, .announcement, .community-card, .video-frame, .discord-live, .software-card, .project-list, .software-help, .mac-guide, .site-nav";
+  const CIBLES = ".intro-card, .social-bar, .announcement, .community-card, .video-frame, .discord-live, .software-card, .project-list, .software-help, .mac-guide, .site-nav, .tickets-panel, .profile-panel, .profile-gate, .player-form-card, .legal-panel, .my-card-callout";
   let gradId = 0;
 
   function graine(n) { let s = n * 9301 + 49297; return () => ((s = (s * 9301 + 49297) % 233280) / 233280); }
