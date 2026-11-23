@@ -159,3 +159,8 @@ body.page-reseaux {
     transition: none;
   }
 }
+
+/* Bouton mail de contact */
+.reseau-mail:hover { background: #ece9ff; }
+.reseau-desc a { color: #5040b7; text-decoration: none; }
+.reseau-desc a:hover { text-decoration: underline; }
