@@ -1,0 +1,111 @@
+/* Édition Noël — ne s'applique que quand noel.js ajoute la classe .noel */
+
+/* Neige posée sur les bulles : on laisse la neige dépasser du bord */
+.noel :is(.intro-card, .social-bar, .announcement, .community-card, .video-frame, .discord-live,
+  .software-card, .project-list, .software-help, .mac-guide, .site-nav) {
+  overflow: visible !important;
+}
+.noel .announcement-image { border-radius: 24px 24px 0 0; }
+
+.hn-neige-chapeau {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  top: 0;
+  translate: 0 calc(-1 * var(--hn-dessus, 26px));
+  pointer-events: none;
+  overflow: visible;
+  filter: drop-shadow(0 2px 2px rgba(98, 85, 228, .18)) drop-shadow(0 5px 7px rgba(50, 39, 101, .12));
+}
+.site-nav > .hn-neige-chapeau,
+.social-bar > .hn-neige-chapeau { --hn-dessus: 14px; }
+.hn-scintille { fill: #fff; animation: hn-scintille 3.2s ease-in-out infinite; }
+@keyframes hn-scintille { 0%, 70%, 100% { opacity: 0; } 82% { opacity: 1; } }
+
+/* Guirlande lumineuse */
+.hn-guirlande {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 46px;
+  pointer-events: none;
+}
+.hn-guirlande svg { width: 100%; height: 100%; overflow: visible; }
+.hn-fil { fill: none; stroke: #3c3a4f; stroke-width: 1.4; opacity: .55; }
+.hn-douille { fill: #4a4760; }
+.hn-ampoule { animation: hn-ampoule 2.4s ease-in-out infinite; filter: drop-shadow(0 0 4px currentColor); }
+.hn-reflet { fill: #fff; opacity: .7; }
+@keyframes hn-ampoule { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+.noel .site-header { z-index: 6; }
+
+/* Badge « Édition de Noël » au-dessus du titre */
+.hn-noel-badge {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 6px 13px;
+  border: 1px solid #fff;
+  border-radius: 999px;
+  color: #b4233f;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  background: linear-gradient(180deg, #fff 0%, #ffeef1 100%);
+  box-shadow: 0 4px 12px rgba(180, 35, 63, .14), inset 0 1px 0 #fff;
+}
+.hn-noel-badge + .hero-kicker { margin-top: 0; }
+
+/* Petite touche de couleur festive sur les accents */
+.noel .eyebrow span { background: linear-gradient(90deg, #d8324f 0 50%, #2f9d5b 50% 100%); }
+
+/* Congère au-dessus du pied de page */
+.hn-congere {
+  height: 70px;
+  margin-top: -30px;
+  pointer-events: none;
+}
+.hn-congere svg { display: block; width: 100%; height: 100%; }
+.hn-congere-fond { fill: #eeedfb; }
+.hn-congere-avant { fill: #fff; filter: drop-shadow(0 -2px 4px rgba(98, 85, 228, .14)); }
+
+/* Flocons qui tombent */
+.hn-flocons {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Bouton pour couper la neige */
+.hn-neige-toggle {
+  position: fixed;
+  z-index: 41;
+  left: 18px;
+  bottom: 18px;
+  padding: 8px 14px;
+  border: 1px solid #fff;
+  border-radius: 999px;
+  color: #3a3394;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(236,234,255,.85));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 22px rgba(50, 39, 101, .16), inset 0 1px 0 #fff;
+}
+.hn-neige-toggle[aria-pressed="false"] { color: #7a7690; }
+
+@media (max-width: 700px) {
+  .hn-guirlande { height: 36px; }
+  .hn-noel-badge { font-size: 10px; }
+  .hn-neige-toggle { left: 12px; bottom: 12px; width: 38px; height: 38px; padding: 0; font-size: 16px; }
+  .hn-neige-texte { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hn-ampoule, .hn-scintille { animation: none; }
+}
