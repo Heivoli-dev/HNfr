@@ -117,3 +117,24 @@ test('templates escape member text', () => {
   assert.ok(!ticketReplyMail({ name: 'x', subject: '<img>', ticketId: 't', message: '<script>' }).html.includes('<script>'));
   assert.ok(sanctionMail({ name: 'x', type: 'ban', reason: 'r', until: null }).html.includes('définitive'));
 });
+
+test('HN Mail inbox needs the private key and returns stored mails', async () => {
+  const { inboxAPI } = await import('../discord-worker/src/inbox.js');
+  const token = 'k'.repeat(32);
+  const req = (key) => new Request('https://worker.test/api/inbox', { headers: key ? { Authorization: `Bearer ${key}` } : {} });
+  assert.equal((await inboxAPI(req(token), {})).status, 503);
+  const env = { HN_MAIL_TOKEN: token, FIREBASE_SERVICE_ACCOUNT: JSON.stringify(account) };
+  assert.equal((await inboxAPI(req('wrong'), env)).status, 401);
+  assert.equal((await inboxAPI(req(''), env)).status, 401);
+  const original = global.fetch;
+  global.fetch = async (url) => String(url).includes('oauth2') ? Response.json({ access_token: 't' })
+    : Response.json([{ document: { name: 'x/inbox/123-abc', fields: { mailbox: { stringValue: 'contact' }, subject: { stringValue: 'Salut' }, fromEmail: { stringValue: 'a@b.fr' }, attachments: { arrayValue: { values: [{ stringValue: 'photo.jpg' }] } } } } }]);
+  try {
+    const res = await inboxAPI(req(token), env);
+    assert.equal(res.status, 200);
+    const { messages } = await res.json();
+    assert.equal(messages[0].id, '123-abc');
+    assert.equal(messages[0].subject, 'Salut');
+    assert.deepEqual(messages[0].attachments, ['photo.jpg']);
+  } finally { global.fetch = original; }
+});

@@ -226,8 +226,10 @@ export async function unsubscribe(request, env) {
 }
 
 // ---------- Mails reçus sur contact@ : transfert vers Gmail + réponse automatique ----------
-export async function handleEmail(message, env) {
-  await message.forward(FORWARD_TO);
+export const FORWARD_ADDRESS = FORWARD_TO;
+
+/** Réponse automatique (une par expéditeur et par jour) aux mails reçus sur contact@. */
+export async function autoReply(message, env) {
   try {
     const from = String(message.from || '').toLowerCase();
     const auto = (message.headers.get('auto-submitted') || 'no').toLowerCase();

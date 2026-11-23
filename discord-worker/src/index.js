@@ -1,5 +1,6 @@
 import { networkAPI } from './network.js';
-import { handleEmail, mailAPI, unsubscribe } from './mail.js';
+import { FORWARD_ADDRESS, autoReply, mailAPI, unsubscribe } from './mail.js';
+import { cleanupInbox, inboxAPI, storeIncoming } from './inbox.js';
 const SITE_ORIGIN = "https://heivoli-network.fr";
 const COOKIE_NAME = "__Host-heivoli_discord_state";
 const FIREBASE_AUDIENCE = "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit";
@@ -144,14 +145,25 @@ async function callback(request, env) {
 
 export default {
   // Mails reçus sur contact@heivoli-network.fr (règle Email Routing « Send to a Worker »).
-  async email(message, env) {
-    await handleEmail(message, env);
+  // Chaque mail est gardé pour l'app HN Mail, transféré vers Gmail, puis reçoit une réponse automatique.
+  async email(message, env, ctx) {
+    let stored = null;
+    try { stored = await storeIncoming(message, env); } catch (error) { console.log('inbox store error', String(error?.message || error)); }
+    let forwarded = false;
+    try { await message.forward(FORWARD_ADDRESS); forwarded = true; } catch (error) { console.log('forward error', String(error?.message || error)); }
+    if (!stored && !forwarded) {
+      message.setReject('Boîte temporairement indisponible, réessaie dans quelques minutes.');
+      return;
+    }
+    if (!String(message.to || '').toLowerCase().startsWith('news@')) await autoReply(message, env);
+    ctx.waitUntil(cleanupInbox(env).catch(() => {}));
   },
   async fetch(request, env) {
     let response;
     try {
       const pathname = new URL(request.url).pathname;
       if (pathname === '/api/mail') response = await mailAPI(request, env);
+      else if (pathname === '/api/inbox') response = await inboxAPI(request, env);
       else if (pathname === '/api/unsubscribe' && (request.method === 'GET' || request.method === 'POST')) response = await unsubscribe(request, env);
       else if (pathname.startsWith('/api/')) response = await networkAPI(request, env);
       else if (request.method !== "GET") response = new Response("Method not allowed", { status: 405, headers: { Allow: "GET" } });
