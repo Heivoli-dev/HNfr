@@ -36,7 +36,7 @@ function firestore(env) {
     const token = await serviceToken(account, DATASTORE);
     const res = await fetch(`${URL_ROOT}${path}`, { ...options, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } });
     if (res.status === 404 && !options.method) return null;
-    if (!res.ok) { const err = new Error(`firestore ${res.status}`); err.status = res.status; throw err; }
+    if (!res.ok) { const body = await res.text(); const err = new Error(`firestore ${res.status} ${body.slice(0, 300)}`); err.status = res.status; err.body = body; throw err; }
     return res.json();
   };
   return {
@@ -54,7 +54,8 @@ async function claim(db, id, info) {
     await db.commit([{ update: { name: `${ROOT}/mailLog/${id}`, fields: { ...info, sentAt: now() } }, currentDocument: { exists: false } }]);
     return true;
   } catch (error) {
-    if (error.status === 409 || error.status === 400) return false;
+    // Seul « le document existe déjà » signifie « déjà envoyé » ; toute autre erreur est remontée.
+    if (error.status === 409 || (error.status === 400 && /FAILED_PRECONDITION|ALREADY_EXISTS/.test(error.body || ''))) return false;
     throw error;
   }
 }
@@ -231,15 +232,18 @@ export async function handleEmail(message, env) {
     const from = String(message.from || '').toLowerCase();
     const auto = (message.headers.get('auto-submitted') || 'no').toLowerCase();
     const precedence = (message.headers.get('precedence') || '').toLowerCase();
-    if (auto !== 'no' || /bulk|list|junk/.test(precedence) || message.headers.get('list-id')
-      || /(no-?reply|mailer-daemon|postmaster|bounce)/.test(from) || from.endsWith('@heivoli-network.fr') || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(from)) return;
+    const skip = auto !== 'no' ? 'auto-submitted' : /bulk|list|junk/.test(precedence) ? 'precedence' : message.headers.get('list-id') ? 'list'
+      : /(no-?reply|mailer-daemon|postmaster|bounce)/.test(from) ? 'robot' : from.endsWith('@heivoli-network.fr') ? 'own-domain'
+      : !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(from) ? 'bad-from' : '';
+    if (skip) { console.log('autoreply skipped', skip, from.replace(/^[^@]{0,3}[^@]*/, '***')); return; }
     const db = firestore(env);
     const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(from))).slice(0, 12), (b) => b.toString(16).padStart(2, '0')).join('');
     const day = new Date().toISOString().slice(0, 10);
-    if (!await claim(db, `auto-${digest}-${day}`, { type: str('autoreply') })) return; // une réponse par expéditeur et par jour
+    if (!await claim(db, `auto-${digest}-${day}`, { type: str('autoreply') })) { console.log('autoreply skipped', 'already-replied-today'); return; } // une réponse par expéditeur et par jour
     const subject = String(message.headers.get('subject') || '').replace(/[\r\n]+/g, ' ').slice(0, 120);
     const mail = autoReplyMail({ subject });
     await brevo(env, { sender: SENDERS.contact, to: [{ email: from }], subject: mail.subject, htmlContent: mail.html, headers: { 'Auto-Submitted': 'auto-replied' } });
+    console.log('autoreply sent');
   } catch (error) {
     console.log('autoreply error', String(error?.message || error));
   }
