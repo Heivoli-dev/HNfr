@@ -67,13 +67,44 @@ const safeEqual = (a, b) => {
   return diff === 0;
 };
 
-/** GET /api/inbox : liste des mails reçus, pour l'app Mac (clé HN_MAIL_TOKEN). */
-export async function inboxAPI(request, env) {
-  const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=UTF-8' } });
-  if (request.method !== 'GET') return reply({ error: 'Méthode refusée.' }, 405);
+const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=UTF-8' } });
+
+function checkKey(request, env) {
   const key = (request.headers.get('Authorization') || '').replace(/^Bearer /, '');
-  if (!env.HN_MAIL_TOKEN || env.HN_MAIL_TOKEN.length < 24) return reply({ error: 'La clé HN Mail n’est pas encore installée sur le serveur.' }, 503);
-  if (!safeEqual(key, env.HN_MAIL_TOKEN)) return reply({ error: 'Clé HN Mail incorrecte.' }, 401);
+  if (!env.HN_MAIL_TOKEN || env.HN_MAIL_TOKEN.length < 24) return json({ error: 'La clé HN Mail n’est pas encore installée sur le serveur.' }, 503);
+  if (!safeEqual(key, env.HN_MAIL_TOKEN)) return json({ error: 'Clé HN Mail incorrecte.' }, 401);
+  return null;
+}
+
+/** POST /api/inbox/replied : marque un mail « répondu » (ou le remet à traiter) pour toute l'équipe. */
+export async function inboxRepliedAPI(request, env) {
+  if (request.method !== 'POST') return json({ error: 'Méthode refusée.' }, 405);
+  const denied = checkKey(request, env);
+  if (denied) return denied;
+  let body;
+  try { body = JSON.parse((await request.text()).slice(0, 2048)); } catch { return json({ error: 'Demande invalide.' }, 400); }
+  const id = String(body?.id || '');
+  if (!/^[0-9]{10,16}-[0-9a-f]{8}$/.test(id)) return json({ error: 'Mail inconnu.' }, 400);
+  const name = `${ROOT}/inbox/${id}`;
+  const by = String(body?.by || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 60) || 'Équipe';
+  const write = body?.value === false
+    ? { update: { name, fields: {} }, updateMask: { fieldPaths: ['repliedAt', 'repliedBy'] }, currentDocument: { exists: true } }
+    : { update: { name, fields: { repliedAt: { timestampValue: new Date().toISOString() }, repliedBy: { stringValue: by } } }, updateMask: { fieldPaths: ['repliedAt', 'repliedBy'] }, currentDocument: { exists: true } };
+  try {
+    await firestore(env, ':commit', { method: 'POST', body: JSON.stringify({ writes: [write] }) });
+    return json({ ok: true });
+  } catch (error) {
+    console.log('inbox replied error', String(error?.message || error));
+    return json({ error: 'Impossible d’enregistrer pour le moment.' }, 503);
+  }
+}
+
+/** GET /api/inbox : liste des mails reçus, pour l'app (clé HN_MAIL_TOKEN). */
+export async function inboxAPI(request, env) {
+  const reply = json;
+  if (request.method !== 'GET') return reply({ error: 'Méthode refusée.' }, 405);
+  const denied = checkKey(request, env);
+  if (denied) return denied;
   try {
     const rows = await firestore(env, ':runQuery', { method: 'POST', body: JSON.stringify({ structuredQuery: {
       from: [{ collectionId: 'inbox' }],
@@ -83,7 +114,7 @@ export async function inboxAPI(request, env) {
     const messages = rows.filter((r) => r.document).map((r) => {
       const f = r.document.fields || {};
       const out = { id: r.document.name.split('/').pop() };
-      for (const k of ['mailbox', 'to', 'fromName', 'fromEmail', 'replyTo', 'subject', 'text', 'messageId', 'date', 'receivedAt', 'attachments']) out[k] = value(f[k]);
+      for (const k of ['mailbox', 'to', 'fromName', 'fromEmail', 'replyTo', 'subject', 'text', 'messageId', 'date', 'receivedAt', 'attachments', 'repliedAt', 'repliedBy']) out[k] = value(f[k]);
       return out;
     });
     return reply({ messages });

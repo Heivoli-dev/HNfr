@@ -138,3 +138,24 @@ test('HN Mail inbox needs the private key and returns stored mails', async () =>
     assert.deepEqual(messages[0].attachments, ['photo.jpg']);
   } finally { global.fetch = original; }
 });
+
+test('HN Mail replied status is shared through the server, with the key only', async () => {
+  const { inboxRepliedAPI } = await import('../discord-worker/src/inbox.js');
+  const token = 'k'.repeat(32);
+  const env = { HN_MAIL_TOKEN: token, FIREBASE_SERVICE_ACCOUNT: JSON.stringify(account) };
+  const req = (body, key = token) => new Request('https://worker.test/api/inbox/replied', { method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: JSON.stringify(body) });
+  assert.equal((await inboxRepliedAPI(req({ id: '1763900000000-abcdef12' }, 'nope'), env)).status, 401);
+  assert.equal((await inboxRepliedAPI(req({ id: '../profiles/x' }), env)).status, 400);
+  const original = global.fetch; const commits = [];
+  global.fetch = async (url, o = {}) => String(url).includes('oauth2') ? Response.json({ access_token: 't' }) : (commits.push(JSON.parse(o.body)), Response.json({}));
+  try {
+    assert.equal((await inboxRepliedAPI(req({ id: '1763900000000-abcdef12', value: true, by: 'Heivoli' }), env)).status, 200);
+    const set = commits[0].writes[0];
+    assert.ok(set.update.name.endsWith('/inbox/1763900000000-abcdef12'));
+    assert.equal(set.update.fields.repliedBy.stringValue, 'Heivoli');
+    assert.deepEqual(set.currentDocument, { exists: true });
+    await inboxRepliedAPI(req({ id: '1763900000000-abcdef12', value: false }), env);
+    assert.deepEqual(commits[1].writes[0].update.fields, {});
+    assert.deepEqual(commits[1].writes[0].updateMask.fieldPaths, ['repliedAt', 'repliedBy']);
+  } finally { global.fetch = original; }
+});
