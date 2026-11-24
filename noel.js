@@ -1,9 +1,9 @@
 /* Édition Noël — Heivoli Network
-   Active automatiquement du 23 novembre au 26 décembre (inclus).
+   Active automatiquement du 23 novembre au 26 décembre 2026 (inclus), seulement cette année.
    Forcer pour tester : ?noel=1 (ou ?noel=0 pour couper). */
 (() => {
-  const DEBUT = { mois: 11, jour: 23 }; // 23 novembre
-  const FIN = { mois: 12, jour: 26 };   // 26 décembre (inclus)
+  const DEBUT = new Date(2026, 10, 23);       // 23 novembre 2026, 0 h (heure locale)
+  const FIN = new Date(2026, 11, 27);         // jusqu'au 26 décembre 2026 inclus
 
   const params = new URLSearchParams(location.search);
   const store = {
@@ -14,9 +14,7 @@
   const force = store.get("hn-noel-force");
 
   const now = new Date();
-  const m = now.getMonth() + 1, d = now.getDate();
-  const jour = m * 100 + d, debut = DEBUT.mois * 100 + DEBUT.jour, fin = FIN.mois * 100 + FIN.jour;
-  const enPeriode = debut <= fin ? (jour >= debut && jour <= fin) : (jour >= debut || jour <= fin);
+  const enPeriode = now >= DEBUT && now < FIN;
   if (force === "0" || (!enPeriode && force !== "1")) return;
 
   const root = document.documentElement;
