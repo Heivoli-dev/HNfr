@@ -1,6 +1,7 @@
 import { networkAPI } from './network.js';
 import { FORWARD_ADDRESS, autoReply, mailAPI, unsubscribe } from './mail.js';
 import { cleanupInbox, inboxAPI, inboxRepliedAPI, storeIncoming } from './inbox.js';
+import { inboxAIAPI } from './inbox-ai.js';
 const SITE_ORIGIN = "https://heivoli-network.fr";
 const COOKIE_NAME = "__Host-heivoli_discord_state";
 const FIREBASE_AUDIENCE = "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit";
@@ -165,6 +166,7 @@ export default {
       if (pathname === '/api/mail') response = await mailAPI(request, env);
       else if (pathname === '/api/inbox') response = await inboxAPI(request, env);
       else if (pathname === '/api/inbox/replied') response = await inboxRepliedAPI(request, env);
+      else if (pathname === '/api/inbox/ai') response = await inboxAIAPI(request, env);
       else if (pathname === '/api/unsubscribe' && (request.method === 'GET' || request.method === 'POST')) response = await unsubscribe(request, env);
       else if (pathname.startsWith('/api/')) response = await networkAPI(request, env);
       else if (request.method !== "GET") response = new Response("Method not allowed", { status: 405, headers: { Allow: "GET" } });
