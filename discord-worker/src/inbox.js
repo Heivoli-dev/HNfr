@@ -56,7 +56,12 @@ export async function cleanupInbox(env) {
     where: { fieldFilter: { field: { fieldPath: 'receivedAt' }, op: 'LESS_THAN', value: { timestampValue: limit } } },
     limit: 20,
   } }) });
-  const writes = rows.filter((r) => r.document).map((r) => ({ delete: r.document.name }));
+  const sentRows = await firestore(env, ':runQuery', { method: 'POST', body: JSON.stringify({ structuredQuery: {
+    from: [{ collectionId: 'sent' }],
+    where: { fieldFilter: { field: { fieldPath: 'sentAt' }, op: 'LESS_THAN', value: { timestampValue: limit } } },
+    limit: 20,
+  } }) });
+  const writes = [...rows, ...sentRows].filter((r) => r.document).map((r) => ({ delete: r.document.name }));
   if (writes.length) await firestore(env, ':commit', { method: 'POST', body: JSON.stringify({ writes }) });
 }
 
@@ -96,6 +101,61 @@ export async function inboxRepliedAPI(request, env) {
   } catch (error) {
     console.log('inbox replied error', String(error?.message || error));
     return json({ error: 'Impossible d’enregistrer pour le moment.' }, 503);
+  }
+}
+
+const SENT_FIELDS = ['mailbox', 'toEmail', 'toName', 'subject', 'text', 'html', 'sentAt', 'by', 'inboxId', 'template'];
+
+/**
+ * /api/inbox/sent : mails envoyés depuis HN Mail (Mac et Windows), gardés 90 jours.
+ * GET → { sent: [...] } ; POST { id, mailbox, toEmail, toName, subject, text, html, by, inboxId, template } → { ok }
+ */
+export async function inboxSentAPI(request, env) {
+  const denied = checkKey(request, env);
+  if (denied) return denied;
+  try {
+    if (request.method === 'GET') {
+      const rows = await firestore(env, ':runQuery', { method: 'POST', body: JSON.stringify({ structuredQuery: {
+        from: [{ collectionId: 'sent' }],
+        orderBy: [{ field: { fieldPath: 'sentAt' }, direction: 'DESCENDING' }],
+        limit: 200,
+      } }) });
+      const sent = rows.filter((r) => r.document).map((r) => {
+        const f = r.document.fields || {};
+        const out = { id: r.document.name.split('/').pop() };
+        for (const k of SENT_FIELDS) out[k] = value(f[k]);
+        return out;
+      });
+      return json({ sent });
+    }
+    if (request.method === 'POST') {
+      const raw = await request.text();
+      if (raw.length > 400000) return json({ error: 'Mail trop long.' }, 413);
+      let body;
+      try { body = JSON.parse(raw); } catch { return json({ error: 'Demande invalide.' }, 400); }
+      const id = String(body?.id || '');
+      if (!/^[A-Za-z0-9-]{8,64}$/.test(id)) return json({ error: 'Identifiant invalide.' }, 400);
+      const str = (v, max) => ({ stringValue: String(v ?? '').replace(/\u0000/g, '').slice(0, max) });
+      const fields = {
+        mailbox: str(body.mailbox === 'news' ? 'news' : 'contact', 10),
+        toEmail: str(String(body.toEmail || '').toLowerCase(), 200),
+        toName: str(body.toName, 200),
+        subject: str(body.subject, 300),
+        text: str(body.text, 30000),
+        html: str(body.html, 300000),
+        by: str(String(body.by || '').replace(/[\u0000-\u001f]/g, '').trim() || 'Équipe', 60),
+        inboxId: str(body.inboxId, 64),
+        template: str(body.template, 60),
+        sentAt: { timestampValue: new Date(Date.parse(body.sentAt || '') || Date.now()).toISOString() },
+      };
+      // Même identifiant = même mail : renvoyer deux fois ne crée pas de doublon.
+      await firestore(env, ':commit', { method: 'POST', body: JSON.stringify({ writes: [{ update: { name: `${ROOT}/sent/${id}`, fields } }] }) });
+      return json({ ok: true });
+    }
+    return json({ error: 'Méthode refusée.' }, 405);
+  } catch (error) {
+    console.log('inbox sent error', String(error?.message || error));
+    return json({ error: 'Envoyés indisponibles pour le moment.' }, 503);
   }
 }
 
