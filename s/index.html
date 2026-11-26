@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="fr">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src https://hn-screen.heivoli-discord-auth.workers.dev; base-uri 'none'; object-src 'none'; form-action 'none'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src https://hn-screen.heivoli-discord-auth.workers.dev; base-uri 'none'; object-src 'none'; form-action 'none'; upgrade-insecure-requests" />
     <meta name="referrer" content="no-referrer" />
     <meta name="robots" content="noindex" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f4f4f4" />
     <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png?v=2" />
-    <title>Hn screen ! — Capture 3DS</title>
-    <link rel="stylesheet" href="screen.css?v=1" />
+    <title>Hn screen ! — Ma galerie</title>
+    <link rel="stylesheet" href="screen.css?v=2" />
   </head>
   <body>
     <header class="bar">
@@ -18,29 +18,53 @@
     </header>
 
     <main>
-      <p id="status" class="status" role="status">Chargement de la capture…</p>
-
-      <section id="shots" class="shots" hidden>
-        <div class="tabs" role="tablist" aria-label="Écran à télécharger">
-          <button type="button" role="tab" data-view="deux" aria-selected="true">Les deux</button>
-          <button type="button" role="tab" data-view="haut" aria-selected="false">Écran du haut</button>
-          <button type="button" role="tab" data-view="bas" aria-selected="false">Écran du bas</button>
-        </div>
-
-        <figure class="frame">
-          <canvas id="view" width="400" height="480" aria-label="Capture d'écran de la 3DS"></canvas>
-        </figure>
-
-        <div class="actions">
-          <a id="download" class="btn primary" href="#" download="hn-screen.png">Télécharger</a>
-          <button id="share" class="btn" type="button" hidden>Enregistrer / partager</button>
-          <label class="zoom"><input id="x2" type="checkbox" checked /> Taille ×2 (plus nette sur téléphone)</label>
-        </div>
-        <p class="note">Ce lien expire 24 h après la capture.</p>
+      <section class="intro">
+        <h1>Ma galerie</h1>
+        <p>Sur ta 3DS, ouvre une capture dans <strong>Hn screen !</strong> et choisis <strong>Partager</strong>. Scanne ensuite le QR code ici : la photo arrive dans ta galerie.</p>
+        <button id="scan" class="btn primary big" type="button">📷 Scanner un QR code</button>
       </section>
+
+      <section id="scanner" class="scanner" hidden aria-label="Scanner de QR code">
+        <div class="viewfinder">
+          <video id="video" playsinline muted></video>
+          <div class="target" aria-hidden="true"></div>
+        </div>
+        <p id="scan-status" class="scan-status" role="status">Vise le QR code affiché sur l'écran du bas de ta 3DS.</p>
+        <button id="stop" class="btn" type="button">Fermer la caméra</button>
+      </section>
+
+      <p id="status" class="status" role="status" hidden></p>
+
+      <section class="gallery-head" id="gallery-head" hidden>
+        <h2>Mes photos <span id="count"></span></h2>
+        <div class="row">
+          <button id="save-all" class="btn" type="button">Tout télécharger</button>
+          <button id="clear" class="btn" type="button">Vider</button>
+        </div>
+      </section>
+      <ul id="gallery" class="gallery"></ul>
+
+      <p id="empty" class="empty">Aucune photo pour l'instant. Scanne un QR code pour commencer.</p>
+
+      <p class="note privacy">🔒 Chaque photo est <strong>effacée du serveur dès qu'elle arrive sur ton appareil</strong> (et au plus tard 10 minutes après le partage si personne ne la scanne). Elle reste seulement dans cette page, sur ton appareil, jusqu'à ce que tu fermes l'onglet : pense à la télécharger.</p>
     </main>
 
-    <footer class="foot">Capture envoyée depuis une Nintendo 3DS avec l'appli Hn screen ! · Heivoli Network</footer>
-    <script src="screen.js?v=1"></script>
+    <dialog id="viewer" class="viewer" aria-label="Photo">
+      <div class="tabs" role="tablist" aria-label="Écran à télécharger">
+        <button type="button" role="tab" data-view="deux" aria-selected="true">Les deux</button>
+        <button type="button" role="tab" data-view="haut" aria-selected="false">Écran du haut</button>
+        <button type="button" role="tab" data-view="bas" aria-selected="false">Écran du bas</button>
+      </div>
+      <figure class="frame"><canvas id="view" width="400" height="480" aria-label="Capture d'écran de la 3DS"></canvas></figure>
+      <div class="actions">
+        <a id="download" class="btn primary" href="#" download="hn-screen.png">Télécharger</a>
+        <button id="share" class="btn" type="button" hidden>Enregistrer / partager</button>
+        <label class="zoom"><input id="x2" type="checkbox" checked /> Taille ×2</label>
+        <button id="close" class="btn close" type="button">Fermer</button>
+      </div>
+    </dialog>
+
+    <footer class="foot">Captures envoyées depuis une Nintendo 3DS avec l'appli Hn screen ! · Heivoli Network</footer>
+    <script src="screen.js?v=2"></script>
   </body>
 </html>

@@ -2,13 +2,14 @@
 //
 // POST /upload        corps = PNG 400 x 480 (écran du haut + écran du bas) envoyé par la console
 //                     réponse {"id":"A7K2Q9XB","expires":…}
-// GET  /i/<id>.png    l'image, pour la page https://heivoli-network.fr/s/?<id>
+// GET  /i/<id>.png    l'image, pour la galerie https://heivoli-network.fr/s/?<id>
 //
-// Les captures sont gardées 24 h dans KV puis effacées automatiquement.
+// Chaque capture ne peut être récupérée qu'une seule fois : elle est effacée du serveur dès
+// que la galerie l'a chargée, et au plus tard 10 minutes après l'envoi si personne ne la scanne.
 // Rien d'autre n'est enregistré (pas de compte, pas d'adresse IP en clair).
 
 const SITE = "https://heivoli-network.fr";
-const TTL = 24 * 60 * 60;
+const TTL = 10 * 60; // 10 minutes maximum sur le serveur
 const MAX_BYTES = 1024 * 1024;
 const PER_HOUR = 30;
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"; // sans 0/O, 1/I/L
@@ -62,20 +63,22 @@ async function upload(request, env) {
   if (buf.byteLength > MAX_BYTES) return json({ error: "Image trop lourde." }, 413);
   if (!isScreenPng(buf)) return json({ error: "Ce n'est pas une capture Hn screen !" }, 400);
   if (await rateLimited(request, env)) return json({ error: "Trop d'envois, réessaie dans une heure." }, 429);
-  const id = newId(); // 31^8 possibilités : collision négligeable sur 24 h
+  const id = newId(); // 31^8 possibilités : collision négligeable sur 10 min
   await env.SHOTS.put(`s:${id}`, buf, { expirationTtl: TTL });
   return json({ id, expires: Date.now() + TTL * 1000 });
 }
 
 async function image(id, env) {
   if (!ID_RE.test(id)) return json({ error: "Lien invalide." }, 404);
-  const data = await env.SHOTS.get(`s:${id}`, { type: "arrayBuffer", cacheTtl: 3600 });
-  if (!data) return json({ error: "Cette capture a expiré ou n'existe pas." }, 404);
+  const key = `s:${id}`;
+  const data = await env.SHOTS.get(key, { type: "arrayBuffer" });
+  if (!data) return json({ error: "Cette capture a déjà été récupérée ou a expiré." }, 404);
+  await env.SHOTS.delete(key); // une seule récupération : la photo part sur l'appareil et quitte le serveur
   return new Response(data, {
     headers: {
       ...baseHeaders,
       "Content-Type": "image/png",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "no-store",
       "Content-Security-Policy": "default-src 'none'",
       "Cross-Origin-Resource-Policy": "cross-origin",
     },
